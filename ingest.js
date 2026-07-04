@@ -85,6 +85,7 @@ async function fetchNewsData(country) {
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
+      description: item.description || null,
       url: item.link,
       published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
     }));
@@ -105,6 +106,7 @@ async function fetchGNews(country) {
       country: country.code,
       topic: 'World',
       title: item.title,
+      description: item.description || null,
       url: item.url,
       published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : null,
     }));
@@ -124,6 +126,7 @@ async function fetchCurrents(country) {
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
+      description: item.description || null,
       url: item.url,
       published_at: item.published ? new Date(item.published).toISOString() : null,
     }));
