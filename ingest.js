@@ -55,21 +55,43 @@ function mapTopic(rawCategory) {
   return 'World';
 }
 
+// Filters out obvious non-news content (classified listings, SEO spam pages)
+// that some free-tier news APIs occasionally mis-categorize as news.
+const JUNK_PATTERNS = [
+  /for sale near/i,
+  /used .* for sale/i,
+  /autos on [\w.]+\.com/i,
+  /\bclassifieds?\b/i,
+  /\bcoupons?\b/i,
+  /\bhoroscope\b/i,
+];
+
+function isJunk(title) {
+  if (!title) return true;
+  return JUNK_PATTERNS.some((pattern) => pattern.test(title));
+}
+
 async function upsertRows(countryName, rows) {
-  if (rows.length === 0) {
+  const filtered = rows.filter((row) => !isJunk(row.title));
+  const skipped = rows.length - filtered.length;
+  if (skipped > 0) {
+    console.log(`[${countryName}] Filtered out ${skipped} junk/non-news item(s).`);
+  }
+
+  if (filtered.length === 0) {
     console.warn(`[${countryName}] No articles returned.`);
     return { country: countryName, inserted: 0 };
   }
   const { error } = await supabase
     .from('articles')
-    .upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
+    .upsert(filtered, { onConflict: 'url', ignoreDuplicates: true });
 
   if (error) {
     console.error(`[${countryName}] Supabase insert error: ${error.message}`);
     return { country: countryName, inserted: 0, error: error.message };
   }
-  console.log(`[${countryName}] Upserted ${rows.length} articles.`);
-  return { country: countryName, inserted: rows.length };
+  console.log(`[${countryName}] Upserted ${filtered.length} articles.`);
+  return { country: countryName, inserted: filtered.length };
 }
 
 async function fetchNewsData(country) {
