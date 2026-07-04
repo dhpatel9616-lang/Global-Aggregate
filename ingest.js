@@ -182,33 +182,19 @@ const BLOCKED_SOURCE_DOMAINS = [
   'old.reddit.com',
 ];
 
-// NEW: International/pan-regional wire services. These aren't native to any
-// single country, so when a country-specific API query returns one, it gets
-// tagged with whatever country was requested rather than the country it's
-// actually from or about — this is what caused "Turkey" filters to surface
-// Reuters/France24/Euronews stories with no connection to Turkey.
-// TRADEOFF: these are legitimate journalism, not junk. Blocking them removes
-// real international coverage from the feed, not just bad content. This is
-// the simplest fix consistent with the existing pattern-based approach; the
-// alternative (keep them, but exclude from country-specific filtering only)
-// needs a schema change (e.g. an is_international flag) and isn't done here.
-const WIRE_SERVICE_DOMAINS = [
-  'reuters.com',
-  'france24.com',
-  'euronews.com',
-  'africanews.com',
-  'menafn.com',
-  'channelnewsasia.com',
-  'almonitor.com',
-];
-
+// International/pan-regional wire services (Reuters, France24, Euronews,
+// AfricaNews, MENAFN, Channel News Asia, Al-Monitor) are intentionally NOT
+// blocked. They're legitimate journalism -- they just aren't native to any
+// single country, so country-specific filters will occasionally surface one
+// with no real connection to the requested country (e.g. a Reuters story
+// showing up under a "Turkey" filter). Accepted tradeoff: keep the real
+// international coverage rather than lose it to fix country-purity. The
+// actual fix, if this becomes a problem, is the planned national-outlet
+// allowlist (Stage 1), not a wire-service blocklist.
 function isBlockedSource(source) {
   if (!source) return false;
   const normalized = source.toLowerCase();
-  return (
-    BLOCKED_SOURCE_DOMAINS.some((domain) => normalized.includes(domain)) ||
-    WIRE_SERVICE_DOMAINS.some((domain) => normalized.includes(domain))
-  );
+  return BLOCKED_SOURCE_DOMAINS.some((domain) => normalized.includes(domain));
 }
 
 // Sports coverage from these APIs skews heavily toward minor/local sports news.
