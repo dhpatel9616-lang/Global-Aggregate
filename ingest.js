@@ -284,6 +284,14 @@ async function main() {
     console.log(`\nCountries with issues (0 articles or errors):`);
     failed.forEach((r) => console.log(`  - ${r.country}${r.error ? `: ${r.error}` : ' (empty result)'}`));
   }
+
+  console.log('\nClustering related stories across countries...');
+  const { error: clusterError } = await supabase.rpc('cluster_related_articles');
+  if (clusterError) {
+    console.error('Clustering failed (non-fatal):', clusterError.message);
+  } else {
+    console.log('Clustering complete.');
+  }
 }
 
 main().catch((err) => {
