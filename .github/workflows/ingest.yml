@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   # Runs automatically every 30 minutes
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */4 * * *'
 
 jobs:
   ingest:
@@ -26,4 +26,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
         run: node ingest.js
