@@ -125,11 +125,79 @@ const JUNK_PATTERNS = [
   /\badvertisement\b/i,
   /\(ad\)/i,
   /paid partnership/i,
+
+  // Non-news content mis-tagged by aggregators (e.g. GitHub repos showing up as "Tech" news)
+  /^github - /i,
+
+  // Obituaries / memorial notices (not national news)
+  /\bobituar(y|ies)\b/i,
+  /in loving memory of/i,
+  /ways to support the family/i,
+
+  // Hyperlocal government/community news (not national news)
+  /\bHOA\b/i,
+  /homeowners? association/i,
+  /\bcity council\b/i,
+  /\bzoning\b/i,
+  /\bschool board\b/i,
+  /\bcounty commission(er)?\b/i,
+  /\btownship\b/i,
+  /\bplanning commission\b/i,
+  /\bboard of education\b/i,
 ];
 
-function isJunk(title) {
-  if (!title) return true;
-  return JUNK_PATTERNS.some((pattern) => pattern.test(title));
+// Specific domains known to be content farms, press-release wires, or
+// non-news sites that keep showing up mis-tagged as news by the APIs above.
+const BLOCKED_SOURCE_DOMAINS = [
+  'github.com',
+  'legacy.com',
+  'openpr.com',
+  'chinanationalnews.com',
+  'pekingpress.com',
+  'shanghaisun.com',
+  'beijingbulletin.com',
+  'bignewsnetwork.com',
+  'tickerreport.com',
+  'dailypolitical.com',
+];
+
+function isBlockedSource(source) {
+  if (!source) return false;
+  const normalized = source.toLowerCase();
+  return BLOCKED_SOURCE_DOMAINS.some((domain) => normalized.includes(domain));
+}
+
+// Sports coverage from these APIs skews heavily toward minor/local sports news.
+// Rather than blocking specific junk, this allowlists major leagues/tournaments —
+// a Sports-tagged article must mention one of these to be kept. This is a real
+// tradeoff: it will occasionally cut a legitimate major story that happens not
+// to use one of these terms, and it can't catch every major event by design.
+const MAJOR_SPORTS_PATTERNS = [
+  /\bNFL\b/i, /\bNBA\b/i, /\bMLB\b/i, /\bNHL\b/i, /\bMLS\b/i,
+  /premier league/i, /la liga/i, /serie a/i, /bundesliga/i, /ligue 1/i,
+  /champions league/i, /europa league/i, /\bFA cup\b/i,
+  /copa am[ée]rica/i, /copa libertadores/i,
+  /\bIPL\b/i, /\bICC\b/i, /\bT20\b/i, /\bASHES\b/i,
+  /six nations/i, /rugby world cup/i, /super rugby/i,
+  /wimbledon/i, /french open/i, /australian open/i, /\bATP\b/i, /\bWTA\b/i, /grand slam/i,
+  /\bmasters\b/i, /\bPGA\b/i, /ryder cup/i,
+  /formula (1|one)\b/i, /\bF1\b/i, /motogp/i, /\bNASCAR\b/i,
+  /\bUFC\b/i, /world title/i, /heavyweight/i,
+  /\bolympics?\b/i, /paralympics/i, /commonwealth games/i,
+  /world cup/i, /\bFIFA\b/i, /\bUEFA\b/i, /\bCONMEBOL\b/i, /\bAFCON\b/i,
+  /national team/i, /world championships?/i, /super bowl/i, /stanley cup/i, /world series/i,
+];
+
+function isObscureSports(row) {
+  if (row.topic !== 'Sports') return false;
+  return !MAJOR_SPORTS_PATTERNS.some((pattern) => pattern.test(row.title));
+}
+
+function isJunk(row) {
+  if (!row.title) return true;
+  if (isBlockedSource(row.source)) return true;
+  if (isObscureSports(row)) return true;
+  return JUNK_PATTERNS.some((pattern) => pattern.test(row.title));
 }
 
 // Same story often gets republished verbatim across sister publications
@@ -150,7 +218,7 @@ async function loadExistingTitles() {
 }
 
 async function upsertRows(countryName, rows, seenTitles) {
-  const noJunk = rows.filter((row) => !isJunk(row.title));
+  const noJunk = rows.filter((row) => !isJunk(row));
   const junkSkipped = rows.length - noJunk.length;
 
   const deduped = [];
@@ -225,6 +293,16 @@ async function fetchGNews(country) {
   return rows;
 }
 
+// Extracts a readable domain from a URL to use as the source label
+// (used for Currents, which doesn't return a publisher name in its response).
+function domainFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function fetchCurrents(country) {
   const url = `https://api.currentsapi.services/v1/latest-news?language=en&country=${country.code}&apiKey=${CURRENTS_API_KEY}`;
   const res = await fetch(url);
@@ -234,7 +312,7 @@ async function fetchCurrents(country) {
   const rows = (data.news || [])
     .filter((item) => item.title && item.url)
     .map((item) => ({
-      source: 'Currents',
+      source: domainFromUrl(item.url), // real domain, not a hardcoded label — needed so source-blocklist filtering actually works
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
