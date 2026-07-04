@@ -1,14 +1,12 @@
 {
   "name": "global-aggregate-ingestion",
   "version": "1.0.0",
-  "description": "RSS ingestion script for The Global Aggregate MVP",
+  "description": "News ingestion script for The Global Aggregate MVP",
   "main": "ingest.js",
   "scripts": {
     "ingest": "node ingest.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
-    "dotenv": "^16.4.5",
-    "rss-parser": "^3.13.0"
+    "@supabase/supabase-js": "^2.45.0"
   }
 }
