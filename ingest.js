@@ -71,27 +71,56 @@ function isJunk(title) {
   return JUNK_PATTERNS.some((pattern) => pattern.test(title));
 }
 
-async function upsertRows(countryName, rows) {
-  const filtered = rows.filter((row) => !isJunk(row.title));
-  const skipped = rows.length - filtered.length;
-  if (skipped > 0) {
-    console.log(`[${countryName}] Filtered out ${skipped} junk/non-news item(s).`);
+// Same story often gets republished verbatim across sister publications
+// (different URL each time, so the DB's unique-URL constraint won't catch it).
+// This tracks titles we've already seen — both already in the database and
+// within this run — so syndicated repeats get skipped instead of piling up.
+function normalizeTitle(title) {
+  return (title || '').trim().toLowerCase();
+}
+
+async function loadExistingTitles() {
+  const { data, error } = await supabase.from('articles').select('title');
+  if (error) {
+    console.error('Could not load existing titles for dedup, continuing without it:', error.message);
+    return new Set();
+  }
+  return new Set(data.map((row) => normalizeTitle(row.title)));
+}
+
+async function upsertRows(countryName, rows, seenTitles) {
+  const noJunk = rows.filter((row) => !isJunk(row.title));
+  const junkSkipped = rows.length - noJunk.length;
+
+  const deduped = [];
+  let dupeSkipped = 0;
+  for (const row of noJunk) {
+    const key = normalizeTitle(row.title);
+    if (seenTitles.has(key)) {
+      dupeSkipped++;
+      continue;
+    }
+    seenTitles.add(key);
+    deduped.push(row);
   }
 
-  if (filtered.length === 0) {
-    console.warn(`[${countryName}] No articles returned.`);
+  if (junkSkipped > 0) console.log(`[${countryName}] Filtered out ${junkSkipped} junk/non-news item(s).`);
+  if (dupeSkipped > 0) console.log(`[${countryName}] Skipped ${dupeSkipped} duplicate/syndicated title(s).`);
+
+  if (deduped.length === 0) {
+    console.warn(`[${countryName}] No new articles to insert.`);
     return { country: countryName, inserted: 0 };
   }
   const { error } = await supabase
     .from('articles')
-    .upsert(filtered, { onConflict: 'url', ignoreDuplicates: true });
+    .upsert(deduped, { onConflict: 'url', ignoreDuplicates: true });
 
   if (error) {
     console.error(`[${countryName}] Supabase insert error: ${error.message}`);
     return { country: countryName, inserted: 0, error: error.message };
   }
-  console.log(`[${countryName}] Upserted ${filtered.length} articles.`);
-  return { country: countryName, inserted: filtered.length };
+  console.log(`[${countryName}] Upserted ${deduped.length} articles.`);
+  return { country: countryName, inserted: deduped.length };
 }
 
 async function fetchNewsData(country) {
@@ -166,6 +195,9 @@ const SOURCES = [
 async function main() {
   console.log(`Starting ingestion for ${countries.length} countries across ${SOURCES.length} sources...\n`);
 
+  const seenTitles = await loadExistingTitles();
+  console.log(`Loaded ${seenTitles.size} existing titles for dedup.\n`);
+
   const results = [];
   for (let i = 0; i < countries.length; i++) {
     const country = countries[i];
@@ -173,7 +205,7 @@ async function main() {
 
     try {
       const rows = await source.fetcher(country);
-      const result = await upsertRows(`${country.name} via ${source.name}`, rows);
+      const result = await upsertRows(`${country.name} via ${source.name}`, rows, seenTitles);
       results.push(result);
     } catch (err) {
       console.error(`[${country.name} via ${source.name}] Failed: ${err.message}`);
