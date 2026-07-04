@@ -111,6 +111,8 @@ const JUNK_PATTERNS = [
   /\bquiz\b/i,
   /which .* are you\??$/i,
   /\btop \d+\b.*(things|reasons|ways) (you|to)/i,
+  // NEW: buying-guide/roundup listicles (e.g. "Best used hybrid cars under $50,000")
+  /\bbest .{0,40}(under|over) \$\d/i,
 
   // Lottery / sweepstakes / giveaways
   /lottery numbers/i,
@@ -128,6 +130,8 @@ const JUNK_PATTERNS = [
 
   // Non-news content mis-tagged by aggregators (e.g. GitHub repos showing up as "Tech" news)
   /^github - /i,
+  // NEW: product/tool listing pages (e.g. "Desunofier - Make Suno AI Songs Sound More Human | InstaSong")
+  /^[\w\s]+ - make .{0,60}\|/i,
 
   // Obituaries / memorial notices (not national news)
   /\bobituar(y|ies)\b/i,
@@ -144,6 +148,20 @@ const JUNK_PATTERNS = [
   /\btownship\b/i,
   /\bplanning commission\b/i,
   /\bboard of education\b/i,
+  // NEW: hyperlocal human-interest / nonprofit PR (e.g. "Single mother moves from homelessness to new Carson apartment")
+  /\bhomeless(ness)? .{0,40}(apartment|nonprofit|shelter)\b/i,
+
+  // NEW: dev-blog / tutorial content mis-tagged as Tech news
+  /\b(deprecated|WP-CLI|npm install|git commit|stack trace)\b/i,
+
+  // NEW: human-interest clickbait framing
+  /\bfinally achiev\w+/i,
+  /heartbreaking (setback|journey)/i,
+  /against all odds/i,
+
+  // NEW: Reddit-formatted titles/threads mis-tagged as news
+  /\[link\]\s*\[comments\]/i,
+  /^\/u\/\w+/i,
 ];
 
 // Specific domains known to be content farms, press-release wires, or
@@ -159,12 +177,38 @@ const BLOCKED_SOURCE_DOMAINS = [
   'bignewsnetwork.com',
   'tickerreport.com',
   'dailypolitical.com',
+  // NEW: Reddit threads getting ingested as if they were news articles
+  'reddit.com',
+  'old.reddit.com',
+];
+
+// NEW: International/pan-regional wire services. These aren't native to any
+// single country, so when a country-specific API query returns one, it gets
+// tagged with whatever country was requested rather than the country it's
+// actually from or about — this is what caused "Turkey" filters to surface
+// Reuters/France24/Euronews stories with no connection to Turkey.
+// TRADEOFF: these are legitimate journalism, not junk. Blocking them removes
+// real international coverage from the feed, not just bad content. This is
+// the simplest fix consistent with the existing pattern-based approach; the
+// alternative (keep them, but exclude from country-specific filtering only)
+// needs a schema change (e.g. an is_international flag) and isn't done here.
+const WIRE_SERVICE_DOMAINS = [
+  'reuters.com',
+  'france24.com',
+  'euronews.com',
+  'africanews.com',
+  'menafn.com',
+  'channelnewsasia.com',
+  'almonitor.com',
 ];
 
 function isBlockedSource(source) {
   if (!source) return false;
   const normalized = source.toLowerCase();
-  return BLOCKED_SOURCE_DOMAINS.some((domain) => normalized.includes(domain));
+  return (
+    BLOCKED_SOURCE_DOMAINS.some((domain) => normalized.includes(domain)) ||
+    WIRE_SERVICE_DOMAINS.some((domain) => normalized.includes(domain))
+  );
 }
 
 // Sports coverage from these APIs skews heavily toward minor/local sports news.
