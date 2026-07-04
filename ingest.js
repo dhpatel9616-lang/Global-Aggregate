@@ -55,15 +55,76 @@ function mapTopic(rawCategory) {
   return 'World';
 }
 
-// Filters out obvious non-news content (classified listings, SEO spam pages)
-// that some free-tier news APIs occasionally mis-categorize as news.
+// Filters out obvious non-news content (classified listings, SEO spam pages,
+// betting/promo content, listicles, etc.) that free-tier news APIs sometimes
+// mis-categorize as news. Grouped by category so it's easier to extend later.
 const JUNK_PATTERNS = [
+  // Classifieds / listings
   /for sale near/i,
   /used .* for sale/i,
   /autos on [\w.]+\.com/i,
+  /real estate listings?/i,
+  /homes? for sale/i,
+  /jobs? near you/i,
+  /hiring near/i,
   /\bclassifieds?\b/i,
+
+  // Betting / gambling promos
+  /promo code/i,
+  /bonus code/i,
+  /free bet/i,
+  /risk-free bet/i,
+  /odds boost/i,
+  /betting offer/i,
+  /\bsportsbook\b/i,
+  /welcome bonus/i,
+  /sign-?up bonus/i,
+  /deposit bonus/i,
+  /\bparlay\b/i,
+  /bet \$?\d+/i,
+  /get \$?\d+ (for|when|on)/i,
+  /\b(bet|betting) (bonus|offer|promo)\b/i,
+  /\b(dabble|draftkings|fanduel|betmgm|caesars sportsbook|pointsbet|bet365)\b/i,
+
+  // "How to watch" / streaming guides (almost never real news)
+  /how to watch .*(for free|live|online|stream)/i,
+  /where to watch/i,
+  /live stream(ing)? (guide|free|online)?/i,
+  /watch .* online free/i,
+
+  // Coupons / deals / shopping
   /\bcoupons?\b/i,
+  /discount code/i,
+  /\d+% off\b/i,
+  /deal of the day/i,
+  /best deals?\b/i,
+  /price drop/i,
+  /\bshop the sale\b/i,
+
+  // Horoscope / astrology
   /\bhoroscope\b/i,
+  /\bzodiac\b/i,
+  /\bastrology\b/i,
+
+  // Listicle / quiz / engagement-bait
+  /you won.?t believe/i,
+  /\bquiz\b/i,
+  /which .* are you\??$/i,
+  /\btop \d+\b.*(things|reasons|ways) (you|to)/i,
+
+  // Lottery / sweepstakes / giveaways
+  /lottery numbers/i,
+  /\bpowerball\b/i,
+  /mega millions/i,
+  /winning numbers/i,
+  /\bsweepstakes\b/i,
+  /\bgiveaway\b/i,
+
+  // Sponsored / ad markers
+  /\bsponsored\b/i,
+  /\badvertisement\b/i,
+  /\(ad\)/i,
+  /paid partnership/i,
 ];
 
 function isJunk(title) {
