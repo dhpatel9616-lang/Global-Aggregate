@@ -223,10 +223,76 @@ function isObscureSports(row) {
   return !MAJOR_SPORTS_PATTERNS.some((pattern) => pattern.test(row.title));
 }
 
+// International/pan-regional wire services -- legitimate journalism, not
+// tied to any single country, so they're exempt from the per-country
+// allowlist check below rather than required to match one specific country.
+const WIRE_SERVICE_DOMAINS = [
+  'reuters.com', 'france24.com', 'euronews.com', 'africanews.com',
+  'menafn.com', 'channelnewsasia.com', 'almonitor.com',
+];
+
+// Major national outlets per country. A country-tagged article whose source
+// domain isn't in its list (and isn't a wire service above) gets filtered as
+// too-obscure/off-topic for that country -- this is the real fix for
+// "national news only": pattern-matching titles can't tell hyperlocal from
+// national, but a known-outlets list can.
+// NOTE: this is necessarily incomplete -- built from what's actually
+// appearing in the data plus general knowledge, not exhaustive research into
+// every regional/minority-language outlet per country. Expect to add entries
+// over time rather than treating this as final.
+const ALLOWLIST_BY_COUNTRY = {
+  AR: ['batimes.com.ar', 'clarin.com', 'lanacion.com.ar', 'infobae.com', 'canal26.com', 'buenosairesherald.com'],
+  AU: ['smh.com.au', 'theage.com.au', 'abc.net.au', 'news.com.au', 'theaustralian.com.au', 'heraldsun.com.au', '7news.com.au', '9news.com.au', 'thewest.com.au', 'perthnow.com.au', 'ntnews.com.au', 'drive.com.au'],
+  BD: ['thedailystar.net', 'dhakatribune.com', 'tbsnews.net', 'prothomalo.com', 'daily-sun.com'],
+  BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br', 'riotimesonline.com'],
+  CA: ['cbc.ca', 'ctvnews.ca', 'globalnews.ca', 'theglobeandmail.com', 'nationalpost.com', 'thestar.com'],
+  CD: ['radiookapi.net', 'actualite.cd'],
+  CN: ['xinhuanet.com', 'chinadaily.com.cn', 'cgtn.com', 'scmp.com', 'globaltimes.cn', 'ecns.cn'],
+  CO: ['elespectador.com', 'eltiempo.com', 'semana.com', 'vanguardia.com'],
+  DE: ['dw.com', 'spiegel.de', 'faz.net', 'sueddeutsche.de', 'thelocal.de', 'zeit.de', 'tagesschau.de'],
+  EG: ['egypttoday.com', 'egyptindependent.com', 'ahram.org.eg', 'dailynewsegypt.com'],
+  ES: ['elpais.com', 'elmundo.es', 'abc.es', 'thelocal.es'],
+  ET: ['ena.et', 'thereporterethiopia.com', 'addisstandard.com'],
+  FR: ['lefigaro.fr', 'lemonde.fr', 'francetvinfo.fr', 'thelocal.fr', 'leparisien.fr', 'lesechos.fr'],
+  GB: ['bbc.co.uk', 'theguardian.com', 'thetimes.co.uk', 'telegraph.co.uk', 'independent.co.uk', 'skynews.com', 'itv.com'],
+  ID: ['thejakartapost.com', 'tempo.co', 'kompas.com', 'antaranews.com', 'jakartaglobe.id'],
+  IN: ['timesofindia.com', 'hindustantimes.com', 'ndtv.com', 'thehindu.com', 'indianexpress.com', 'news18.com'],
+  IR: ['en.irna.ir', 'mehrnews.com', 'presstv.ir', 'tehrantimes.com', 'irna.ir'],
+  IT: ['ansa.it', 'corriere.it', 'repubblica.it', 'tgcom24.mediaset.it', 'ilsole24ore.com'],
+  JP: ['japantimes.co.jp', 'japantoday.com', 'asahi.com', 'mainichi.jp', 'nhk.or.jp', 'kyodonews.net'],
+  KE: ['nation.africa', 'standardmedia.co.ke', 'capitalfm.co.ke', 'citizen.digital', 'the-star.co.ke'],
+  MX: ['eluniversal.com.mx', 'milenio.com', 'jornada.com.mx', 'mexiconewsdaily.com', 'elsoldemexico.com.mx'],
+  NG: ['vanguardngr.com', 'punchng.com', 'thenationonlineng.net', 'premiumtimesng.com', 'dailypost.ng', 'businessday.ng'],
+  PH: ['inquirer.net', 'philstar.com', 'manilatimes.net', 'rappler.com', 'gmanetwork.com', 'abs-cbn.com', 'sunstar.com.ph', 'mb.com.ph', 'tribune.net.ph'],
+  PK: ['dawn.com', 'thenews.com.pk', 'tribune.com.pk', 'geo.tv', 'arynews.tv', 'dunyanews.tv', 'pakobserver.net', 'dailytimes.com.pk', 'brecorder.com', 'nation.com.pk'],
+  RU: ['tass.com', 'rt.com', 'themoscowtimes.com', 'interfax.com'],
+  TR: ['aa.com.tr', 'dailysabah.com', 'hurriyetdailynews.com', 'trtworld.com', 'birgun.net'],
+  TZ: ['thecitizen.co.tz', 'dailynews.co.tz', 'ippmedia.com'],
+  US: ['usatoday.com', 'nypost.com', 'nytimes.com', 'washingtonpost.com', 'cnn.com', 'apnews.com', 'npr.org', 'foxnews.com'],
+  VN: ['vietnamnews.vn', 'vietnamplus.vn', 'tuoitrenews.vn', 'vnexpress.net', 'sggpnews.org.vn'],
+  ZA: ['iol.co.za', 'timeslive.co.za', 'news24.com', 'sabcnews.com', 'ewn.co.za', 'citizen.co.za', 'sowetanlive.co.za'],
+};
+
+function isWireService(source) {
+  if (!source) return false;
+  const normalized = source.toLowerCase();
+  return WIRE_SERVICE_DOMAINS.some((domain) => normalized.includes(domain));
+}
+
+function failsNationalAllowlist(row) {
+  const list = ALLOWLIST_BY_COUNTRY[row.country];
+  if (!list) return false; // no allowlist yet for this country -- don't filter, fall back to pattern-based junk rules only
+  if (isWireService(row.source)) return false;
+  if (!row.source) return true;
+  const normalized = row.source.toLowerCase();
+  return !list.some((domain) => normalized.includes(domain));
+}
+
 function isJunk(row) {
   if (!row.title) return true;
   if (isBlockedSource(row.source)) return true;
   if (isObscureSports(row)) return true;
+  if (failsNationalAllowlist(row)) return true;
   return JUNK_PATTERNS.some((pattern) => pattern.test(row.title));
 }
 
@@ -282,6 +348,22 @@ async function upsertRows(countryName, rows, seenTitles) {
   return { country: countryName, inserted: deduped.length };
 }
 
+// Extracts a readable domain from a URL to use as the source label.
+// All three APIs return source info in a different format (NewsData: a slug
+// like "aa_tr", GNews: a display name, Currents: nothing usable at all), so
+// deriving the domain from the article's own URL is the one thing that's
+// consistent across all three — needed so blocklist/allowlist matching
+// actually works uniformly instead of silently missing entries whose slug
+// happened not to match (this is why openpr/bignewsnetwork/chinanationalnews
+// were still leaking through the existing blocklist despite being listed).
+function domainFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function fetchNewsData(country) {
   const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_API_KEY}&country=${country.code.toLowerCase()}&language=en`;
   const res = await fetch(url);
@@ -291,7 +373,7 @@ async function fetchNewsData(country) {
   const rows = (data.results || [])
     .filter((item) => item.title && item.link)
     .map((item) => ({
-      source: item.source_id || 'NewsData.io',
+      source: domainFromUrl(item.link),
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
@@ -312,7 +394,7 @@ async function fetchGNews(country) {
   const rows = data.articles
     .filter((item) => item.title && item.url)
     .map((item) => ({
-      source: (item.source && item.source.name) || 'GNews',
+      source: domainFromUrl(item.url),
       country: country.code,
       topic: 'World',
       title: item.title,
@@ -321,16 +403,6 @@ async function fetchGNews(country) {
       published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : null,
     }));
   return rows;
-}
-
-// Extracts a readable domain from a URL to use as the source label
-// (used for Currents, which doesn't return a publisher name in its response).
-function domainFromUrl(url) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return 'unknown';
-  }
 }
 
 async function fetchCurrents(country) {
