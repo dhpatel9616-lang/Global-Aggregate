@@ -226,9 +226,18 @@ function isObscureSports(row) {
 // International/pan-regional wire services -- legitimate journalism, not
 // tied to any single country, so they're exempt from the per-country
 // allowlist check below rather than required to match one specific country.
+// menafn.com was removed from this list after repeated evidence it's
+// overwhelmingly corporate PR/press-release syndication (varying partner
+// names in its dateline -- "Global Industrial Parts Inc.", "AsiaNet News",
+// "IANS", "PR Newswire" -- made it impractical to pattern-match every
+// variant) rather than journalism. It's now treated as an ordinary source,
+// which blocks it outright since it isn't on any country's allowlist.
+// TRADEOFF: this loses the occasional genuine wire piece MENAFN syndicates
+// (e.g. real Ukrinform commentary saw earlier) along with the PR spam.
+// Given how consistently it's shown up as junk, that's the right trade.
 const WIRE_SERVICE_DOMAINS = [
   'reuters.com', 'france24.com', 'euronews.com', 'africanews.com',
-  'menafn.com', 'channelnewsasia.com', 'almonitor.com',
+  'channelnewsasia.com', 'almonitor.com',
 ];
 
 // Major national outlets per country. A country-tagged article whose source
@@ -271,6 +280,26 @@ const ALLOWLIST_BY_COUNTRY = {
   US: ['usatoday.com', 'nypost.com', 'nytimes.com', 'washingtonpost.com', 'cnn.com', 'apnews.com', 'npr.org', 'foxnews.com'],
   VN: ['vietnamnews.vn', 'vietnamplus.vn', 'tuoitrenews.vn', 'vnexpress.net', 'sggpnews.org.vn'],
   ZA: ['iol.co.za', 'timeslive.co.za', 'news24.com', 'sabcnews.com', 'ewn.co.za', 'citizen.co.za', 'sowetanlive.co.za'],
+  // -- Stage 2 batch (added together, cross-checked against the English-only
+  // constraint -- several of these countries' actual major domestic press
+  // isn't English, so these are deliberately the English-language outlets,
+  // not necessarily the single biggest paper in the country. Expect thinner
+  // volume from CL/PE/KR/TH/PL/MA as a direct consequence, not a new bug.
+  KR: ['koreaherald.com', 'koreatimes.co.kr', 'yna.co.kr', 'koreajoongangdaily.joins.com'],
+  SA: ['arabnews.com', 'saudigazette.com.sa', 'spa.gov.sa'],
+  AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae'],
+  TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com'],
+  MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com'],
+  SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com'],
+  PL: ['thefirstnews.com', 'notesfrompoland.com', 'polandin.com'],
+  UA: ['kyivindependent.com', 'kyivpost.com', 'pravda.com.ua'],
+  NL: ['nltimes.nl', 'dutchnews.nl'],
+  SE: ['thelocal.se', 'sverigesradio.se'],
+  GH: ['myjoyonline.com', 'graphic.com.gh', 'citinewsroom.com', 'ghanaweb.com'],
+  MA: ['moroccoworldnews.com', 'mapnews.ma'],
+  CL: ['santiagotimes.cl', 'biobiochile.cl'],
+  PE: ['perureports.com', 'andina.pe'],
+  NZ: ['nzherald.co.nz', 'stuff.co.nz', 'rnz.co.nz'],
 };
 
 function isWireService(source) {
@@ -287,36 +316,51 @@ const COUNTRY_NAME_BY_CODE = Object.fromEntries(countries.map((c) => [c.code, c.
 // out of the country name (e.g. "South Africa" -> "South African"). Extend
 // this list as needed rather than treating it as exhaustive.
 const COUNTRY_MENTION_ALIASES = {
-  US: ['united states', 'u.s.', 'usa', 'american'],
-  GB: ['united kingdom', 'britain', 'british', 'uk'],
-  ZA: ['south african'],
-  PH: ['filipino', 'philippine'],
-  KE: ['kenyan'],
-  NG: ['nigerian'],
-  EG: ['egyptian'],
-  TR: ['turkish', 'türkiye'],
-  RU: ['russian'],
-  CN: ['chinese'],
-  IN: ['indian'],
-  ID: ['indonesian'],
-  PK: ['pakistani'],
-  BD: ['bangladeshi'],
-  VN: ['vietnamese'],
-  JP: ['japanese'],
-  IR: ['iranian'],
-  IT: ['italian'],
-  FR: ['french'],
-  DE: ['german'],
-  ES: ['spanish'],
-  MX: ['mexican'],
-  BR: ['brazilian'],
-  AR: ['argentine', 'argentinian'],
-  CO: ['colombian'],
-  AU: ['australian'],
-  CA: ['canadian'],
-  CD: ['congolese'],
-  ET: ['ethiopian'],
-  TZ: ['tanzanian'],
+  US: ['united states', 'u.s.', 'usa', 'american', 'washington'],
+  GB: ['united kingdom', 'britain', 'british', 'uk', 'london'],
+  ZA: ['south african', 'johannesburg', 'pretoria', 'cape town'],
+  PH: ['filipino', 'philippine', 'manila'],
+  KE: ['kenyan', 'nairobi'],
+  NG: ['nigerian', 'lagos'],
+  EG: ['egyptian', 'cairo'],
+  TR: ['turkish', 'türkiye', 'istanbul', 'ankara'],
+  RU: ['russian', 'moscow', 'kremlin'],
+  CN: ['chinese', 'beijing', 'shanghai'],
+  IN: ['indian', 'delhi', 'mumbai'],
+  ID: ['indonesian', 'jakarta'],
+  PK: ['pakistani', 'islamabad', 'karachi'],
+  BD: ['bangladeshi', 'dhaka'],
+  VN: ['vietnamese', 'hanoi'],
+  JP: ['japanese', 'tokyo'],
+  IR: ['iranian', 'tehran'],
+  IT: ['italian', 'rome'],
+  FR: ['french', 'paris'],
+  DE: ['german', 'berlin'],
+  ES: ['spanish', 'madrid'],
+  MX: ['mexican', 'mexico city'],
+  BR: ['brazilian', 'rio de janeiro', 'brasilia'],
+  AR: ['argentine', 'argentinian', 'buenos aires'],
+  CO: ['colombian', 'bogota', 'bogotá'],
+  AU: ['australian', 'sydney', 'canberra'],
+  CA: ['canadian', 'ottawa', 'toronto'],
+  CD: ['congolese', 'kinshasa'],
+  ET: ['ethiopian', 'addis ababa'],
+  TZ: ['tanzanian', 'dar es salaam'],
+  KR: ['south korean', 'korean', 'seoul'],
+  SA: ['saudi', 'riyadh'],
+  AE: ['emirati', 'dubai', 'abu dhabi'],
+  TH: ['thai', 'bangkok'],
+  MY: ['malaysian', 'kuala lumpur'],
+  SG: ['singaporean'],
+  PL: ['polish', 'warsaw'],
+  UA: ['ukrainian', 'kyiv', 'kiev'],
+  NL: ['dutch', 'amsterdam'],
+  SE: ['swedish', 'stockholm'],
+  GH: ['ghanaian', 'accra'],
+  MA: ['moroccan', 'rabat', 'casablanca'],
+  CL: ['chilean', 'santiago'],
+  PE: ['peruvian', 'lima'],
+  NZ: ['new zealand', 'kiwi', 'wellington', 'auckland'],
 };
 
 function mentionsCountry(text, countryCode) {
@@ -373,8 +417,7 @@ function isNonEnglish(text) {
 // manilatimes.net) -- outlet allowlisting alone can't catch this, since the
 // outlet itself is real. Checked against both title and description.
 const PR_WIRE_MARKERS = [
-  /\(MENAFN\s*-\s*PR ?Newswire\)/i,
-  /\(MENAFN\s*-\s*Globe ?Newswire\)/i,
+  /\(MENAFN\s*-\s*[^)]+\)/i, // MENAFN's dateline format varies by syndication partner -- catch the pattern generically, not specific partner names
   /\/PRNewswire\//i,
   /\(GLOBE ?NEWSWIRE\)/i,
   /\(PR ?NEWSWIRE\)/i,
@@ -526,15 +569,52 @@ async function fetchCurrents(country) {
   return rows;
 }
 
-// Round-robin assignment: every 3rd country goes to the same source,
-// splitting the 30 countries into 10/10/10 across the three providers.
+// Weighted allocation instead of even thirds. The three providers do NOT
+// have equal capacity: GNews caps around 100 req/day, NewsData around
+// 200/day, Currents 600-1,000/day. An even three-way split already put
+// GNews at 80% of its cap at just 30 countries -- growing further with even
+// thirds would break GNews first, long before NewsData or Currents felt any
+// pressure. These caps keep GNews frozen near its current load and let
+// NewsData/Currents absorb growth, each with a ~20% safety margin below
+// their real ceiling (matching the margin the original design already used).
+// Currents has no listed cap since even 60 countries (480 req/day) stays
+// comfortably under its 600-1,000/day range -- revisit if that changes.
+const SOURCE_CAPS = {
+  'GNews': 10,        // ~80 req/day at 8 runs/day -- already near its 100/day cap, do not grow
+  'NewsData.io': 20,  // ~160 req/day -- safe margin under its 200/day cap
+  // Currents: uncapped here, absorbs everything beyond the two caps above
+};
+
 const SOURCES = [
   { name: 'NewsData.io', fetcher: fetchNewsData },
   { name: 'GNews', fetcher: fetchGNews },
   { name: 'Currents', fetcher: fetchCurrents },
 ];
 
+// Assigns each country a source by filling GNews and NewsData up to their
+// caps first (in countries.json order), then routing everything else to
+// Currents. Deterministic and easy to reason about; re-run this assignment
+// whenever countries.json changes rather than trying to preserve old
+// per-country assignments -- the caps are what matter, not stability of
+// which specific country landed on which source.
+function assignSources(countryList) {
+  const counts = { 'GNews': 0, 'NewsData.io': 0, 'Currents': 0 };
+  return countryList.map((country) => {
+    let sourceName;
+    if (counts['GNews'] < SOURCE_CAPS['GNews']) {
+      sourceName = 'GNews';
+    } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
+      sourceName = 'NewsData.io';
+    } else {
+      sourceName = 'Currents';
+    }
+    counts[sourceName]++;
+    return SOURCES.find((s) => s.name === sourceName);
+  });
+}
+
 async function main() {
+  const sourceAssignments = assignSources(countries);
   console.log(`Starting ingestion for ${countries.length} countries across ${SOURCES.length} sources...\n`);
 
   const seenTitles = await loadExistingTitles();
@@ -543,7 +623,7 @@ async function main() {
   const results = [];
   for (let i = 0; i < countries.length; i++) {
     const country = countries[i];
-    const source = SOURCES[i % SOURCES.length];
+    const source = sourceAssignments[i];
 
     try {
       const rows = await source.fetcher(country);
