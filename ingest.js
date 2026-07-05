@@ -279,13 +279,111 @@ function isWireService(source) {
   return WIRE_SERVICE_DOMAINS.some((domain) => normalized.includes(domain));
 }
 
+// Built from the real countries.json at runtime, not hardcoded, so it can't
+// drift out of sync with the actual country list.
+const COUNTRY_NAME_BY_CODE = Object.fromEntries(countries.map((c) => [c.code, c.name]));
+
+// A handful of countries whose demonym/common short form doesn't just fall
+// out of the country name (e.g. "South Africa" -> "South African"). Extend
+// this list as needed rather than treating it as exhaustive.
+const COUNTRY_MENTION_ALIASES = {
+  US: ['united states', 'u.s.', 'usa', 'american'],
+  GB: ['united kingdom', 'britain', 'british', 'uk'],
+  ZA: ['south african'],
+  PH: ['filipino', 'philippine'],
+  KE: ['kenyan'],
+  NG: ['nigerian'],
+  EG: ['egyptian'],
+  TR: ['turkish', 'türkiye'],
+  RU: ['russian'],
+  CN: ['chinese'],
+  IN: ['indian'],
+  ID: ['indonesian'],
+  PK: ['pakistani'],
+  BD: ['bangladeshi'],
+  VN: ['vietnamese'],
+  JP: ['japanese'],
+  IR: ['iranian'],
+  IT: ['italian'],
+  FR: ['french'],
+  DE: ['german'],
+  ES: ['spanish'],
+  MX: ['mexican'],
+  BR: ['brazilian'],
+  AR: ['argentine', 'argentinian'],
+  CO: ['colombian'],
+  AU: ['australian'],
+  CA: ['canadian'],
+  CD: ['congolese'],
+  ET: ['ethiopian'],
+  TZ: ['tanzanian'],
+};
+
+function mentionsCountry(text, countryCode) {
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  const name = COUNTRY_NAME_BY_CODE[countryCode];
+  if (name && normalized.includes(name.toLowerCase())) return true;
+  const aliases = COUNTRY_MENTION_ALIASES[countryCode] || [];
+  return aliases.some((alias) => normalized.includes(alias));
+}
+
+// Wire services are exempt from the outlet allowlist (they're not native to
+// any one country), but that used to mean ANY wire story got tagged with
+// whatever country was requested regardless of subject -- e.g. a Reuters NHL
+// contract story showing up under South Africa with no description at all.
+// This requires the wire story to actually be about (or at least mention)
+// the country it's tagged with, which is a much better bar than "came from
+// a request for that country" while still keeping legitimate wire coverage
+// of that country's real news.
+function wireFailsCountryRelevance(row) {
+  if (!isWireService(row.source)) return false;
+  const text = `${row.title} ${row.description || ''}`;
+  return !mentionsCountry(text, row.country);
+}
+
 function failsNationalAllowlist(row) {
   const list = ALLOWLIST_BY_COUNTRY[row.country];
   if (!list) return false; // no allowlist yet for this country -- don't filter, fall back to pattern-based junk rules only
-  if (isWireService(row.source)) return false;
+  if (isWireService(row.source)) return false; // wires skip the outlet-allowlist check, but still have to pass wireFailsCountryRelevance separately
   if (!row.source) return true;
   const normalized = row.source.toLowerCase();
   return !list.some((domain) => normalized.includes(domain));
+}
+
+// Defensive language filter. All three APIs are asked for language=en, but
+// that request isn't reliably honored by every provider/source -- e.g.
+// vanguardia.com (a legitimately allowlisted Colombian outlet) returned a
+// Spanish-language horoscope despite the language=en param. Catches non-
+// Latin scripts outright (safe, no false-positive risk for English text) and
+// Latin-script diacritics/punctuation that are common in Spanish/Portuguese/
+// French but essentially never appear in English news writing.
+function isNonEnglish(text) {
+  if (!text) return false;
+  // CJK, Arabic, Cyrillic, Hangul -- unambiguous, zero false-positive risk
+  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF]/.test(text)) return true;
+  // Diacritics and punctuation common in Spanish/Portuguese/French, rare in English news text
+  if (/[áéíóúñüãõçàâêîôû¿¡]/i.test(text)) return true;
+  return false;
+}
+
+// Press-release/wire-syndication markers. These show up in the description's
+// dateline even when the article ran on an otherwise-legitimate allowlisted
+// outlet (e.g. a GlobeNewswire furniture press release syndicated onto
+// manilatimes.net) -- outlet allowlisting alone can't catch this, since the
+// outlet itself is real. Checked against both title and description.
+const PR_WIRE_MARKERS = [
+  /\(MENAFN\s*-\s*PR ?Newswire\)/i,
+  /\(MENAFN\s*-\s*Globe ?Newswire\)/i,
+  /\/PRNewswire\//i,
+  /\(GLOBE ?NEWSWIRE\)/i,
+  /\(PR ?NEWSWIRE\)/i,
+  /\(BUSINESS ?WIRE\)/i,
+];
+
+function isPrWireContent(row) {
+  const text = `${row.title} ${row.description || ''}`;
+  return PR_WIRE_MARKERS.some((pattern) => pattern.test(text));
 }
 
 function isJunk(row) {
@@ -293,6 +391,9 @@ function isJunk(row) {
   if (isBlockedSource(row.source)) return true;
   if (isObscureSports(row)) return true;
   if (failsNationalAllowlist(row)) return true;
+  if (wireFailsCountryRelevance(row)) return true;
+  if (isNonEnglish(row.title) || isNonEnglish(row.description)) return true;
+  if (isPrWireContent(row)) return true;
   return JUNK_PATTERNS.some((pattern) => pattern.test(row.title));
 }
 
