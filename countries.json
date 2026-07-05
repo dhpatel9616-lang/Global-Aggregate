@@ -34,4 +34,20 @@
   { "name": "Argentina", "code": "AR", "continent": "South America" },
 
   { "name": "Australia", "code": "AU", "continent": "Oceania" }
+  [
+  { "name": "South Korea", "code": "KR", "continent": "Asia" },
+  { "name": "Saudi Arabia", "code": "SA", "continent": "Asia" },
+  { "name": "United Arab Emirates", "code": "AE", "continent": "Asia" },
+  { "name": "Thailand", "code": "TH", "continent": "Asia" },
+  { "name": "Malaysia", "code": "MY", "continent": "Asia" },
+  { "name": "Singapore", "code": "SG", "continent": "Asia" },
+  { "name": "Poland", "code": "PL", "continent": "Europe" },
+  { "name": "Ukraine", "code": "UA", "continent": "Europe" },
+  { "name": "Netherlands", "code": "NL", "continent": "Europe" },
+  { "name": "Sweden", "code": "SE", "continent": "Europe" },
+  { "name": "Ghana", "code": "GH", "continent": "Africa" },
+  { "name": "Morocco", "code": "MA", "continent": "Africa" },
+  { "name": "Chile", "code": "CL", "continent": "South America" },
+  { "name": "Peru", "code": "PE", "continent": "South America" },
+  { "name": "New Zealand", "code": "NZ", "continent": "Oceania" }
 ]
