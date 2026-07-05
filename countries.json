@@ -9,7 +9,6 @@
   { "name": "Vietnam", "code": "VN", "continent": "Asia" },
   { "name": "Iran", "code": "IR", "continent": "Asia" },
   { "name": "Turkey", "code": "TR", "continent": "Asia" },
-
   { "name": "Nigeria", "code": "NG", "continent": "Africa" },
   { "name": "Ethiopia", "code": "ET", "continent": "Africa" },
   { "name": "Egypt", "code": "EG", "continent": "Africa" },
@@ -17,24 +16,19 @@
   { "name": "Tanzania", "code": "TZ", "continent": "Africa" },
   { "name": "South Africa", "code": "ZA", "continent": "Africa" },
   { "name": "Kenya", "code": "KE", "continent": "Africa" },
-
   { "name": "Russia", "code": "RU", "continent": "Europe" },
   { "name": "Germany", "code": "DE", "continent": "Europe" },
   { "name": "United Kingdom", "code": "GB", "continent": "Europe" },
   { "name": "France", "code": "FR", "continent": "Europe" },
   { "name": "Italy", "code": "IT", "continent": "Europe" },
   { "name": "Spain", "code": "ES", "continent": "Europe" },
-
   { "name": "United States", "code": "US", "continent": "North America" },
   { "name": "Mexico", "code": "MX", "continent": "North America" },
   { "name": "Canada", "code": "CA", "continent": "North America" },
-
   { "name": "Brazil", "code": "BR", "continent": "South America" },
   { "name": "Colombia", "code": "CO", "continent": "South America" },
   { "name": "Argentina", "code": "AR", "continent": "South America" },
-
-  { "name": "Australia", "code": "AU", "continent": "Oceania" }
-  [
+  { "name": "Australia", "code": "AU", "continent": "Oceania" },
   { "name": "South Korea", "code": "KR", "continent": "Asia" },
   { "name": "Saudi Arabia", "code": "SA", "continent": "Asia" },
   { "name": "United Arab Emirates", "code": "AE", "continent": "Asia" },
