@@ -430,15 +430,26 @@ function isPrWireContent(row) {
   return PR_WIRE_MARKERS.some((pattern) => pattern.test(text));
 }
 
+// Returns the specific reason a row was filtered, or null if it's not junk.
+// Checks run in the same order as before -- this is a pure refactor for
+// diagnosability, not a behavior change. Added after finding that "N filtered
+// out" counts alone weren't enough to diagnose why entire countries (e.g.
+// Ghana: 20/20 filtered) were coming back empty -- without knowing WHICH
+// check caught them, every fix attempt was a guess.
+function getJunkReason(row) {
+  if (!row.title) return 'missing_title';
+  if (isBlockedSource(row.source)) return 'blocked_source';
+  if (isObscureSports(row)) return 'obscure_sports';
+  if (failsNationalAllowlist(row)) return 'not_on_country_allowlist';
+  if (wireFailsCountryRelevance(row)) return 'wire_not_relevant_to_country';
+  if (isNonEnglish(row.title) || isNonEnglish(row.description)) return 'non_english';
+  if (isPrWireContent(row)) return 'pr_wire_content';
+  if (JUNK_PATTERNS.some((pattern) => pattern.test(row.title))) return 'junk_pattern_match';
+  return null;
+}
+
 function isJunk(row) {
-  if (!row.title) return true;
-  if (isBlockedSource(row.source)) return true;
-  if (isObscureSports(row)) return true;
-  if (failsNationalAllowlist(row)) return true;
-  if (wireFailsCountryRelevance(row)) return true;
-  if (isNonEnglish(row.title) || isNonEnglish(row.description)) return true;
-  if (isPrWireContent(row)) return true;
-  return JUNK_PATTERNS.some((pattern) => pattern.test(row.title));
+  return getJunkReason(row) !== null;
 }
 
 // Same story often gets republished verbatim across sister publications
@@ -459,7 +470,20 @@ async function loadExistingTitles() {
 }
 
 async function upsertRows(countryName, rows, seenTitles) {
-  const noJunk = rows.filter((row) => !isJunk(row));
+  const noJunk = [];
+  const reasonCounts = {};
+  const blockedSources = new Set();
+  for (const row of rows) {
+    const reason = getJunkReason(row);
+    if (reason === null) {
+      noJunk.push(row);
+    } else {
+      reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+      if (reason === 'not_on_country_allowlist' && row.source) {
+        blockedSources.add(row.source);
+      }
+    }
+  }
   const junkSkipped = rows.length - noJunk.length;
 
   const deduped = [];
@@ -474,7 +498,13 @@ async function upsertRows(countryName, rows, seenTitles) {
     deduped.push(row);
   }
 
-  if (junkSkipped > 0) console.log(`[${countryName}] Filtered out ${junkSkipped} junk/non-news item(s).`);
+  if (junkSkipped > 0) {
+    const breakdown = Object.entries(reasonCounts).map(([reason, count]) => `${reason}: ${count}`).join(', ');
+    console.log(`[${countryName}] Filtered out ${junkSkipped} junk/non-news item(s) -- ${breakdown}.`);
+    if (blockedSources.size > 0) {
+      console.log(`[${countryName}] Sources blocked by allowlist: ${[...blockedSources].join(', ')}`);
+    }
+  }
   if (dupeSkipped > 0) console.log(`[${countryName}] Skipped ${dupeSkipped} duplicate/syndicated title(s).`);
 
   if (deduped.length === 0) {
