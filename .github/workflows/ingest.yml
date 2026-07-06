@@ -1,27 +1,25 @@
 name: Ingest News Articles
-
 on:
   # Lets you click "Run workflow" manually in GitHub's Actions tab
   workflow_dispatch:
-  # Runs automatically every 30 minutes
+  # Runs automatically every 3 hours. Deliberately NOT on the hour (:00) --
+  # GitHub's own docs note scheduled workflows are more likely to be delayed
+  # right at the top of the hour, since that's when the highest volume of
+  # scheduled jobs across all of GitHub compete for the same window.
   schedule:
-    - cron: '0 */3 * * *'
-
+    - cron: '17 */3 * * *'
 jobs:
   ingest:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: Install dependencies
         run: npm install
-
       - name: Run ingestion script
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
