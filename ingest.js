@@ -246,6 +246,7 @@ const WIRE_SERVICE_DOMAINS = [
   'channelnewsasia.com', 'almonitor.com',
   'bbc.com', 'bbc.co.uk', 'theguardian.com', 'apnews.com',
   'aljazeera.com', 'dw.com',
+  'middleeasteye.net', 'euractiv.com', 'allafrica.com',
 ];
 
 // Major national outlets per country. A country-tagged article whose source
@@ -293,10 +294,10 @@ const ALLOWLIST_BY_COUNTRY = {
   // isn't English, so these are deliberately the English-language outlets,
   // not necessarily the single biggest paper in the country. Expect thinner
   // volume from CL/PE/KR/TH/PL/MA as a direct consequence, not a new bug.
-  KR: ['koreaherald.com', 'koreatimes.co.kr', 'yna.co.kr', 'koreajoongangdaily.joins.com'],
+  KR: ['koreaherald.com', 'koreatimes.co.kr', 'yna.co.kr', 'koreajoongangdaily.joins.com', 'english.hani.co.kr', 'businesskorea.co.kr', 'koreaittimes.com'],
   SA: ['arabnews.com', 'saudigazette.com.sa', 'spa.gov.sa'],
   AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae', 'emirates247.com'],
-  TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com'],
+  TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com', 'thephuketnews.com'],
   MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com', 'malaysiakini.com', 'bernama.com'],
   SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com', 'businesstimes.com.sg', 'theindependent.sg', 'asiaone.com'],
   PL: ['thefirstnews.com', 'notesfrompoland.com', 'polandin.com'],
