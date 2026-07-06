@@ -645,6 +645,27 @@ const SOURCES = [
   { name: 'Currents', fetcher: fetchCurrents },
 ];
 
+// Manual overrides -- specific countries forced onto a different source
+// than the generic weighted-fill would assign, based on real evidence that
+// their default source consistently fails for them:
+//   PL: two consecutive Currents runs, zero genuine Polish outlets among 40
+//       filtered items -- looks like a real Currents coverage/tagging gap.
+//   UA, MA: persistent Currents API errors, 2/2 runs each -- not transient.
+//   CL: consistently zero raw results via Currents, both runs checked.
+// Applied ON TOP of the normal caps below (not counted against them) --
+// this deliberately trades some of NewsData's safety margin (20 countries
+// -> 24, ~192 of its 200/day cap) for a real test of a different provider,
+// since all 4 were producing zero value via Currents anyway. No downside
+// if NewsData also comes up empty for them; real upside if it doesn't.
+// If this doesn't help after a few runs, accept these as genuine gaps
+// rather than continuing to reassign indefinitely.
+const SOURCE_OVERRIDES = {
+  PL: 'NewsData.io',
+  UA: 'NewsData.io',
+  MA: 'NewsData.io',
+  CL: 'NewsData.io',
+};
+
 // Assigns each country a source by filling GNews and NewsData up to their
 // caps first (in countries.json order), then routing everything else to
 // Currents. Deterministic and easy to reason about; re-run this assignment
@@ -655,7 +676,9 @@ function assignSources(countryList) {
   const counts = { 'GNews': 0, 'NewsData.io': 0, 'Currents': 0 };
   return countryList.map((country) => {
     let sourceName;
-    if (counts['GNews'] < SOURCE_CAPS['GNews']) {
+    if (SOURCE_OVERRIDES[country.code]) {
+      sourceName = SOURCE_OVERRIDES[country.code];
+    } else if (counts['GNews'] < SOURCE_CAPS['GNews']) {
       sourceName = 'GNews';
     } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
       sourceName = 'NewsData.io';
