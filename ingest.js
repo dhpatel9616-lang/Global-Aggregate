@@ -236,9 +236,16 @@ function isObscureSports(row) {
 // TRADEOFF: this loses the occasional genuine wire piece MENAFN syndicates
 // (e.g. real Ukrinform commentary saw earlier) along with the PR spam.
 // Given how consistently it's shown up as junk, that's the right trade.
+// BBC/Guardian/AP/Al Jazeera/DW added after log evidence showed them being
+// blocked across nearly every country's allowlist (Indonesia, Pakistan,
+// Iran, Ethiopia, DR Congo, Saudi Arabia, UAE, Poland, Sweden) -- same
+// category of international outlet as Reuters, same treatment: exempt from
+// the outlet allowlist but still must pass wireFailsCountryRelevance.
 const WIRE_SERVICE_DOMAINS = [
   'reuters.com', 'france24.com', 'euronews.com', 'africanews.com',
   'channelnewsasia.com', 'almonitor.com',
+  'bbc.com', 'bbc.co.uk', 'theguardian.com', 'apnews.com',
+  'aljazeera.com', 'dw.com',
 ];
 
 // Major national outlets per country. A country-tagged article whose source
@@ -262,18 +269,18 @@ const ALLOWLIST_BY_COUNTRY = {
   DE: ['dw.com', 'spiegel.de', 'faz.net', 'sueddeutsche.de', 'thelocal.de', 'zeit.de', 'tagesschau.de'],
   EG: ['egypttoday.com', 'egyptindependent.com', 'ahram.org.eg', 'dailynewsegypt.com'],
   ES: ['elpais.com', 'elmundo.es', 'abc.es', 'thelocal.es'],
-  ET: ['ena.et', 'thereporterethiopia.com', 'addisstandard.com'],
+  ET: ['ena.et', 'thereporterethiopia.com', 'addisstandard.com', 'ethiopianreporter.com'],
   FR: ['lefigaro.fr', 'lemonde.fr', 'francetvinfo.fr', 'thelocal.fr', 'leparisien.fr', 'lesechos.fr'],
   GB: ['bbc.co.uk', 'theguardian.com', 'thetimes.co.uk', 'telegraph.co.uk', 'independent.co.uk', 'skynews.com', 'itv.com'],
   ID: ['thejakartapost.com', 'tempo.co', 'kompas.com', 'antaranews.com', 'jakartaglobe.id'],
-  IN: ['timesofindia.com', 'hindustantimes.com', 'ndtv.com', 'thehindu.com', 'indianexpress.com', 'news18.com'],
+  IN: ['timesofindia.indiatimes.com', 'hindustantimes.com', 'ndtv.com', 'thehindu.com', 'indianexpress.com', 'news18.com', 'moneycontrol.com'],
   IR: ['en.irna.ir', 'mehrnews.com', 'presstv.ir', 'tehrantimes.com', 'irna.ir'],
   IT: ['ansa.it', 'corriere.it', 'repubblica.it', 'tgcom24.mediaset.it', 'ilsole24ore.com'],
   JP: ['japantimes.co.jp', 'japantoday.com', 'asahi.com', 'mainichi.jp', 'nhk.or.jp', 'kyodonews.net'],
   KE: ['nation.africa', 'standardmedia.co.ke', 'capitalfm.co.ke', 'citizen.digital', 'the-star.co.ke'],
   MX: ['eluniversal.com.mx', 'milenio.com', 'jornada.com.mx', 'mexiconewsdaily.com', 'elsoldemexico.com.mx'],
-  NG: ['vanguardngr.com', 'punchng.com', 'thenationonlineng.net', 'premiumtimesng.com', 'dailypost.ng', 'businessday.ng'],
-  PH: ['inquirer.net', 'philstar.com', 'manilatimes.net', 'rappler.com', 'gmanetwork.com', 'abs-cbn.com', 'sunstar.com.ph', 'mb.com.ph', 'tribune.net.ph'],
+  NG: ['vanguardngr.com', 'punchng.com', 'thenationonlineng.net', 'premiumtimesng.com', 'dailypost.ng', 'businessday.ng', 'legit.ng', 'dailytrust.com', 'newtelegraphng.com'],
+  PH: ['inquirer.net', 'philstar.com', 'manilatimes.net', 'rappler.com', 'gmanetwork.com', 'abs-cbn.com', 'sunstar.com.ph', 'mb.com.ph', 'tribune.net.ph', 'bworldonline.com'],
   PK: ['dawn.com', 'thenews.com.pk', 'tribune.com.pk', 'geo.tv', 'arynews.tv', 'dunyanews.tv', 'pakobserver.net', 'dailytimes.com.pk', 'brecorder.com', 'nation.com.pk'],
   RU: ['tass.com', 'rt.com', 'themoscowtimes.com', 'interfax.com'],
   TR: ['aa.com.tr', 'dailysabah.com', 'hurriyetdailynews.com', 'trtworld.com', 'birgun.net'],
@@ -288,15 +295,15 @@ const ALLOWLIST_BY_COUNTRY = {
   // volume from CL/PE/KR/TH/PL/MA as a direct consequence, not a new bug.
   KR: ['koreaherald.com', 'koreatimes.co.kr', 'yna.co.kr', 'koreajoongangdaily.joins.com'],
   SA: ['arabnews.com', 'saudigazette.com.sa', 'spa.gov.sa'],
-  AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae'],
+  AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae', 'emirates247.com'],
   TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com'],
-  MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com'],
-  SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com'],
+  MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com', 'malaysiakini.com', 'bernama.com'],
+  SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com', 'businesstimes.com.sg', 'theindependent.sg', 'asiaone.com'],
   PL: ['thefirstnews.com', 'notesfrompoland.com', 'polandin.com'],
   UA: ['kyivindependent.com', 'kyivpost.com', 'pravda.com.ua'],
   NL: ['nltimes.nl', 'dutchnews.nl'],
   SE: ['thelocal.se', 'sverigesradio.se'],
-  GH: ['myjoyonline.com', 'graphic.com.gh', 'citinewsroom.com', 'ghanaweb.com'],
+  GH: ['myjoyonline.com', 'graphic.com.gh', 'citinewsroom.com', 'ghanaweb.com', 'newsghana.com.gh'],
   MA: ['moroccoworldnews.com', 'mapnews.ma'],
   CL: ['santiagotimes.cl', 'biobiochile.cl'],
   PE: ['perureports.com', 'andina.pe'],
