@@ -168,6 +168,7 @@ const JUNK_PATTERNS = [
 // non-news sites that keep showing up mis-tagged as news by the APIs above.
 const BLOCKED_SOURCE_DOMAINS = [
   'github.com',
+  'dev.to', // developer tutorial/blogging platform, same category as github.com -- never news
   'legacy.com',
   'openpr.com',
   'chinanationalnews.com',
@@ -500,6 +501,21 @@ async function upsertRows(countryName, rows, seenTitles) {
 // actually works uniformly instead of silently missing entries whose slug
 // happened not to match (this is why openpr/bignewsnetwork/chinanationalnews
 // were still leaking through the existing blocklist despite being listed).
+// Caps description length. Some sources return a real full article body in
+// the description field instead of a short teaser (seen up to 15,000+
+// characters) -- inconsistent with the ~200-300 character summaries most
+// sources return, and a likely contributor to unpredictable "Read more"
+// behavior on the frontend, which is built and tested against short teasers.
+// Capping here keeps "description" meaning the same thing regardless of
+// which of the 3 APIs or which specific source produced it.
+const MAX_DESCRIPTION_LENGTH = 500;
+
+function capDescription(text) {
+  if (!text) return text;
+  if (text.length <= MAX_DESCRIPTION_LENGTH) return text;
+  return text.slice(0, MAX_DESCRIPTION_LENGTH).trim() + '...';
+}
+
 function domainFromUrl(url) {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
@@ -521,7 +537,7 @@ async function fetchNewsData(country) {
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
-      description: item.description || null,
+      description: capDescription(item.description) || null,
       url: item.link,
       published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
     }));
@@ -542,7 +558,7 @@ async function fetchGNews(country) {
       country: country.code,
       topic: 'World',
       title: item.title,
-      description: item.description || null,
+      description: capDescription(item.description) || null,
       url: item.url,
       published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : null,
     }));
@@ -562,7 +578,7 @@ async function fetchCurrents(country) {
       country: country.code,
       topic: mapTopic(item.category),
       title: item.title,
-      description: item.description || null,
+      description: capDescription(item.description) || null,
       url: item.url,
       published_at: item.published ? new Date(item.published).toISOString() : null,
     }));
