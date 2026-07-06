@@ -278,7 +278,7 @@ const ALLOWLIST_BY_COUNTRY = {
   IR: ['en.irna.ir', 'mehrnews.com', 'presstv.ir', 'tehrantimes.com', 'irna.ir'],
   IT: ['ansa.it', 'corriere.it', 'repubblica.it', 'tgcom24.mediaset.it', 'ilsole24ore.com'],
   JP: ['japantimes.co.jp', 'japantoday.com', 'asahi.com', 'mainichi.jp', 'nhk.or.jp', 'kyodonews.net'],
-  KE: ['nation.africa', 'standardmedia.co.ke', 'capitalfm.co.ke', 'citizen.digital', 'the-star.co.ke'],
+  KE: ['nation.africa', 'standardmedia.co.ke', 'capitalfm.co.ke', 'capitalfm.africa', 'citizen.digital', 'the-star.co.ke', 'kbc.co.ke', 'k24.digital', 'peopledaily.digital'],
   MX: ['eluniversal.com.mx', 'milenio.com', 'jornada.com.mx', 'mexiconewsdaily.com', 'elsoldemexico.com.mx'],
   NG: ['vanguardngr.com', 'punchng.com', 'thenationonlineng.net', 'premiumtimesng.com', 'dailypost.ng', 'businessday.ng', 'legit.ng', 'dailytrust.com', 'newtelegraphng.com'],
   PH: ['inquirer.net', 'philstar.com', 'manilatimes.net', 'rappler.com', 'gmanetwork.com', 'abs-cbn.com', 'sunstar.com.ph', 'mb.com.ph', 'tribune.net.ph', 'bworldonline.com'],
