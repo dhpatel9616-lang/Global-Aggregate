@@ -94,6 +94,13 @@ const FEED_URLS_BY_COUNTRY = {
   KE: [
     { source: 'nation.africa', feedUrl: 'https://nation.africa/kenya/rss' },
   ],
+  // Fetch-verified via search this session (real, current feed URLs)
+  PK: [
+    { source: 'dawn.com', feedUrl: 'https://www.dawn.com/feeds/home' },
+  ],
+  TH: [
+    { source: 'bangkokpost.com', feedUrl: 'https://www.bangkokpost.com/rss/data/topstories.xml' },
+  ],
   GH: [
     { source: 'myjoyonline.com', feedUrl: 'https://www.myjoyonline.com/feed/' },
   ],
