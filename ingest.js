@@ -113,6 +113,9 @@ const JUNK_PATTERNS = [
   /\btop \d+\b.*(things|reasons|ways) (you|to)/i,
   // NEW: buying-guide/roundup listicles (e.g. "Best used hybrid cars under $50,000")
   /\bbest .{0,40}(under|over) \$\d/i,
+  // NEW: generic "best X to buy in [year]" roundups -- found via RSS pipeline testing,
+  // the price-threshold pattern above didn't catch this broader listicle format
+  /\bbest .{0,40}\b(to buy|to buy in \d{4}|of \d{4})\b/i,
 
   // Lottery / sweepstakes / giveaways
   /lottery numbers/i,
@@ -739,7 +742,31 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Ingestion failed:', err);
-  process.exit(1);
-});
+// Only auto-run when executed directly (node ingest.js), not when required
+// as a module -- ingest-rss.js imports the filtering functions below without
+// wanting to trigger a full NewsData/GNews/Currents run as a side effect.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Ingestion failed:', err);
+    process.exit(1);
+  });
+}
+
+// Shared with ingest-rss.js -- one filtering brain, two ingestion paths.
+// Deliberately NOT re-exporting the API fetchers (fetchNewsData/fetchGNews/
+// fetchCurrents) or main() itself -- RSS has its own fetch/parse logic, it
+// only needs the junk-detection and text-processing functions.
+module.exports = {
+  getJunkReason,
+  isJunk,
+  capDescription,
+  mentionsCountry,
+  isNonEnglish,
+  isPrWireContent,
+  mapTopic,
+  normalizeTitle,
+  COUNTRY_NAME_BY_CODE,
+  ALLOWLIST_BY_COUNTRY,
+  BLOCKED_SOURCE_DOMAINS,
+  isBlockedSource,
+};
