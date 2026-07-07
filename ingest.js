@@ -52,10 +52,29 @@ function sleep(ms) {
 
 // Normalizes various category label formats onto our fixed MVP topic list.
 // Anything unrecognized falls back to "World".
+//
+// The 3 JSON APIs always give plain strings here, but RSS/XML parsing (via
+// xml2js, which rss-parser uses internally) can produce complex objects for
+// <category> elements instead of simple strings -- sometimes null-prototype
+// objects with no toString()/valueOf(), which makes a plain String(x) call
+// throw "Cannot convert object to primitive value" rather than just
+// returning "[object Object]". That crashed an entire ingestion run instead
+// of just falling back to "World" for one bad value -- safeStringify below
+// never throws, regardless of what shape the input turns out to be.
+function safeStringify(value) {
+  if (typeof value === 'string') return value;
+  if (value == null) return '';
+  try {
+    return String(value);
+  } catch {
+    return '';
+  }
+}
+
 function mapTopic(rawCategory) {
   if (!rawCategory) return 'World';
   const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
-  const first = String(cats[0] || '').toLowerCase();
+  const first = safeStringify(cats[0]).toLowerCase();
 
   if (first.includes('polit')) return 'Politics';
   if (first.includes('business') || first.includes('economy') || first.includes('finance')) return 'Business';
