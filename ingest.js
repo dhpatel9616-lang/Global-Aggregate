@@ -159,6 +159,10 @@ const JUNK_PATTERNS = [
   /heartbreaking (setback|journey)/i,
   /against all odds/i,
 
+  // NEW: raw wire-service slugs that never got formatted into a real headline
+  // (e.g. "(SP)U.S.-HOUSTON-FOOTBALL-FIFA WORLD CUP-TRAINING-CANADA")
+  /^\(SP\)/i,
+
   // NEW: Reddit-formatted titles/threads mis-tagged as news
   /\[link\]\s*\[comments\]/i,
   /^\/u\/\w+/i,
@@ -169,6 +173,8 @@ const JUNK_PATTERNS = [
 const BLOCKED_SOURCE_DOMAINS = [
   'github.com',
   'dev.to', // developer tutorial/blogging platform, same category as github.com -- never news
+  'bevcanna.com', // cannabis beverage company site returning unrelated syndicated content (confirmed: Vietnamese-language sports posts)
+  'seekingalpha.com', // investment/stock analysis blog, not journalism
   'legacy.com',
   'openpr.com',
   'chinanationalnews.com',
@@ -405,18 +411,30 @@ function failsNationalAllowlist(row) {
 }
 
 // Defensive language filter. All three APIs are asked for language=en, but
-// that request isn't reliably honored by every provider/source -- e.g.
-// vanguardia.com (a legitimately allowlisted Colombian outlet) returned a
-// Spanish-language horoscope despite the language=en param. Catches non-
-// Latin scripts outright (safe, no false-positive risk for English text) and
-// Latin-script diacritics/punctuation that are common in Spanish/Portuguese/
-// French but essentially never appear in English news writing.
+// that request isn't reliably honored by every provider/source.
+//
+// CONFIRMED FAILURE MODE (this is why there are two separate checks below):
+// diacritics alone are not sufficient. A live check of Colombia's feed found
+// it was 100% Spanish-language articles, many with ZERO accented characters
+// at all ("Venezuela en la mala", "Salvar patria desde Miami") -- Spanish
+// doesn't require diacritics to exist, so a diacritic-only filter provably
+// cannot catch it reliably. The stopword-frequency check below is the real
+// fix for that. Vietnamese diacritics were also confirmed missing (found via
+// Vietnamese-language sports content from a mis-tagged Canada source) and
+// have been added to the script-range check.
 function isNonEnglish(text) {
   if (!text) return false;
-  // CJK, Arabic, Cyrillic, Hangul -- unambiguous, zero false-positive risk
-  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF]/.test(text)) return true;
-  // Diacritics and punctuation common in Spanish/Portuguese/French, rare in English news text
+  // CJK, Arabic, Cyrillic, Hangul, Vietnamese -- unambiguous, zero false-positive risk
+  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9]/.test(text)) return true;
+  // Diacritics/punctuation common in Spanish/Portuguese/French -- catches SOME but not all, see stopword check below
   if (/[áéíóúñüãõçàâêîôû¿¡]/i.test(text)) return true;
+  // Frequency-based check: common Spanish/Portuguese/French function words as
+  // whole words. A single incidental match (e.g. "la Liga" in English sports
+  // writing) isn't enough to flag -- requires 2+ distinct-position matches,
+  // which genuine foreign-language sentences have in abundance and genuine
+  // English essentially never does by coincidence.
+  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas)\b/gi);
+  if (stopwordMatches && stopwordMatches.length >= 2) return true;
   return false;
 }
 
