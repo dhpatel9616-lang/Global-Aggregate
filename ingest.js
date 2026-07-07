@@ -26,12 +26,22 @@ const required = {
   GNEWS_API_KEY,
   CURRENTS_API_KEY,
 };
-const missing = Object.entries(required)
-  .filter(([, v]) => !v)
-  .map(([k]) => k);
-if (missing.length > 0) {
-  console.error(`Missing required secrets: ${missing.join(', ')}. Check your GitHub secrets.`);
-  process.exit(1);
+// Only enforced when this file is run directly (node ingest.js), which needs
+// all 5. ingest-rss.js requires this file just to reuse the filtering
+// functions below -- it doesn't touch NewsData/GNews/Currents at all, so it
+// shouldn't be blocked by their secrets being absent. This check used to run
+// unconditionally at module load time, which meant simply requiring this
+// file from ingest-rss.js killed the whole process immediately, before
+// ingest-rss.js's own main() ever got a chance to run. ingest-rss.js does
+// its own check for the 2 secrets it actually needs.
+if (require.main === module) {
+  const missing = Object.entries(required)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+  if (missing.length > 0) {
+    console.error(`Missing required secrets: ${missing.join(', ')}. Check your GitHub secrets.`);
+    process.exit(1);
+  }
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
