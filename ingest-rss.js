@@ -38,7 +38,13 @@ if (missing.length > 0) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const parser = new Parser({ timeout: 10000 });
+// nation.africa returned a 403 with the default (generic/missing) User-Agent
+// rss-parser sends -- a common form of basic bot-blocking some sites apply.
+// A realistic browser User-Agent is a standard, low-risk workaround.
+const parser = new Parser({
+  timeout: 10000,
+  headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+});
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -142,7 +148,10 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
   const blockedSources = new Set();
   const clean = [];
   for (const row of rows) {
-    if (seenUrls.has(row.url)) continue; // already in DB or already seen this run
+    if (seenUrls.has(row.url)) {
+      reasonCounts['already_seen_url'] = (reasonCounts['already_seen_url'] || 0) + 1;
+      continue;
+    }
     const reason = getJunkReason(row);
     if (reason === null) {
       const key = normalizeTitle(row.title);
@@ -245,7 +254,14 @@ async function main() {
   console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s).`);
 
   console.log('\nClustering related stories across countries...');
-  const { error: clusterError } = await supabase.rpc('cluster_related_articles');
+  // RSS runs every 15 minutes, not every 3 hours like the API pipeline --
+  // the function's default process_window_hours (6h) was sized for that
+  // slower cadence. At RSS's frequency, a 6h window means re-scanning the
+  // same growing backlog ~24 times within that window, which is what caused
+  // a real timeout (confirmed: 478 of 483 articles in the last 6h were still
+  // unclustered at the time it failed). 1 hour comfortably covers several
+  // missed cycles' worth of buffer without re-scanning that much backlog.
+  const { error: clusterError } = await supabase.rpc('cluster_related_articles', { process_window_hours: 1 });
   if (clusterError) {
     console.error('Clustering failed (non-fatal):', clusterError.message);
   } else {
