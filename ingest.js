@@ -230,30 +230,12 @@ function isObscureSports(row) {
   return !MAJOR_SPORTS_PATTERNS.some((pattern) => pattern.test(row.title));
 }
 
-// International/pan-regional wire services -- legitimate journalism, not
-// tied to any single country, so they're exempt from the per-country
-// allowlist check below rather than required to match one specific country.
-// menafn.com was removed from this list after repeated evidence it's
-// overwhelmingly corporate PR/press-release syndication (varying partner
-// names in its dateline -- "Global Industrial Parts Inc.", "AsiaNet News",
-// "IANS", "PR Newswire" -- made it impractical to pattern-match every
-// variant) rather than journalism. It's now treated as an ordinary source,
-// which blocks it outright since it isn't on any country's allowlist.
-// TRADEOFF: this loses the occasional genuine wire piece MENAFN syndicates
-// (e.g. real Ukrinform commentary saw earlier) along with the PR spam.
-// Given how consistently it's shown up as junk, that's the right trade.
-// BBC/Guardian/AP/Al Jazeera/DW added after log evidence showed them being
-// blocked across nearly every country's allowlist (Indonesia, Pakistan,
-// Iran, Ethiopia, DR Congo, Saudi Arabia, UAE, Poland, Sweden) -- same
-// category of international outlet as Reuters, same treatment: exempt from
-// the outlet allowlist but still must pass wireFailsCountryRelevance.
-const WIRE_SERVICE_DOMAINS = [
-  'reuters.com', 'france24.com', 'euronews.com', 'africanews.com',
-  'channelnewsasia.com', 'almonitor.com',
-  'bbc.com', 'bbc.co.uk', 'theguardian.com', 'apnews.com',
-  'aljazeera.com', 'dw.com',
-  'middleeasteye.net', 'euractiv.com', 'allafrica.com',
-];
+// NOTE: there used to be a WIRE_SERVICE_DOMAINS list and isWireService()
+// special-case here. Both were removed once the relevance-check fallback
+// below was generalized to apply to ANY source not on a country's allowlist
+// -- wires never appear on a country allowlist anyway, so they were always
+// going to hit that same relevance-check path. No special-casing needed
+// anymore; this is a simplification, not a behavior change for wire content.
 
 // Major national outlets per country. A country-tagged article whose source
 // domain isn't in its list (and isn't a wire service above) gets filtered as
@@ -316,12 +298,6 @@ const ALLOWLIST_BY_COUNTRY = {
   PE: ['perureports.com', 'andina.pe'],
   NZ: ['nzherald.co.nz', 'stuff.co.nz', 'rnz.co.nz'],
 };
-
-function isWireService(source) {
-  if (!source) return false;
-  const normalized = source.toLowerCase();
-  return WIRE_SERVICE_DOMAINS.some((domain) => normalized.includes(domain));
-}
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
 // drift out of sync with the actual country list.
@@ -387,27 +363,41 @@ function mentionsCountry(text, countryCode) {
   return aliases.some((alias) => normalized.includes(alias));
 }
 
-// Wire services are exempt from the outlet allowlist (they're not native to
-// any one country), but that used to mean ANY wire story got tagged with
-// whatever country was requested regardless of subject -- e.g. a Reuters NHL
-// contract story showing up under South Africa with no description at all.
-// This requires the wire story to actually be about (or at least mention)
-// the country it's tagged with, which is a much better bar than "came from
-// a request for that country" while still keeping legitimate wire coverage
-// of that country's real news.
-function wireFailsCountryRelevance(row) {
-  if (!isWireService(row.source)) return false;
+// A source is trusted as domestic for a country in one of two ways:
+//
+// 1. It's on that country's outlet allowlist -- established national media,
+//    so its content is presumed relevant even if it never says the country's
+//    name (a Ghanaian outlet covering a local cabinet reshuffle won't
+//    necessarily say "Ghana" anywhere in the headline, and shouldn't have to).
+//
+// 2. It isn't on any allowlist -- a wire service, an unrecognized outlet, or
+//    (critically) a country with NO allowlist built yet at all -- in which
+//    case it has to prove relevance by actually mentioning the country
+//    (name, demonym, or capital city).
+//
+// This used to only apply to wire services specifically, which meant any
+// country without a manually-curated allowlist had NO outlet/relevance
+// filtering at all -- just the generic junk patterns. That doesn't scale to
+// 195 countries; it means every new country is "unsafe until someone
+// manually curates it" via the log-reading process. Generalizing the
+// relevance fallback to any non-allowlisted source makes every country safe
+// by default from the moment it's added, curated or not -- the allowlist
+// becomes a way to ALSO recall hyperlocal domestic content that doesn't
+// self-reference the country, not the only thing standing between a country
+// and total junk.
+function passesNationalRelevance(row) {
+  if (!row.source) return false;
+  const list = ALLOWLIST_BY_COUNTRY[row.country];
+  if (list) {
+    const normalized = row.source.toLowerCase();
+    if (list.some((domain) => normalized.includes(domain))) return true;
+  }
   const text = `${row.title} ${row.description || ''}`;
-  return !mentionsCountry(text, row.country);
+  return mentionsCountry(text, row.country);
 }
 
 function failsNationalAllowlist(row) {
-  const list = ALLOWLIST_BY_COUNTRY[row.country];
-  if (!list) return false; // no allowlist yet for this country -- don't filter, fall back to pattern-based junk rules only
-  if (isWireService(row.source)) return false; // wires skip the outlet-allowlist check, but still have to pass wireFailsCountryRelevance separately
-  if (!row.source) return true;
-  const normalized = row.source.toLowerCase();
-  return !list.some((domain) => normalized.includes(domain));
+  return !passesNationalRelevance(row);
 }
 
 // Defensive language filter. All three APIs are asked for language=en, but
@@ -466,8 +456,7 @@ function getJunkReason(row) {
   if (!row.title) return 'missing_title';
   if (isBlockedSource(row.source)) return 'blocked_source';
   if (isObscureSports(row)) return 'obscure_sports';
-  if (failsNationalAllowlist(row)) return 'not_on_country_allowlist';
-  if (wireFailsCountryRelevance(row)) return 'wire_not_relevant_to_country';
+  if (failsNationalAllowlist(row)) return 'not_relevant_to_country';
   if (isNonEnglish(row.title) || isNonEnglish(row.description)) return 'non_english';
   if (isPrWireContent(row)) return 'pr_wire_content';
   if (JUNK_PATTERNS.some((pattern) => pattern.test(row.title))) return 'junk_pattern_match';
