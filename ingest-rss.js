@@ -4,7 +4,7 @@
 // The 3 commercial APIs (NewsData, GNews, Currents) keep running on their
 // existing 3-hour cadence via ingest.js -- they provide broad discovery and
 // clean structured data. This script polls RSS feeds directly from outlets
-// already confirmed real through the allowlist research process, and is
+// already confirmed real through the allowlist process, and is
 // designed to run far more often (e.g. every 15 minutes) since RSS feeds
 // have no per-request "credits" system, unlike the 3 APIs.
 //
