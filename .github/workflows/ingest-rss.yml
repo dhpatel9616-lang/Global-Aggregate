@@ -1,6 +1,6 @@
 name: Ingest RSS Feeds
 on:
-  # Lets you click "Run workflow" manually in GitHub's Actions tab
+  # Lets you click "Run workflow" manually in GitHub Actions tab
   workflow_dispatch:
   # Runs every 15 minutes. This is only viable because the repo is public --
   # a private repo would burn through its 2,000 free Actions-minutes/month
