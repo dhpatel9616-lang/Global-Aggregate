@@ -116,7 +116,16 @@ async function loadExistingTitles() {
 }
 
 async function fetchFeed(feedUrl) {
-  const feed = await parser.parseURL(feedUrl);
+  // Hard backstop independent of rss-parser's own `timeout` option (see
+  // module-level comment on the Parser config) -- confirmed necessary after
+  // a real hang (run #11, 2026-07-13) sat "In progress" for 3h47m+ instead
+  // of erroring out at the configured 10s. If the library's internal timeout
+  // doesn't fire for some reason, this one still will.
+  const HARD_TIMEOUT_MS = 15000;
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`Hard timeout after ${HARD_TIMEOUT_MS}ms (rss-parser's own timeout did not fire)`)), HARD_TIMEOUT_MS)
+  );
+  const feed = await Promise.race([parser.parseURL(feedUrl), timeout]);
   return feed.items || [];
 }
 
