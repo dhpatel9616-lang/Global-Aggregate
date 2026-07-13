@@ -703,6 +703,8 @@ const SOURCE_OVERRIDES = {
   UA: 'NewsData.io',
   MA: 'NewsData.io',
   CL: 'NewsData.io',
+  SA: 'NewsData.io',
+  AE: 'NewsData.io',
 };
 
 // Assigns each country a source by filling GNews and NewsData up to their
