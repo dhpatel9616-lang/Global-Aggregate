@@ -13,6 +13,13 @@ on:
 jobs:
   ingest-rss:
     runs-on: ubuntu-latest
+    # Hard backstop against hangs. GitHub Actions defaults to a 6-hour job
+    # timeout if unset -- confirmed via a real run (#11, 2026-07-13) that sat
+    # "In progress" for 3h47m+ on what should be a 1-2 minute job (13 feeds,
+    # each with a 10s internal timeout, plus clustering). 10 minutes is
+    # generous headroom and guarantees a future hang can't eat hours again,
+    # regardless of which specific call is the culprit.
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
