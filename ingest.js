@@ -219,6 +219,16 @@ const BLOCKED_SOURCE_DOMAINS = [
   // NEW: Reddit threads getting ingested as if they were news articles
   'reddit.com',
   'old.reddit.com',
+  // NEW: found in Portugal's first real run (2026-07-13). 247wallst.com is a
+  // personal-finance content-farm (surfaced a generic "retire to Portugal on
+  // $2,600/month" clickbait piece -- not news, domestic or international).
+  // flipboard.com is a reader/aggregator app, not a primary source -- it
+  // re-syndicated a WCVB local-news story under "flipboard.com" as if it
+  // were its own outlet, producing a near-duplicate of the real wcvb.com
+  // story under a different title (see normalizeTitle fix below for the
+  // general version of this problem).
+  '247wallst.com',
+  'flipboard.com',
 ];
 
 // International/pan-regional wire services (Reuters, France24, Euronews,
@@ -504,7 +514,19 @@ function isJunk(row) {
 // This tracks titles we've already seen — both already in the database and
 // within this run — so syndicated repeats get skipped instead of piling up.
 function normalizeTitle(title) {
-  return (title || '').trim().toLowerCase();
+  let t = (title || '').trim().toLowerCase();
+  // Strip a trailing " | <suffix>" only when the suffix is short (<=20
+  // chars) -- that's the shape of an appended site name (e.g. "| Flipboard",
+  // "| The Jerusalem Post"), not a real clause in the headline. Real
+  // headlines that legitimately contain "|" tend to have longer, sentence-
+  // like segments on both sides, so this stays conservative about what it
+  // strips. This only affects the in-memory comparison key used for dedup --
+  // the original title is still what gets stored in the database.
+  const pipeIndex = t.lastIndexOf(' | ');
+  if (pipeIndex !== -1 && t.length - pipeIndex - 3 <= 20) {
+    t = t.slice(0, pipeIndex);
+  }
+  return t.trim();
 }
 
 async function loadExistingTitles() {
