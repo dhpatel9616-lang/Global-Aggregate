@@ -686,25 +686,23 @@ const SOURCES = [
 
 // Manual overrides -- specific countries forced onto a different source
 // than the generic weighted-fill would assign, based on real evidence that
-// their default source consistently fails for them:
-//   PL: two consecutive Currents runs, zero genuine Polish outlets among 40
-//       filtered items -- looks like a real Currents coverage/tagging gap.
-//   UA, MA: persistent Currents API errors, 2/2 runs each -- not transient.
-//   CL: consistently zero raw results via Currents, both runs checked.
-// Applied ON TOP of the normal caps below (not counted against them) --
-// this deliberately trades some of NewsData's safety margin (20 countries
-// -> 24, ~192 of its 200/day cap) for a real test of a different provider,
-// since all 4 were producing zero value via Currents anyway. No downside
-// if NewsData also comes up empty for them; real upside if it doesn't.
-// If this doesn't help after a few runs, accept these as genuine gaps
-// rather than continuing to reassign indefinitely.
+// their default source consistently fails for them.
+//
+// Started as a 6-country experiment (PL, UA, MA, CL, SA, AE all moved to
+// NewsData.io after Currents produced nothing for them). Checked results
+// against live data after several runs:
+//   PL: WORKED -- picked up parkiet.com, a genuine Polish outlet.
+//   UA: WORKED WELL -- 51 articles across 5 real Ukrainian outlets
+//       (kyivindependent.com, kyivpost.com, pravda.com.ua, ukrinform.net).
+//   MA, CL, SA, AE: DID NOT WORK -- still stuck at 1-4 articles each even
+//       on NewsData.io. Keeping them overridden was pure NewsData quota
+//       overhead with nothing to show for it, so they're reverted here to
+//       default routing (which sends them to Currents) rather than
+//       continuing to burn NewsData capacity on a fix that isn't fixing
+//       anything. Revisit as genuine coverage gaps, not an allowlist problem.
 const SOURCE_OVERRIDES = {
   PL: 'NewsData.io',
   UA: 'NewsData.io',
-  MA: 'NewsData.io',
-  CL: 'NewsData.io',
-  SA: 'NewsData.io',
-  AE: 'NewsData.io',
 };
 
 // Assigns each country a source by filling GNews and NewsData up to their
@@ -716,10 +714,15 @@ const SOURCE_OVERRIDES = {
 function assignSources(countryList) {
   const counts = { 'GNews': 0, 'NewsData.io': 0, 'Currents': 0 };
   return countryList.map((country) => {
-    let sourceName;
+    // Overrides are handled first and returned immediately -- they must NOT
+    // touch the fill counters below, or they silently consume cap slots
+    // meant for the normal weighted assignment (the bug that let NewsData.io
+    // creep to 26 real countries / 208 req/day against its ~200/day cap).
     if (SOURCE_OVERRIDES[country.code]) {
-      sourceName = SOURCE_OVERRIDES[country.code];
-    } else if (counts['GNews'] < SOURCE_CAPS['GNews']) {
+      return SOURCES.find((s) => s.name === SOURCE_OVERRIDES[country.code]);
+    }
+    let sourceName;
+    if (counts['GNews'] < SOURCE_CAPS['GNews']) {
       sourceName = 'GNews';
     } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
       sourceName = 'NewsData.io';
