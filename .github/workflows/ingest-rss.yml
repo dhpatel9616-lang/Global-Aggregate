@@ -2,11 +2,14 @@ name: Ingest RSS Feeds
 on:
   # Lets you click "Run workflow" manually in GitHub Actions tab
   workflow_dispatch:
-  # Runs every 15 minutes. This is only viable because the repo is public --
-  # a private repo would burn through its 2,000 free Actions-minutes/month
-  # cap in days at this frequency (public repos have no such cap).
+  # Runs every 15 minutes, offset from :00/:15/:30/:45 to avoid GitHub's
+  # top-of-quarter-hour scheduler congestion -- the same reason ingest.yml
+  # uses "17 */3 * * *" instead of a clean hour mark. This workflow's original
+  # */15 schedule fired on the congested marks and, per GitHub Actions run
+  # history, never actually triggered on schedule in 6 days (only manual
+  # workflow_dispatch runs) -- this offset is the fix.
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '4,19,34,49 * * * *'
 jobs:
   ingest-rss:
     runs-on: ubuntu-latest
