@@ -72,7 +72,7 @@ const FEED_URLS_BY_COUNTRY = {
   IN: [
     { source: 'timesofindia.indiatimes.com', feedUrl: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms' },
     { source: 'ndtv.com', feedUrl: 'http://feeds.feedburner.com/ndtvnews-top-stories' },
-    { source: 'indianexpress.com', feedUrl: 'https://indianexpress.com/print/front-page/feed/' },
+    { source: 'indianexpress.com', feedUrl: 'https://indianexpress.com/feed/' },
   ],
   // The following are well-documented standard feed URLs for outlets already
   // on the API-based allowlist, NOT individually fetch-tested this session --
