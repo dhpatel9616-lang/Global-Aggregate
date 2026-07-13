@@ -43,5 +43,21 @@
   { "name": "Morocco", "code": "MA", "continent": "Africa" },
   { "name": "Chile", "code": "CL", "continent": "South America" },
   { "name": "Peru", "code": "PE", "continent": "South America" },
-  { "name": "New Zealand", "code": "NZ", "continent": "Oceania" }
+  { "name": "New Zealand", "code": "NZ", "continent": "Oceania" },
+
+  { "name": "Israel", "code": "IL", "continent": "Asia" },
+  { "name": "Sri Lanka", "code": "LK", "continent": "Asia" },
+  { "name": "Nepal", "code": "NP", "continent": "Asia" },
+  { "name": "Ireland", "code": "IE", "continent": "Europe" },
+  { "name": "Portugal", "code": "PT", "continent": "Europe" },
+  { "name": "Greece", "code": "GR", "continent": "Europe" },
+  { "name": "Uganda", "code": "UG", "continent": "Africa" },
+  { "name": "Zimbabwe", "code": "ZW", "continent": "Africa" },
+  { "name": "Senegal", "code": "SN", "continent": "Africa" },
+  { "name": "Ecuador", "code": "EC", "continent": "South America" },
+  { "name": "Uruguay", "code": "UY", "continent": "South America" },
+  { "name": "Bolivia", "code": "BO", "continent": "South America" },
+  { "name": "Guatemala", "code": "GT", "continent": "North America" },
+  { "name": "Fiji", "code": "FJ", "continent": "Oceania" },
+  { "name": "Papua New Guinea", "code": "PG", "continent": "Oceania" }
 ]
