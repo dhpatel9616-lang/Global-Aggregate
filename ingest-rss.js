@@ -104,6 +104,39 @@ const FEED_URLS_BY_COUNTRY = {
   GH: [
     { source: 'myjoyonline.com', feedUrl: 'https://www.myjoyonline.com/feed/' },
   ],
+  // NEW: added for the 7 countries confirmed to throw real Currents API
+  // errors (not just empty results) -- Currents documents covering ~70
+  // countries total, so these are very likely just outside that supported
+  // set, not a fixable allowlist problem. RSS has no such coverage ceiling.
+  // Fetch-verified this session (live content confirmed directly):
+  MA: [
+    { source: 'moroccoworldnews.com', feedUrl: 'https://www.moroccoworldnews.com/feed/' },
+  ],
+  LK: [
+    { source: 'dailymirror.lk', feedUrl: 'https://www.dailymirror.lk/rss' },
+  ],
+  // Verified via a real feed-listing source this session, not directly
+  // fetch-tested. allafrica.com's English feed avoids the problem that
+  // Senegal's major domestic outlets (Seneweb, Le Soleil, APS) are all
+  // French-only and would likely be caught by the non-English filter.
+  SN: [
+    { source: 'allafrica.com', feedUrl: 'http://allafrica.com/tools/headlines/rdf/senegal/headlines.rdf' },
+  ],
+  FJ: [
+    { source: 'fbcnews.com.fj', feedUrl: 'https://www.fbcnews.com.fj/feed/' },
+  ],
+  // NOT fetch-tested and NOT verified via a feed listing -- pattern-matched
+  // from the same Nation Media Group platform as Kenya's nation.africa
+  // entry above. Exactly the kind of entry the diagnostic logging is meant
+  // to validate or correct on the first real run.
+  UG: [
+    { source: 'monitor.co.ug', feedUrl: 'https://www.monitor.co.ug/uganda/rss' },
+  ],
+  // NOT fetch-tested -- standard WordPress /feed/ convention guessed from
+  // the domain, no feed listing found to confirm. Same caveat as above.
+  PG: [
+    { source: 'postcourier.com.pg', feedUrl: 'https://postcourier.com.pg/feed/' },
+  ],
 };
 
 async function loadExistingTitles() {
