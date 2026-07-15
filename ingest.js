@@ -339,6 +339,19 @@ const ALLOWLIST_BY_COUNTRY = {
   CL: ['santiagotimes.cl', 'biobiochile.cl'],
   PE: ['perureports.com', 'andina.pe', 'peruviantimes.com'],
   NZ: ['nzherald.co.nz', 'stuff.co.nz', 'rnz.co.nz'],
+  // -- RSS-only single-country outlets added this session. Necessary
+  // because a domestic outlet's headlines naturally don't always name the
+  // country (implied for local readers) -- confirmed via Nepal, where
+  // 100% of onlinekhabar.com's content was filtered as not_relevant until
+  // this was added. Same gap almost certainly affects LK/FJ/UG/PG/GR/ZW,
+  // they just hadn't shown it yet (some were still 403-blocked).
+  LK: ['dailymirror.lk'],
+  FJ: ['fbcnews.com.fj'],
+  UG: ['monitor.co.ug'],
+  PG: ['postcourier.com.pg'],
+  NP: ['onlinekhabar.com'],
+  GR: ['thenationalherald.com', 'ekathimerini.com', 'greekreporter.com'],
+  ZW: ['herald.co.zw', 'newsday.co.zw'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -790,7 +803,24 @@ async function main() {
   }
 
   console.log('\nClustering related stories across countries...');
-  const { error: clusterError } = await supabase.rpc('cluster_related_articles');
+  // max_batch_size explicitly bounded, and a hard client-side timeout added,
+  // for the same reason as ingest-rss.js's clustering call: PostgREST routes
+  // every request through the 'authenticator' role (statement_timeout=8s),
+  // and that session-level timeout carries through the role switch into
+  // service_role since service_role has no override of its own -- so this
+  // call was actually capped at 8s server-side all along (not the 2-minute
+  // database default), with no client-side timeout to fail fast/cleanly if
+  // it ran long. 40 gives a bit more headroom than RSS's 30 since this runs
+  // far less often (every 3h vs every 15min) and can afford a slightly
+  // bigger batch while staying comfortably under the real 8s ceiling.
+  const CLUSTER_HARD_TIMEOUT_MS = 60000;
+  const clusterTimeout = new Promise((resolve) =>
+    setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
+  );
+  const { error: clusterError } = await Promise.race([
+    supabase.rpc('cluster_related_articles', { max_batch_size: 40 }),
+    clusterTimeout,
+  ]);
   if (clusterError) {
     console.error('Clustering failed (non-fatal):', clusterError.message);
   } else {
