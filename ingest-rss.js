@@ -67,6 +67,14 @@ const FEED_URLS_BY_COUNTRY = {
   WORLD: [
     { source: 'bbc.com', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
     { source: 'aljazeera.com', feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml' },
+    // Moved here from broken per-country EC/BO guesses (both 404'd --
+    // MercoPress doesn't appear to have dedicated Ecuador/Bolivia RSS
+    // sub-feeds, consistent with them still being in the process of
+    // joining Mercosur rather than full members). This confirmed general
+    // Latin America feed gets evaluated against every South/Central
+    // American country instead, a strict improvement over the narrower
+    // per-country attempt.
+    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/latin-america' },
   ],
   // India -- fetch-verified via search this session (real, current feed URLs)
   IN: [
@@ -143,23 +151,17 @@ const FEED_URLS_BY_COUNTRY = {
   NP: [
     { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
   ],
+  // greekreporter.com/greece/feed 403'd (likely IP-reputation blocking,
+  // same category as Kenya/Morocco/Sri Lanka/Uganda -- a UA header alone
+  // doesn't fix this class of block). Switched to a different outlet.
   GR: [
-    { source: 'greekreporter.com', feedUrl: 'https://greekreporter.com/greece/feed' },
+    { source: 'thenationalherald.com', feedUrl: 'https://www.thenationalherald.com/feed/' },
   ],
-  // Verified via an rssing.com archive listing showing the live RSS URL
-  // directly, plus current (July 2026) live content confirmed on the site.
+  // newsday.co.zw's own feed returned malformed XML (a real parse error --
+  // "Attribute without value" -- not a fetch/blocking issue, the feed
+  // itself is broken). Switched to Zimbabwe's flagship daily instead.
   ZW: [
-    { source: 'newsday.co.zw', feedUrl: 'https://www.newsday.co.zw/feed' },
-  ],
-  // Pattern-matched from MercoPress's per-country RSS structure, confirmed
-  // working for 4 sibling countries (Uruguay, Argentina, Venezuela,
-  // Paraguay) via the same en.mercopress.com/rss/{country} URL shape --
-  // not individually fetch-tested for these two specific slugs.
-  EC: [
-    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/ecuador' },
-  ],
-  BO: [
-    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/bolivia' },
+    { source: 'herald.co.zw', feedUrl: 'https://www.herald.co.zw/feed/' },
   ],
 };
 
@@ -339,7 +341,7 @@ async function main() {
     setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
   );
   const { error: clusterError } = await Promise.race([
-    supabase.rpc('cluster_related_articles', { process_window_hours: 1 }),
+    supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 30 }),
     clusterTimeout,
   ]);
   if (clusterError) {
