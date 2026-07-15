@@ -334,7 +334,14 @@ async function main() {
   // a real timeout (confirmed: 478 of 483 articles in the last 6h were still
   // unclustered at the time it failed). 1 hour comfortably covers several
   // missed cycles' worth of buffer without re-scanning that much backlog.
-  const { error: clusterError } = await supabase.rpc('cluster_related_articles', { process_window_hours: 1 });
+  const CLUSTER_HARD_TIMEOUT_MS = 60000;
+  const clusterTimeout = new Promise((resolve) =>
+    setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
+  );
+  const { error: clusterError } = await Promise.race([
+    supabase.rpc('cluster_related_articles', { process_window_hours: 1 }),
+    clusterTimeout,
+  ]);
   if (clusterError) {
     console.error('Clustering failed (non-fatal):', clusterError.message);
   } else {
