@@ -59,5 +59,8 @@
   { "name": "Bolivia", "code": "BO", "continent": "South America" },
   { "name": "Guatemala", "code": "GT", "continent": "North America" },
   { "name": "Fiji", "code": "FJ", "continent": "Oceania" },
-  { "name": "Papua New Guinea", "code": "PG", "continent": "Oceania" }
+  { "name": "Papua New Guinea", "code": "PG", "continent": "Oceania" },
+  { "name": "Jamaica", "code": "JM", "continent": "North America" },
+  { "name": "Jordan", "code": "JO", "continent": "Asia" },
+  { "name": "Qatar", "code": "QA", "continent": "Asia" }
 ]
