@@ -137,6 +137,30 @@ const FEED_URLS_BY_COUNTRY = {
   PG: [
     { source: 'postcourier.com.pg', feedUrl: 'https://postcourier.com.pg/feed/' },
   ],
+  // NEW: added for the 5 countries still confirmed at zero articles across
+  // BOTH the API pipeline (empty/error results in ingest.js logs) and RSS
+  // (never had a feed at all until now).
+  NP: [
+    { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
+  ],
+  GR: [
+    { source: 'greekreporter.com', feedUrl: 'https://greekreporter.com/greece/feed' },
+  ],
+  // Verified via an rssing.com archive listing showing the live RSS URL
+  // directly, plus current (July 2026) live content confirmed on the site.
+  ZW: [
+    { source: 'newsday.co.zw', feedUrl: 'https://www.newsday.co.zw/feed' },
+  ],
+  // Pattern-matched from MercoPress's per-country RSS structure, confirmed
+  // working for 4 sibling countries (Uruguay, Argentina, Venezuela,
+  // Paraguay) via the same en.mercopress.com/rss/{country} URL shape --
+  // not individually fetch-tested for these two specific slugs.
+  EC: [
+    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/ecuador' },
+  ],
+  BO: [
+    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/bolivia' },
+  ],
 };
 
 async function loadExistingTitles() {
