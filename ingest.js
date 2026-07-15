@@ -352,6 +352,9 @@ const ALLOWLIST_BY_COUNTRY = {
   NP: ['onlinekhabar.com'],
   GR: ['thenationalherald.com', 'ekathimerini.com', 'greekreporter.com'],
   ZW: ['herald.co.zw', 'newsday.co.zw'],
+  JM: ['jamaica-star.com', 'jamaica-gleaner.com'],
+  JO: ['jordannews.jo', 'jordantimes.com'],
+  QA: ['dohanews.co', 'thepeninsulaqatar.com', 'gulf-times.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
