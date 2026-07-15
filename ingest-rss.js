@@ -163,6 +163,23 @@ const FEED_URLS_BY_COUNTRY = {
   ZW: [
     { source: 'herald.co.zw', feedUrl: 'https://www.herald.co.zw/feed/' },
   ],
+  // Jamaica: jamaica-star.com confirmed via feed listing (part of the
+  // Gleaner Company, Jamaica's oldest/largest media network).
+  JM: [
+    { source: 'jamaica-star.com', feedUrl: 'https://jamaica-star.com/feed/news.xml' },
+  ],
+  // Jordan: jordantimes.com's own feed is dead -- shows as a 404 in every
+  // listing checked. Used jordannews.jo instead, which returned genuine
+  // live current headlines (Middle East geopolitics) directly when checked.
+  JO: [
+    { source: 'jordannews.jo', feedUrl: 'https://www.jordannews.jo/Story/t/8355/RSS' },
+  ],
+  // Qatar: dohanews.co, an established outlet (covering Qatar since 2009,
+  // staffed by journalists with Al Jazeera English/BBC/WSJ backgrounds),
+  // clean confirmed feed URL.
+  QA: [
+    { source: 'dohanews.co', feedUrl: 'https://dohanews.co/feed' },
+  ],
 };
 
 async function loadExistingTitles() {
