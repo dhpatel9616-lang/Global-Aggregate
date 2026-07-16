@@ -351,9 +351,9 @@ const ALLOWLIST_BY_COUNTRY = {
   PG: ['postcourier.com.pg'],
   NP: ['onlinekhabar.com'],
   GR: ['thenationalherald.com', 'ekathimerini.com', 'greekreporter.com'],
-  ZW: ['herald.co.zw', 'newsday.co.zw'],
+  ZW: ['herald.co.zw', 'newsday.co.zw', 'zimlive.com'],
   JM: ['jamaica-star.com', 'jamaica-gleaner.com'],
-  JO: ['jordannews.jo', 'jordantimes.com'],
+  JO: ['jordannews.jo', 'jordantimes.com', 'ammonnews.net'],
   QA: ['dohanews.co', 'thepeninsulaqatar.com', 'gulf-times.com'],
 };
 
