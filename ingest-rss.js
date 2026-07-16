@@ -157,28 +157,34 @@ const FEED_URLS_BY_COUNTRY = {
   GR: [
     { source: 'thenationalherald.com', feedUrl: 'https://www.thenationalherald.com/feed/' },
   ],
-  // newsday.co.zw's own feed returned malformed XML (a real parse error --
-  // "Attribute without value" -- not a fetch/blocking issue, the feed
-  // itself is broken). Switched to Zimbabwe's flagship daily instead.
+  // herald.co.zw 403'd (same IP-reputation pattern as Kenya/Morocco/Sri
+  // Lanka/Uganda). Switched to zimlive.com -- confirmed live current
+  // content when checked.
   ZW: [
-    { source: 'herald.co.zw', feedUrl: 'https://www.herald.co.zw/feed/' },
+    { source: 'zimlive.com', feedUrl: 'https://www.zimlive.com/feed/' },
   ],
-  // Jamaica: jamaica-star.com confirmed via feed listing (part of the
-  // Gleaner Company, Jamaica's oldest/largest media network).
+  // jamaica-star.com threw "unable to verify the first certificate" -- a
+  // real TLS cert chain issue on their end (likely a missing intermediate
+  // cert), not a blocking issue. Trying plain http:// as a low-risk
+  // workaround: RSS content isn't sensitive, and many older regional sites
+  // still serve http even when their https cert chain is broken.
   JM: [
-    { source: 'jamaica-star.com', feedUrl: 'https://jamaica-star.com/feed/news.xml' },
+    { source: 'jamaica-star.com', feedUrl: 'http://jamaica-star.com/feed/news.xml' },
   ],
-  // Jordan: jordantimes.com's own feed is dead -- shows as a 404 in every
-  // listing checked. Used jordannews.jo instead, which returned genuine
-  // live current headlines (Middle East geopolitics) directly when checked.
+  // jordannews.jo's feed was malformed XML (unquoted attribute value --
+  // broken on their end, not fixable client-side). Switched to Ammon News,
+  // an established bilingual (Arabic/English) Jordanian outlet -- exact
+  // English RSS path not independently fetch-verified, moderate confidence.
   JO: [
-    { source: 'jordannews.jo', feedUrl: 'https://www.jordannews.jo/Story/t/8355/RSS' },
+    { source: 'ammonnews.net', feedUrl: 'https://en.ammonnews.net/rss.php' },
   ],
-  // Qatar: dohanews.co, an established outlet (covering Qatar since 2009,
-  // staffed by journalists with Al Jazeera English/BBC/WSJ backgrounds),
-  // clean confirmed feed URL.
+  // dohanews.co 403'd. Switched to thepeninsulaqatar.com -- already proven
+  // as a real, active outlet (it appeared as a legitimate Currents-sourced
+  // article for DR Congo earlier this session), though that doesn't
+  // guarantee its own RSS feed won't hit the same IP-reputation blocking
+  // that's affected several other feeds -- worth checking the next log.
   QA: [
-    { source: 'dohanews.co', feedUrl: 'https://dohanews.co/feed' },
+    { source: 'thepeninsulaqatar.com', feedUrl: 'https://thepeninsulaqatar.com/feed' },
   ],
 };
 
