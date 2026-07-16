@@ -84,6 +84,38 @@ function mapTopic(rawCategory) {
   return 'World';
 }
 
+// Category names that indicate content is local/lifestyle/entertainment
+// rather than national or international news -- checked against the SAME
+// raw category data mapTopic reads above, which previously got discarded
+// (anything unrecognized just fell into the generic "World" bucket).
+// Checks every category on an item, not just the first, since a source
+// might tag something ["Top Stories", "Entertainment"] with the excluded
+// category listed second.
+//
+// This is deliberately a structural fix rather than a title-text one:
+// testing showed regex patterns built from a sample of junk titles caught
+// only ~1% of the real problem in the two sources they were built from
+// (title phrasing is too varied to generalize). This instead trusts the
+// source's OWN editorial categorization, which is a much stronger signal
+// and costs nothing extra -- it's data already being downloaded, just
+// unused until now.
+const EXCLUDED_CATEGORIES = [
+  'entertainment', 'bollywood', 'hollywood', 'celebrity', 'celebrities',
+  'lifestyle', 'fashion', 'beauty', 'food', 'recipe', 'travel',
+  'city', 'cities', 'local', 'metro', 'crime', // crime desk is almost
+  // always hyperlocal police-blotter content, not national news
+  'opinion', 'editorial', 'blog', 'astrology', 'horoscope', 'gossip',
+];
+
+function hasExcludedCategory(rawCategory) {
+  if (!rawCategory) return false;
+  const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
+  return cats.some((cat) => {
+    const normalized = safeStringify(cat).toLowerCase();
+    return EXCLUDED_CATEGORIES.some((excluded) => normalized.includes(excluded));
+  });
+}
+
 // Filters out obvious non-news content (classified listings, SEO spam pages,
 // betting/promo content, listicles, etc.) that free-tier news APIs sometimes
 // mis-categorize as news. Grouped by category so it's easier to extend later.
@@ -198,6 +230,39 @@ const JUNK_PATTERNS = [
   // NEW: Reddit-formatted titles/threads mis-tagged as news
   /\[link\]\s*\[comments\]/i,
   /^\/u\/\w+/i,
+
+  // NEW: hyperlocal state-court rulings on narrow personal/civil matters --
+  // found via real sample of indianexpress.com/timesofindia content
+  // (2026-07-16). Deliberately targets STATE High Courts combined with a
+  // narrow personal outcome, not "Supreme Court" (which is more often
+  // genuinely national) and not state courts ruling on major policy
+  // matters (which wouldn't match the narrow-outcome half of the pattern).
+  /\b(Jharkhand|Bengal|West Bengal|Karnataka|Chhattisgarh|Ladakh|Madhya Pradesh|\bMP\b|Punjab|Gujarat|Kerala|Tamil Nadu|Rajasthan|Bihar|Odisha|Telangana|Andhra Pradesh|Maharashtra|Uttar Pradesh|\bUP\b|Haryana|Jammu)\s+(High Court|court)\b.{0,60}\b(rules?|stays?|grants?|rejects?|orders?|summons?|clean chit|maintenance|bail)\b/i,
+  // NEW: hyperlocal "court orders compensation" human-interest (found
+  // repeatedly in the same sample -- narrow individual payouts, not news
+  // of national significance)
+  /court orders?.{0,40}(to )?pay (Rs\.?|₹)\s?[\d,]+/i,
+  /wins? (Rs\.?|₹)\s?[\d,]+ (payout|compensation)/i,
+
+  // NEW: celebrity/entertainment personal-life gossip (weddings, romance,
+  // relationship reveals) -- not news, found in the same sample
+  /\bties the knot\b/i,
+  /\bfianc[ée]\b/i,
+  /\bintroduces (her|his) (fiance|fiancé|boyfriend|girlfriend|partner)\b/i,
+  /\bcalls (her|his) .{0,30}(problematic|flawed|toxic)\b/i,
+
+  // NEW: generic lifestyle/beauty/diet clickbait, not tied to any actual
+  // news event -- found in the same sample
+  /\blatest beauty trend\b/i,
+  /\bdetailed recipe inside\b/i,
+  /\bhigh-protein.{0,20}breakfast\b/i,
+
+  // NEW: live-blog / rolling-digest formats -- these are aggregator posts
+  // that get repeatedly republished throughout the day, not discrete news
+  // stories, and don't fit a single-headline feed well
+  /\bLive Updates?,/i,
+  /\bDaily Catch-?Up\b/i,
+  /News Live:/i,
 ];
 
 // Specific domains known to be content farms, press-release wires, or
@@ -517,6 +582,7 @@ function getJunkReason(row) {
   if (failsNationalAllowlist(row)) return 'not_relevant_to_country';
   if (isNonEnglish(row.title) || isNonEnglish(row.description)) return 'non_english';
   if (isPrWireContent(row)) return 'pr_wire_content';
+  if (hasExcludedCategory(row._rawCategory)) return 'excluded_category';
   if (JUNK_PATTERNS.some((pattern) => pattern.test(row.title))) return 'junk_pattern_match';
   return null;
 }
@@ -598,7 +664,10 @@ async function upsertRows(countryName, rows, seenTitles) {
   }
   const { error } = await supabase
     .from('articles')
-    .upsert(deduped, { onConflict: 'url', ignoreDuplicates: true });
+    .upsert(
+      deduped.map(({ _rawCategory, ...cleanRow }) => cleanRow),
+      { onConflict: 'url', ignoreDuplicates: true }
+    );
 
   if (error) {
     console.error(`[${countryName}] Supabase insert error: ${error.message}`);
@@ -655,6 +724,7 @@ async function fetchNewsData(country) {
       description: capDescription(item.description) || null,
       url: item.link,
       published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+      _rawCategory: item.category,
     }));
   return rows;
 }
@@ -696,6 +766,7 @@ async function fetchCurrents(country) {
       description: capDescription(item.description) || null,
       url: item.url,
       published_at: item.published ? new Date(item.published).toISOString() : null,
+      _rawCategory: item.category,
     }));
   return rows;
 }
