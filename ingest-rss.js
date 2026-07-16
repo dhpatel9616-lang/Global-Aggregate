@@ -80,7 +80,14 @@ const FEED_URLS_BY_COUNTRY = {
   IN: [
     { source: 'timesofindia.indiatimes.com', feedUrl: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms' },
     { source: 'ndtv.com', feedUrl: 'http://feeds.feedburner.com/ndtvnews-top-stories' },
-    { source: 'indianexpress.com', feedUrl: 'https://indianexpress.com/feed/' },
+    // Switched from the generic /feed/ (all sections) to the India-only
+    // section feed. A random sample of 25 articles from the generic feed
+    // (2026-07-16) showed roughly half were hyperlocal High Court rulings,
+    // celebrity gossip, live-blog/digest posts, and state-government
+    // funding announcements -- none of which belong in a national-
+    // headlines aggregator. This section feed excludes Entertainment,
+    // Lifestyle, Cities, and Opinion sections entirely.
+    { source: 'indianexpress.com', feedUrl: 'https://indianexpress.com/section/india/feed/' },
   ],
   // The following are well-documented standard feed URLs for outlets already
   // on the API-based allowlist, NOT individually fetch-tested this session --
@@ -228,6 +235,7 @@ function buildRow(item, country, source) {
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
     url: item.link,
     published_at: item.isoDate ? new Date(item.isoDate).toISOString() : (item.pubDate ? new Date(item.pubDate).toISOString() : null),
+    _rawCategory: item.categories,
   };
 }
 
@@ -285,7 +293,10 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
     return { label, inserted: 0 };
   }
 
-  const { error } = await supabase.from('articles').upsert(clean, { onConflict: 'url', ignoreDuplicates: true });
+  const { error } = await supabase.from('articles').upsert(
+    clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
+    { onConflict: 'url', ignoreDuplicates: true }
+  );
   if (error) {
     console.error(`[${label}] Supabase insert error: ${error.message}`);
     return { label, inserted: 0, error: error.message };
@@ -341,7 +352,10 @@ async function main() {
             return true;
           });
           if (clean.length > 0) {
-            const { error } = await supabase.from('articles').upsert(clean, { onConflict: 'url', ignoreDuplicates: true });
+            const { error } = await supabase.from('articles').upsert(
+    clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
+    { onConflict: 'url', ignoreDuplicates: true }
+  );
             if (!error) {
               console.log(`[${targetCountry} via RSS (${feedEntry.source})] Upserted ${clean.length} relevant article(s).`);
               results.push({ label: `${targetCountry} via ${feedEntry.source}`, inserted: clean.length });
