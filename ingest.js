@@ -835,10 +835,20 @@ async function main() {
 // as a module -- ingest-rss.js imports the filtering functions below without
 // wanting to trigger a full NewsData/GNews/Currents run as a side effect.
 if (require.main === module) {
-  main().catch((err) => {
-    console.error('Ingestion failed:', err);
-    process.exit(1);
-  });
+  main()
+    .then(() => {
+      // Force a clean exit -- same fix as ingest-rss.js, same reason:
+      // without this, Node waits for the event loop to empty naturally,
+      // and supabase-js's keep-alive HTTP connections can keep the process
+      // alive indefinitely after all real work is done. Hadn't been
+      // observed failing this way here yet, but no reason to leave it
+      // exposed to the same risk now that the root cause is understood.
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Ingestion failed:', err);
+      process.exit(1);
+    });
 }
 
 // Shared with ingest-rss.js -- one filtering brain, two ingestion paths.
