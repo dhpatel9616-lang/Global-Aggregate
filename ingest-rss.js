@@ -204,11 +204,19 @@ async function fetchFeed(feedUrl) {
   // of erroring out at the configured 10s. If the library's internal timeout
   // doesn't fire for some reason, this one still will.
   const HARD_TIMEOUT_MS = 15000;
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(`Hard timeout after ${HARD_TIMEOUT_MS}ms (rss-parser's own timeout did not fire)`)), HARD_TIMEOUT_MS)
-  );
-  const feed = await Promise.race([parser.parseURL(feedUrl), timeout]);
-  return feed.items || [];
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Hard timeout after ${HARD_TIMEOUT_MS}ms (rss-parser's own timeout did not fire)`)), HARD_TIMEOUT_MS);
+  });
+  try {
+    const feed = await Promise.race([parser.parseURL(feedUrl), timeout]);
+    return feed.items || [];
+  } finally {
+    // Clear the timer regardless of which side of the race won -- left
+    // dangling before, which kept the event loop alive for up to 15 more
+    // seconds per feed in the overwhelming majority (successful) case.
+    clearTimeout(timer);
+  }
 }
 
 function buildRow(item, country, source) {
@@ -374,7 +382,19 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('RSS ingestion failed:', err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    // Force a clean exit. Without this, Node waits for the event loop to
+    // empty naturally -- and either the fetchFeed() hard-timeout timers
+    // (never cleared when a fetch wins the race) or supabase-js's
+    // keep-alive HTTP connections can keep the process alive indefinitely
+    // after all real work is done, with no further output, until GitHub
+    // Actions kills the job at the 10-minute mark. Confirmed via a real
+    // run (2026-07-15) that completed everything successfully -- "Done...
+    // 647 articles... Clustering complete." -- then still got cancelled.
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('RSS ingestion failed:', err);
+    process.exit(1);
+  });
