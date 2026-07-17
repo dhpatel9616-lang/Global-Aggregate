@@ -294,6 +294,18 @@ const BLOCKED_SOURCE_DOMAINS = [
   // general version of this problem).
   '247wallst.com',
   'flipboard.com',
+  // NEW: found scanning the 43-country batch's first real data (2026-07-17).
+  // aol.com is a mixed content portal -- some legit wire-sourced news, but
+  // also pure consumer listicles ("15 Must-Have Five Below Candies") and
+  // lifestyle real-estate features, too inconsistent to keep. travelgeekery.com
+  // and upgradedpoints.com are pure travel/points blogs, not news.
+  // unitedinfocus.com is a Man Utd fan site that showed the same "sports
+  // team travels through a country" false-positive pattern seen before with
+  // Portugal/Celtic FC -- named the host country only incidentally.
+  'aol.com',
+  'travelgeekery.com',
+  'upgradedpoints.com',
+  'unitedinfocus.com',
 ];
 
 // International/pan-regional wire services (Reuters, France24, Euronews,
