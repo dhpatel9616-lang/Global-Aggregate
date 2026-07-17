@@ -784,7 +784,12 @@ async function fetchCurrents(country) {
 const SOURCE_CAPS = {
   'GNews': 10,        // ~80 req/day at 8 runs/day -- already near its 100/day cap, do not grow
   'NewsData.io': 20,  // ~160 req/day -- safe margin under its 200/day cap
-  // Currents: uncapped here, absorbs everything beyond the two caps above
+  // Currents: uncapped here, absorbs everything beyond the two caps above.
+  // Verified via Currents' own official pricing page (2026-07-16): free
+  // tier is 1,000 req/day, not the vaguer "600-1,000" range this was
+  // working from before. ~20% safety margin below that puts a soft target
+  // around 800 req/day (100 countries at 8 runs/day) -- revisit allocation
+  // if growth approaches that.
 };
 
 const SOURCES = [
