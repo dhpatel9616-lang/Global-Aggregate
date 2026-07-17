@@ -306,6 +306,16 @@ const BLOCKED_SOURCE_DOMAINS = [
   'travelgeekery.com',
   'upgradedpoints.com',
   'unitedinfocus.com',
+  // NEW: found scanning the 43-country batch's second wave of data
+  // (2026-07-17). news.google.com is a redirect/aggregator domain, not a
+  // real publisher -- the underlying articles are legitimate, but we can't
+  // reliably resolve the true source without following redirects (not done
+  // here), so the source label itself is misleading either way. roadandtrack.com
+  // showed the same "sports event held in country X" mistagging pattern as
+  // Portugal/Celtic FC and Finland/Man Utd caught earlier -- an F1 Hungarian
+  // Grand Prix story tagged as Hungary news.
+  'news.google.com',
+  'roadandtrack.com',
 ];
 
 // International/pan-regional wire services (Reuters, France24, Euronews,
@@ -369,7 +379,7 @@ const ALLOWLIST_BY_COUNTRY = {
   AR: ['batimes.com.ar', 'clarin.com', 'lanacion.com.ar', 'infobae.com', 'canal26.com', 'buenosairesherald.com'],
   AU: ['smh.com.au', 'theage.com.au', 'abc.net.au', 'news.com.au', 'theaustralian.com.au', 'heraldsun.com.au', '7news.com.au', '9news.com.au', 'thewest.com.au', 'perthnow.com.au', 'ntnews.com.au', 'drive.com.au'],
   BD: ['thedailystar.net', 'dhakatribune.com', 'tbsnews.net', 'prothomalo.com', 'daily-sun.com'],
-  BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br', 'riotimesonline.com'],
+  BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br'],
   CA: ['cbc.ca', 'ctvnews.ca', 'globalnews.ca', 'theglobeandmail.com', 'nationalpost.com', 'thestar.com'],
   CD: ['radiookapi.net', 'actualite.cd'],
   CN: ['xinhuanet.com', 'chinadaily.com.cn', 'cgtn.com', 'scmp.com', 'globaltimes.cn', 'ecns.cn', 'caixinglobal.com', 'sixthtone.com'],
@@ -390,7 +400,7 @@ const ALLOWLIST_BY_COUNTRY = {
   NG: ['vanguardngr.com', 'punchng.com', 'thenationonlineng.net', 'premiumtimesng.com', 'dailypost.ng', 'businessday.ng', 'legit.ng', 'dailytrust.com', 'newtelegraphng.com'],
   PH: ['inquirer.net', 'philstar.com', 'manilatimes.net', 'rappler.com', 'gmanetwork.com', 'abs-cbn.com', 'sunstar.com.ph', 'mb.com.ph', 'tribune.net.ph', 'bworldonline.com'],
   PK: ['dawn.com', 'thenews.com.pk', 'tribune.com.pk', 'geo.tv', 'arynews.tv', 'dunyanews.tv', 'pakobserver.net', 'dailytimes.com.pk', 'brecorder.com', 'nation.com.pk'],
-  RU: ['tass.com', 'rt.com', 'themoscowtimes.com', 'interfax.com'],
+  RU: ['rt.com', 'themoscowtimes.com', 'interfax.com'],
   TR: ['aa.com.tr', 'dailysabah.com', 'hurriyetdailynews.com', 'trtworld.com', 'birgun.net'],
   TZ: ['thecitizen.co.tz', 'dailynews.co.tz', 'ippmedia.com', 'tanzaniatimes.net'],
   US: ['usatoday.com', 'nypost.com', 'nytimes.com', 'washingtonpost.com', 'cnn.com', 'apnews.com', 'npr.org', 'foxnews.com'],
@@ -405,7 +415,7 @@ const ALLOWLIST_BY_COUNTRY = {
   SA: ['arabnews.com', 'saudigazette.com.sa', 'spa.gov.sa'],
   AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae', 'emirates247.com'],
   TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com', 'thephuketnews.com'],
-  MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com', 'malaysiakini.com', 'bernama.com'],
+  MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com', 'malaysiakini.com'],
   SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com', 'businesstimes.com.sg', 'theindependent.sg', 'asiaone.com'],
   PL: ['thefirstnews.com', 'notesfrompoland.com', 'polandin.com', 'poland-today.pl', 'wbj.pl', 'tvpworld.com'],
   UA: ['kyivindependent.com', 'kyivpost.com', 'pravda.com.ua', 'euromaidanpress.com', 'nv.ua'],
@@ -476,7 +486,7 @@ const COUNTRY_MENTION_ALIASES = {
   SA: ['saudi', 'riyadh'],
   AE: ['emirati', 'dubai', 'abu dhabi'],
   TH: ['thai', 'bangkok'],
-  MY: ['malaysian', 'kuala lumpur'],
+  MY: ['malaysian', 'kuala lumpur', 'johor', 'penang', 'melaka', 'malacca', 'selangor', 'perak', 'kedah', 'kelantan', 'terengganu', 'pahang', 'negeri sembilan', 'sabah', 'sarawak', 'perlis', 'putrajaya', 'dewan rakyat', 'dewan negara', 'petronas', 'ringgit'],
   SG: ['singaporean'],
   PL: ['polish', 'warsaw'],
   UA: ['ukrainian', 'kyiv', 'kiev'],
