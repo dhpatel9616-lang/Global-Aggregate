@@ -416,7 +416,7 @@ const ALLOWLIST_BY_COUNTRY = {
   AE: ['thenationalnews.com', 'gulfnews.com', 'khaleejtimes.com', 'wam.ae', 'emirates247.com'],
   TH: ['bangkokpost.com', 'nationthailand.com', 'thaipbsworld.com', 'thephuketnews.com'],
   MY: ['thestar.com.my', 'nst.com.my', 'malaymail.com', 'freemalaysiatoday.com', 'malaysiakini.com'],
-  SG: ['straitstimes.com', 'todayonline.com', 'channelnewsasia.com', 'businesstimes.com.sg', 'theindependent.sg', 'asiaone.com'],
+  SG: ['straitstimes.com', 'todayonline.com', 'businesstimes.com.sg', 'theindependent.sg'],
   PL: ['thefirstnews.com', 'notesfrompoland.com', 'polandin.com', 'poland-today.pl', 'wbj.pl', 'tvpworld.com'],
   UA: ['kyivindependent.com', 'kyivpost.com', 'pravda.com.ua', 'euromaidanpress.com', 'nv.ua'],
   NL: ['nltimes.nl', 'dutchnews.nl'],
