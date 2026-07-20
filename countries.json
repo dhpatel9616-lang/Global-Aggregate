@@ -528,5 +528,60 @@
     "name": "Zambia",
     "code": "ZM",
     "continent": "Africa"
+  },
+  {
+    "name": "Afghanistan",
+    "code": "AF",
+    "continent": "Asia"
+  },
+  {
+    "name": "Syria",
+    "code": "SY",
+    "continent": "Asia"
+  },
+  {
+    "name": "Yemen",
+    "code": "YE",
+    "continent": "Asia"
+  },
+  {
+    "name": "Somalia",
+    "code": "SO",
+    "continent": "Africa"
+  },
+  {
+    "name": "Libya",
+    "code": "LY",
+    "continent": "Africa"
+  },
+  {
+    "name": "Sudan",
+    "code": "SD",
+    "continent": "Africa"
+  },
+  {
+    "name": "Cuba",
+    "code": "CU",
+    "continent": "North America"
+  },
+  {
+    "name": "Myanmar",
+    "code": "MM",
+    "continent": "Asia"
+  },
+  {
+    "name": "Mali",
+    "code": "ML",
+    "continent": "Africa"
+  },
+  {
+    "name": "Madagascar",
+    "code": "MG",
+    "continent": "Africa"
+  },
+  {
+    "name": "Azerbaijan",
+    "code": "AZ",
+    "continent": "Asia"
   }
 ]
