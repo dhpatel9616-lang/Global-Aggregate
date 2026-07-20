@@ -1,0 +1,31 @@
+name: Send Digest Emails
+on:
+  workflow_dispatch:
+  # Once daily. The script itself decides who's actually due (daily vs
+  # weekly subscribers) based on digest_frequency + digest_last_sent_at --
+  # this single daily trigger correctly serves both without needing two
+  # separate schedules. Offset off the top of the hour, same congestion
+  # lesson learned from the ingestion workflows earlier in this project.
+  schedule:
+    - cron: '11 13 * * *' # ~9:11am EDT / 6:11am PDT -- reasonable morning delivery time for US-based subscribers; revisit if the audience becomes more global
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Send digest emails
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DIGEST_FROM_EMAIL: ${{ secrets.DIGEST_FROM_EMAIL }}
+        run: node send-digest.js
