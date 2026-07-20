@@ -583,5 +583,80 @@
     "name": "Azerbaijan",
     "code": "AZ",
     "continent": "Asia"
+  },
+  {
+    "name": "Albania",
+    "code": "AL",
+    "continent": "Europe"
+  },
+  {
+    "name": "Iceland",
+    "code": "IS",
+    "continent": "Europe"
+  },
+  {
+    "name": "Cyprus",
+    "code": "CY",
+    "continent": "Europe"
+  },
+  {
+    "name": "Moldova",
+    "code": "MD",
+    "continent": "Europe"
+  },
+  {
+    "name": "North Macedonia",
+    "code": "MK",
+    "continent": "Europe"
+  },
+  {
+    "name": "Kyrgyzstan",
+    "code": "KG",
+    "continent": "Asia"
+  },
+  {
+    "name": "Laos",
+    "code": "LA",
+    "continent": "Asia"
+  },
+  {
+    "name": "Brunei",
+    "code": "BN",
+    "continent": "Asia"
+  },
+  {
+    "name": "Costa Rica",
+    "code": "CR",
+    "continent": "North America"
+  },
+  {
+    "name": "Haiti",
+    "code": "HT",
+    "continent": "North America"
+  },
+  {
+    "name": "Trinidad and Tobago",
+    "code": "TT",
+    "continent": "North America"
+  },
+  {
+    "name": "Guyana",
+    "code": "GY",
+    "continent": "South America"
+  },
+  {
+    "name": "Benin",
+    "code": "BJ",
+    "continent": "Africa"
+  },
+  {
+    "name": "Burkina Faso",
+    "code": "BF",
+    "continent": "Africa"
+  },
+  {
+    "name": "Malawi",
+    "code": "MW",
+    "continent": "Africa"
   }
 ]
