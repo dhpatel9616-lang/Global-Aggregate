@@ -658,5 +658,325 @@
     "name": "Malawi",
     "code": "MW",
     "continent": "Africa"
+  },
+  {
+    "name": "Andorra",
+    "code": "AD",
+    "continent": "Europe"
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "code": "AG",
+    "continent": "North America"
+  },
+  {
+    "name": "Bahamas",
+    "code": "BS",
+    "continent": "North America"
+  },
+  {
+    "name": "Barbados",
+    "code": "BB",
+    "continent": "North America"
+  },
+  {
+    "name": "Belarus",
+    "code": "BY",
+    "continent": "Europe"
+  },
+  {
+    "name": "Belize",
+    "code": "BZ",
+    "continent": "North America"
+  },
+  {
+    "name": "Bhutan",
+    "code": "BT",
+    "continent": "Asia"
+  },
+  {
+    "name": "Burundi",
+    "code": "BI",
+    "continent": "Africa"
+  },
+  {
+    "name": "Cabo Verde",
+    "code": "CV",
+    "continent": "Africa"
+  },
+  {
+    "name": "Central African Republic",
+    "code": "CF",
+    "continent": "Africa"
+  },
+  {
+    "name": "Chad",
+    "code": "TD",
+    "continent": "Africa"
+  },
+  {
+    "name": "Comoros",
+    "code": "KM",
+    "continent": "Africa"
+  },
+  {
+    "name": "Congo, Republic of the",
+    "code": "CG",
+    "continent": "Africa"
+  },
+  {
+    "name": "Djibouti",
+    "code": "DJ",
+    "continent": "Africa"
+  },
+  {
+    "name": "Dominica",
+    "code": "DM",
+    "continent": "North America"
+  },
+  {
+    "name": "Equatorial Guinea",
+    "code": "GQ",
+    "continent": "Africa"
+  },
+  {
+    "name": "Eritrea",
+    "code": "ER",
+    "continent": "Africa"
+  },
+  {
+    "name": "Estonia",
+    "code": "EE",
+    "continent": "Europe"
+  },
+  {
+    "name": "Eswatini",
+    "code": "SZ",
+    "continent": "Africa"
+  },
+  {
+    "name": "Gabon",
+    "code": "GA",
+    "continent": "Africa"
+  },
+  {
+    "name": "Gambia",
+    "code": "GM",
+    "continent": "Africa"
+  },
+  {
+    "name": "Grenada",
+    "code": "GD",
+    "continent": "North America"
+  },
+  {
+    "name": "Guinea",
+    "code": "GN",
+    "continent": "Africa"
+  },
+  {
+    "name": "Guinea-Bissau",
+    "code": "GW",
+    "continent": "Africa"
+  },
+  {
+    "name": "Holy See",
+    "code": "VA",
+    "continent": "Europe"
+  },
+  {
+    "name": "Honduras",
+    "code": "HN",
+    "continent": "North America"
+  },
+  {
+    "name": "Kiribati",
+    "code": "KI",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Latvia",
+    "code": "LV",
+    "continent": "Europe"
+  },
+  {
+    "name": "Lesotho",
+    "code": "LS",
+    "continent": "Africa"
+  },
+  {
+    "name": "Liberia",
+    "code": "LR",
+    "continent": "Africa"
+  },
+  {
+    "name": "Liechtenstein",
+    "code": "LI",
+    "continent": "Europe"
+  },
+  {
+    "name": "Luxembourg",
+    "code": "LU",
+    "continent": "Europe"
+  },
+  {
+    "name": "Maldives",
+    "code": "MV",
+    "continent": "Asia"
+  },
+  {
+    "name": "Malta",
+    "code": "MT",
+    "continent": "Europe"
+  },
+  {
+    "name": "Marshall Islands",
+    "code": "MH",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Mauritania",
+    "code": "MR",
+    "continent": "Africa"
+  },
+  {
+    "name": "Mauritius",
+    "code": "MU",
+    "continent": "Africa"
+  },
+  {
+    "name": "Micronesia",
+    "code": "FM",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Monaco",
+    "code": "MC",
+    "continent": "Europe"
+  },
+  {
+    "name": "Montenegro",
+    "code": "ME",
+    "continent": "Europe"
+  },
+  {
+    "name": "Nauru",
+    "code": "NR",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Niger",
+    "code": "NE",
+    "continent": "Africa"
+  },
+  {
+    "name": "North Korea",
+    "code": "KP",
+    "continent": "Asia"
+  },
+  {
+    "name": "Palau",
+    "code": "PW",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Palestine",
+    "code": "PS",
+    "continent": "Asia"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "code": "KN",
+    "continent": "North America"
+  },
+  {
+    "name": "Saint Lucia",
+    "code": "LC",
+    "continent": "North America"
+  },
+  {
+    "name": "Saint Vincent and the Grenadines",
+    "code": "VC",
+    "continent": "North America"
+  },
+  {
+    "name": "Samoa",
+    "code": "WS",
+    "continent": "Oceania"
+  },
+  {
+    "name": "San Marino",
+    "code": "SM",
+    "continent": "Europe"
+  },
+  {
+    "name": "Sao Tome and Principe",
+    "code": "ST",
+    "continent": "Africa"
+  },
+  {
+    "name": "Seychelles",
+    "code": "SC",
+    "continent": "Africa"
+  },
+  {
+    "name": "Sierra Leone",
+    "code": "SL",
+    "continent": "Africa"
+  },
+  {
+    "name": "Slovenia",
+    "code": "SI",
+    "continent": "Europe"
+  },
+  {
+    "name": "Solomon Islands",
+    "code": "SB",
+    "continent": "Oceania"
+  },
+  {
+    "name": "South Sudan",
+    "code": "SS",
+    "continent": "Africa"
+  },
+  {
+    "name": "Suriname",
+    "code": "SR",
+    "continent": "South America"
+  },
+  {
+    "name": "Tajikistan",
+    "code": "TJ",
+    "continent": "Asia"
+  },
+  {
+    "name": "Timor-Leste",
+    "code": "TL",
+    "continent": "Asia"
+  },
+  {
+    "name": "Togo",
+    "code": "TG",
+    "continent": "Africa"
+  },
+  {
+    "name": "Tonga",
+    "code": "TO",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Turkmenistan",
+    "code": "TM",
+    "continent": "Asia"
+  },
+  {
+    "name": "Tuvalu",
+    "code": "TV",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Vanuatu",
+    "code": "VU",
+    "continent": "Oceania"
   }
 ]
