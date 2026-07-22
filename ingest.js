@@ -775,8 +775,17 @@ async function fetchGNews(country) {
 async function fetchCurrents(country) {
   const url = `https://api.currentsapi.services/v1/latest-news?language=en&country=${country.code}&apiKey=${CURRENTS_API_KEY}`;
   const res = await fetch(url);
-  const data = await res.json();
-  if (data.status !== 'ok') throw new Error(data.message || 'Currents API error');
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    // Non-JSON body (e.g. plain-text rate-limit page) -- surface status + raw body directly.
+    throw new Error(`Currents API error (HTTP ${res.status}, non-JSON body): ${rawText.slice(0, 200)}`);
+  }
+  if (data.status !== 'ok') {
+    throw new Error(`Currents API error (HTTP ${res.status}): ${data.message || '[no message field]'}`);
+  }
 
   const rows = (data.news || [])
     .filter((item) => item.title && item.url)
