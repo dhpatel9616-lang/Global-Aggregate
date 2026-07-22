@@ -193,6 +193,67 @@ const FEED_URLS_BY_COUNTRY = {
   QA: [
     { source: 'thepeninsulaqatar.com', feedUrl: 'https://thepeninsulaqatar.com/feed' },
   ],
+
+  // --- Batch 3: countries with NO working API path at all (not on GNews's
+  // 10-country cap, not on NewsData's cap, and not in Currents' real
+  // supported-region list -- confirmed 2026-07-22 via a live call to
+  // Currents' /v1/available/regions). RSS is the only remaining option for
+  // these. Same discipline as batch 2: standard/documented feed paths,
+  // NOT individually fetch-tested -- the next real run's diagnostic
+  // logging (403s, malformed XML, non_english, etc.) is what actually
+  // validates or corrects these, not pre-research. Expect a meaningfully
+  // higher break rate here than batch 1/2 -- these are smaller, less
+  // resourced outlets than BBC/Guardian/Times of India.
+  AL: [{ source: 'albaniandailynews.com', feedUrl: 'https://albaniandailynews.com/index.php?feed=rss2' }],
+  AM: [{ source: 'armenpress.am', feedUrl: 'https://armenpress.am/eng/rss/' }],
+  AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
+  AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
+  BG: [{ source: 'sofiaglobe.com', feedUrl: 'https://sofiaglobe.com/feed/' }],
+  BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
+  BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
+  BN: [{ source: 'borneobulletin.com.bn', feedUrl: 'https://borneobulletin.com.bn/feed/' }],
+  BW: [{ source: 'mmegi.bw', feedUrl: 'https://www.mmegi.bw/feed' }],
+  CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
+  CM: [{ source: 'journalducameroun.com', feedUrl: 'https://www.journalducameroun.com/en/feed/' }],
+  CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }],
+  CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
+  CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
+  DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
+  DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/rss' }],
+  GE: [{ source: 'agenda.ge', feedUrl: 'https://agenda.ge/en/rss' }],
+  GY: [{ source: 'stabroeknews.com', feedUrl: 'https://www.stabroeknews.com/feed/' }],
+  HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
+  HT: [{ source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' }],
+  IS: [{ source: 'icelandreview.com', feedUrl: 'https://www.icelandreview.com/feed/' }],
+  KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
+  KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
+  LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
+  LT: [{ source: 'lrt.lt', feedUrl: 'https://www.lrt.lt/en/rss' }],
+  LY: [{ source: 'libyaobserver.ly', feedUrl: 'https://www.libyaobserver.ly/rss.xml' }],
+  MD: [{ source: 'agora.md', feedUrl: 'https://agora.md/rss' }],
+  MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
+  MK: [{ source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' }],
+  ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
+  MN: [{ source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/rss' }],
+  MW: [{ source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' }],
+  MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
+  NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
+  OM: [{ source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' }],
+  RW: [{ source: 'newtimes.co.rw', feedUrl: 'https://www.newtimes.co.rw/rss.xml' }],
+  SD: [{ source: 'sudantribune.com', feedUrl: 'https://sudantribune.com/feed/' }],
+  SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
+  SO: [{ source: 'garoweonline.com', feedUrl: 'https://www.garoweonline.com/en/feed' }],
+  SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
+  TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
+  TT: [{ source: 'newsday.co.tt', feedUrl: 'https://newsday.co.tt/feed/' }],
+  UZ: [{ source: 'daryo.uz', feedUrl: 'https://daryo.uz/en/feed' }],
+  ZM: [{ source: 'lusakatimes.com', feedUrl: 'https://www.lusakatimes.com/feed/' }],
+  // NOT YET FOUND -- no plausible, reliably-updated English-language outlet
+  // located for these in this pass. Real research needed, not a guess:
+  // BF (Burkina Faso), GT (Guatemala), NI (Nicaragua), SV (El Salvador),
+  // YE (Yemen, though it likely relies on wire coverage -- BBC/AJ/Reuters
+  // mentioning it by name via the WORLD feeds -- rather than a domestic
+  // outlet, since one may not reliably exist).
 };
 
 async function loadExistingTitles() {
