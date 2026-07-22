@@ -13,22 +13,22 @@
 // run correctly handles both daily and weekly subscribers without needing
 // two separate workflows.
 //
-// Requires a RESEND_API_KEY secret (get one free at resend.com -- 3,000
-// emails/month, 100/day, no card required). IMPORTANT: Resend's free tier
-// only delivers to your own verified account email until you verify a
-// custom sending domain -- this script will run fine either way, but real
-// subscriber delivery needs that domain verification done on Resend's side
-// first.
+// Uses Brevo (free tier: 300 emails/day, no card required) instead of
+// Resend -- switched because the project's existing domain was already
+// verified on a separate Resend account. Requires a BREVO_API_KEY secret
+// (Brevo dashboard -> SMTP & API -> API Keys) and a verified sender email
+// (Brevo dashboard -> Senders, Domains & Dedicated IPs -> Senders).
 
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL || 'onboarding@resend.dev';
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL; // must be a verified sender in Brevo -- no generic fallback like Resend's onboarding@resend.dev exists here
+const DIGEST_FROM_NAME = process.env.DIGEST_FROM_NAME || 'Global Aggregate';
 const SUPABASE_PROJECT_REF = process.env.SUPABASE_PROJECT_REF; // e.g. "nikvqivovodrfybfjjka" -- used to build the unsubscribe link
 
-const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'RESEND_API_KEY', 'SUPABASE_PROJECT_REF'].filter((k) => !process.env[k]);
+const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'BREVO_API_KEY', 'DIGEST_FROM_EMAIL', 'SUPABASE_PROJECT_REF'].filter((k) => !process.env[k]);
 if (missing.length > 0) {
   console.error(`Missing required environment variable(s): ${missing.join(', ')}`);
   process.exit(1);
@@ -61,8 +61,8 @@ async function getDueFilters() {
   return data.filter((filter) => {
     if (!filter.digest_last_sent_at) return true; // never sent -- due immediately
     const hoursSinceLastSend = (now - new Date(filter.digest_last_sent_at).getTime()) / (1000 * 60 * 60);
-    if (filter.digest_frequency === 'daily') return hoursSinceLastSend >= 20; // small buffer under 24h so run-time drift doesn't skip a day
-    if (filter.digest_frequency === 'weekly') return hoursSinceLastSend >= 164; // ~6.8 days, same buffer logic
+    if (filter.digest_frequency === 'daily') return hoursSinceLastSend >= 20;
+    if (filter.digest_frequency === 'weekly') return hoursSinceLastSend >= 164;
     return false;
   });
 }
@@ -74,7 +74,7 @@ async function getArticlesFor(filter) {
     .select('title, description, url, source, country, topic, cluster_id, published_at, created_at')
     .gte('created_at', new Date(Date.now() - lookbackHours * 60 * 60 * 1000).toISOString())
     .order('created_at', { ascending: false })
-    .limit(200); // pull a generous pool, then trim after dedup below
+    .limit(200);
 
   if (filter.country_list && filter.country_list.length > 0) {
     query = query.in('country', filter.country_list);
@@ -86,13 +86,6 @@ async function getArticlesFor(filter) {
   const { data, error } = await query;
   if (error) throw new Error(`Failed to load articles for filter ${filter.id}: ${error.message}`);
 
-  // Dedup by cluster_id -- if the filter matches multiple articles covering
-  // the same cross-country story, show it once. Also cap per-country
-  // representation (max 3) -- without this, "most recent" ordering skews
-  // heavily toward whichever country's pipeline happened to land in the
-  // same ingestion batch (confirmed via testing: one country's feed alone
-  // made up 40+ of a 200-row sample for a filter with no country selected),
-  // which isn't a genuinely broad digest, just whichever country ran last.
   const seenClusters = new Set();
   const perCountryCount = {};
   const MAX_PER_COUNTRY = 3;
@@ -106,7 +99,7 @@ async function getArticlesFor(filter) {
     if (countryCount >= MAX_PER_COUNTRY) continue;
     perCountryCount[article.country] = countryCount + 1;
     deduped.push(article);
-    if (deduped.length >= 20) break; // keep the email a reasonable length
+    if (deduped.length >= 20) break;
   }
   return deduped;
 }
@@ -150,17 +143,23 @@ function buildEmailHtml(filterName, articles, unsubscribeUrl) {
 }
 
 async function sendEmail(to, subject, html) {
-  const res = await fetch('https://api.resend.com/emails', {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'api-key': BREVO_API_KEY,
       'Content-Type': 'application/json',
+      accept: 'application/json',
     },
-    body: JSON.stringify({ from: DIGEST_FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify({
+      sender: { email: DIGEST_FROM_EMAIL, name: DIGEST_FROM_NAME },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Resend API error ${res.status}: ${body}`);
+    throw new Error(`Brevo API error ${res.status}: ${body}`);
   }
   return res.json();
 }
@@ -169,9 +168,7 @@ async function main() {
   const filters = await getDueFilters();
   console.log(`${filters.length} subscribed filter(s) due for a digest.`);
 
-  // Cache user_id -> email lookups since one user can have multiple due filters
   const emailCache = new Map();
-
   let sent = 0;
   let skippedEmpty = 0;
   let failed = 0;
@@ -222,7 +219,7 @@ async function main() {
       failed++;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 500)); // stay comfortably under Resend's rate limit
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   console.log(`\nDone. Sent: ${sent}, skipped (no matching articles): ${skippedEmpty}, failed: ${failed}.`);
