@@ -772,6 +772,41 @@ async function fetchGNews(country) {
   return rows;
 }
 
+// Currents only supports 70+ countries total (confirmed via their own docs
+// and, definitively, via a live call to this endpoint on 2026-07-22), not
+// the 100+ country codes this project was routing to it by default-fill
+// logic. Every unsupported code was throwing a 400 on every single run --
+// confirmed 57 of the ~100 Currents-assigned countries at the time this was
+// added. Fetched live each run (Currents can add/remove supported regions
+// over time, and this is cheap -- one extra request) rather than trusting a
+// hardcoded snapshot to stay accurate. Falls back to the snapshot below
+// only if the live call itself fails, so a transient hiccup on this one
+// endpoint doesn't take down the whole run's Currents assignment.
+const CURRENTS_SUPPORTED_REGIONS_FALLBACK = new Set([
+  'US','TW','DE','GB','CN','IN','ES','IT','PL','AU','MY','SG','CA','KR','DK',
+  'FR','BE','JP','AT','PT','PH','HK','AR','VE','BR','FI','ID','VN','MX','GR',
+  'NL','NO','NZ','RU','SA','CH','TH','AE','IE','IR','IQ','RO','AF','ZW','MM',
+  'SE','PE','PA','EG','TR','IL','CZ','BD','NG','KE','CL','UY','EC','RS','HU',
+  'SI','GH','BO','PK','CO','PY','PS','EE','LB','QA','KW','KH','NP','LU','BA',
+]);
+
+async function fetchCurrentsSupportedRegions() {
+  try {
+    const res = await fetch(`https://api.currentsapi.services/v1/available/regions?apiKey=${CURRENTS_API_KEY}`);
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.regions) throw new Error('Unexpected response shape');
+    // data.regions is { "Country Name": "CODE" } -- we only need the codes.
+    // Excludes non-ISO aggregate entries (EU, ASIA, INT, and NK for North
+    // Korea, whose real ISO code is KP and isn't in countries.json anyway)
+    // implicitly, since we only ever look codes up against real configured
+    // countries later.
+    return new Set(Object.values(data.regions));
+  } catch (err) {
+    console.warn(`Could not fetch live Currents region list (${err.message}) -- using last-known snapshot instead.`);
+    return CURRENTS_SUPPORTED_REGIONS_FALLBACK;
+  }
+}
+
 async function fetchCurrents(country) {
   const url = `https://api.currentsapi.services/v1/latest-news?language=en&country=${country.code}&apiKey=${CURRENTS_API_KEY}`;
   const res = await fetch(url);
@@ -852,11 +887,14 @@ const SOURCE_OVERRIDES = {
 
 // Assigns each country a source by filling GNews and NewsData up to their
 // caps first (in countries.json order), then routing everything else to
-// Currents. Deterministic and easy to reason about; re-run this assignment
-// whenever countries.json changes rather than trying to preserve old
-// per-country assignments -- the caps are what matter, not stability of
-// which specific country landed on which source.
-function assignSources(countryList) {
+// Currents -- EXCEPT countries Currents doesn't actually support (see
+// fetchCurrentsSupportedRegions above), which get null instead of a
+// guaranteed-400 Currents call every single run. Deterministic and easy to
+// reason about; re-run this assignment whenever countries.json changes
+// rather than trying to preserve old per-country assignments -- the caps
+// are what matter, not stability of which specific country landed on which
+// source.
+function assignSources(countryList, currentsSupportedRegions) {
   const counts = { 'GNews': 0, 'NewsData.io': 0, 'Currents': 0 };
   return countryList.map((country) => {
     // Overrides are handled first and returned immediately -- they must NOT
@@ -871,8 +909,16 @@ function assignSources(countryList) {
       sourceName = 'GNews';
     } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
       sourceName = 'NewsData.io';
-    } else {
+    } else if (currentsSupportedRegions.has(country.code)) {
       sourceName = 'Currents';
+    } else {
+      // No viable API source for this country at current caps -- do not
+      // burn a request on a call that's guaranteed to 400. This is a real,
+      // known gap (candidate for RSS or a future dedicated source), not a
+      // transient failure, so it's surfaced separately in the run summary
+      // rather than mixed in with genuine errors.
+      counts['Currents']++; // still counts toward "would have gone to Currents" bookkeeping below
+      return null;
     }
     counts[sourceName]++;
     return SOURCES.find((s) => s.name === sourceName);
@@ -880,16 +926,34 @@ function assignSources(countryList) {
 }
 
 async function main() {
-  const sourceAssignments = assignSources(countries);
-  console.log(`Starting ingestion for ${countries.length} countries across ${SOURCES.length} sources...\n`);
+  console.log('Checking Currents-supported regions...');
+  const currentsSupportedRegions = await fetchCurrentsSupportedRegions();
+  console.log(`Currents supports ${currentsSupportedRegions.size} region codes.\n`);
+
+  const sourceAssignments = assignSources(countries, currentsSupportedRegions);
+  const noSourceCount = sourceAssignments.filter((s) => s === null).length;
+  console.log(`Starting ingestion for ${countries.length} countries across ${SOURCES.length} sources...`);
+  if (noSourceCount > 0) {
+    console.log(`(${noSourceCount} countries have no viable API source this run -- skipped, not attempted -- see summary below)\n`);
+  } else {
+    console.log('');
+  }
 
   const seenTitles = await loadExistingTitles();
   console.log(`Loaded ${seenTitles.size} existing titles for dedup.\n`);
 
   const results = [];
+  const skipped = [];
   for (let i = 0; i < countries.length; i++) {
     const country = countries[i];
     const source = sourceAssignments[i];
+
+    if (source === null) {
+      // Known, expected gap -- not attempted, not an error. Tracked
+      // separately so it doesn't get mixed in with genuine failures below.
+      skipped.push(country.name);
+      continue;
+    }
 
     try {
       const rows = await source.fetcher(country);
@@ -906,10 +970,14 @@ async function main() {
   const totalInserted = results.reduce((sum, r) => sum + r.inserted, 0);
   const failed = results.filter((r) => r.error || r.inserted === 0);
 
-  console.log(`\nDone. ${totalInserted} articles processed across ${countries.length} countries.`);
+  console.log(`\nDone. ${totalInserted} articles processed across ${countries.length - skipped.length} attempted countries (${skipped.length} skipped -- no API source).`);
   if (failed.length > 0) {
     console.log(`\nCountries with issues (0 articles or errors):`);
     failed.forEach((r) => console.log(`  - ${r.country}${r.error ? `: ${r.error}` : ' (empty result)'}`));
+  }
+  if (skipped.length > 0) {
+    console.log(`\nSkipped -- no viable API source at current caps (candidates for RSS or a dedicated fix, not errors):`);
+    skipped.forEach((name) => console.log(`  - ${name}`));
   }
 
   console.log('\nClustering related stories across countries...');
