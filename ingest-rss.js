@@ -271,7 +271,7 @@ const FEED_URLS_BY_COUNTRY = {
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
   SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
   GA: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
-  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/feed' }], // 404 on /africa/gambia/feed -- retrying with bare /feed
+  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/feed' }], // 404 on two different guessed paths now -- needs real research (open the site, find the actual feed link), not another blind guess
   GD: [{ source: 'nowgrenada.com', feedUrl: 'https://nowgrenada.com/feed/' }],
   GN: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
   VA: [{ source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
@@ -279,18 +279,18 @@ const FEED_URLS_BY_COUNTRY = {
   LS: [{ source: 'lestimes.com', feedUrl: 'https://lestimes.com/feed/' }], // feed itself has an unescaped "&" in it (invalid XML on their end) -- not fixable by changing the URL, same class of issue as the Jordan/Zimbabwe feeds already accepted as known-broken
   LR: [{ source: 'frontpageafricaonline.com', feedUrl: 'https://frontpageafricaonline.com/?feed=rss2' }], // /feed/ served something not recognized as valid RSS -- retrying explicit WordPress rss2 param
   LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
-  MV: [{ source: 'edition.mv', feedUrl: 'https://edition.mv/feed/' }], // 404 without trailing slash -- retrying with one
-  MT: [{ source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }], // /rss/news redirected server-side to a malformed hostname (their bug, not ours) -- trying the standard /rss.xml path instead
+  MV: [{ source: 'edition.mv', feedUrl: 'https://edition.mv/feed/' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
+  MT: [{ source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }], // now resolves but returns 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco, not a path problem, no further URL guessing will help
   MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
-  MU: [{ source: 'defimedia.info', feedUrl: 'https://defimedia.info/?feed=rss2' }], // /feed 404'd -- retrying explicit WordPress rss2 param
+  MU: [{ source: 'defimedia.info', feedUrl: 'https://defimedia.info/?feed=rss2' }], // feed exists at this path now (no more 404) but has malformed XML of its own -- source-side bug, same class as LS/TJ below
   MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }], // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
   ME: [{ source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' }],
   NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
-  PS: [{ source: 'wafa.ps', feedUrl: 'https://www.wafa.ps/rss.aspx' }], // english.wafa.ps/rss.aspx 404'd -- trying www.wafa.ps instead (lower confidence, may need real research if this also fails)
-  KN: [{ source: 'sknvibes.com', feedUrl: 'https://www.sknvibes.com/feed' }], // /rss/news.xml 404'd -- retrying bare /feed
+  PS: [{ source: 'wafa.ps', feedUrl: 'https://www.wafa.ps/rss.aspx' }], // 404 on two different subdomain guesses now -- needs real research, not another blind guess
+  KN: [{ source: 'sknvibes.com', feedUrl: 'https://www.sknvibes.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
   LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }],
   VC: [{ source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' }],
-  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/feed/' }], // 404 without trailing slash -- retrying with one
+  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/feed/' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
   SC: [{ source: 'seychellesnewsagency.com', feedUrl: 'https://www.seychellesnewsagency.com/rss' }],
   SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
   SI: [{ source: 'sloveniatimes.com', feedUrl: 'https://sloveniatimes.com/feed' }],
@@ -300,7 +300,7 @@ const FEED_URLS_BY_COUNTRY = {
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
   TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 without trailing slash -- retrying with one
-  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // 404 with trailing slash -- retrying without one
+  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // path is correct now (429 rate-limited, not 404) -- may succeed on a later run without any change needed
   // NOT FOUND -- no plausible independent English-language outlet located
   // in this pass, or (for BY/ER/KP/TM) the press is state-controlled to a
   // degree that a "national outlet" RSS feed isn't a meaningful concept --
