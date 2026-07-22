@@ -254,6 +254,65 @@ const FEED_URLS_BY_COUNTRY = {
   // YE (Yemen, though it likely relies on wire coverage -- BBC/AJ/Reuters
   // mentioning it by name via the WORLD feeds -- rather than a domestic
   // outlet, since one may not reliably exist).
+
+  // --- Batch 4: the 64 UN member/observer states added 2026-07-22 to reach
+  // full 195-country coverage. Same discipline as batches 2/3 -- real
+  // candidate outlets, standard feed paths, NOT individually fetch-tested.
+  // Confidence varies a lot more here than earlier batches: several of
+  // these countries have genuinely thin or state-controlled press, so
+  // expect a higher break/skip rate than usual on the first real run.
+  AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
+  BS: [{ source: 'tribune242.com', feedUrl: 'https://www.tribune242.com/rss/news/' }],
+  BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
+  BZ: [{ source: 'breakingbelizenews.com', feedUrl: 'https://www.breakingbelizenews.com/feed' }],
+  BT: [{ source: 'kuenselonline.com', feedUrl: 'https://kuenselonline.com/feed/' }],
+  CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/republicofcongo/headlines.rdf' }],
+  DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
+  EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
+  SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
+  GA: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
+  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/africa/gambia/feed' }],
+  GD: [{ source: 'nowgrenada.com', feedUrl: 'https://nowgrenada.com/feed/' }],
+  GN: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
+  VA: [{ source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
+  LV: [{ source: 'eng.lsm.lv', feedUrl: 'https://eng.lsm.lv/rss/' }],
+  LS: [{ source: 'lestimes.com', feedUrl: 'https://lestimes.com/feed/' }],
+  LR: [{ source: 'frontpageafricaonline.com', feedUrl: 'https://frontpageafricaonline.com/feed/' }],
+  LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
+  MV: [{ source: 'edition.mv', feedUrl: 'https://edition.mv/feed' }],
+  MT: [{ source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss/news' }],
+  MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
+  MU: [{ source: 'defimedia.info', feedUrl: 'https://defimedia.info/feed' }],
+  MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }],
+  ME: [{ source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' }],
+  NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
+  PS: [{ source: 'wafa.ps', feedUrl: 'https://english.wafa.ps/rss.aspx' }],
+  KN: [{ source: 'sknvibes.com', feedUrl: 'https://www.sknvibes.com/rss/news.xml' }],
+  LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }],
+  VC: [{ source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' }],
+  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/feed' }],
+  SC: [{ source: 'seychellesnewsagency.com', feedUrl: 'https://www.seychellesnewsagency.com/rss' }],
+  SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
+  SI: [{ source: 'sloveniatimes.com', feedUrl: 'https://sloveniatimes.com/feed' }],
+  SB: [{ source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' }],
+  SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/rss.xml' }],
+  TJ: [{ source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss/news' }],
+  TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
+  TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
+  TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed' }],
+  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed/' }],
+  // NOT FOUND -- no plausible independent English-language outlet located
+  // in this pass, or (for BY/ER/KP/TM) the press is state-controlled to a
+  // degree that a "national outlet" RSS feed isn't a meaningful concept --
+  // these realistically depend on wire-service mentions (WORLD feed) or
+  // exile/diaspora media that would need deliberate individual research:
+  // AD (Andorra), BY (Belarus), BI (Burundi), CV (Cabo Verde),
+  // CF (Central African Republic), TD (Chad), KM (Comoros),
+  // DJ (Djibouti), GQ (Equatorial Guinea), ER (Eritrea),
+  // GW (Guinea-Bissau), HN (Honduras), KI (Kiribati), LI (Liechtenstein),
+  // MH (Marshall Islands), FM (Micronesia), NR (Nauru), KP (North Korea),
+  // PW (Palau), SM (San Marino), ST (Sao Tome and Principe),
+  // SR (Suriname), TM (Turkmenistan), TV (Tuvalu).
 };
 
 async function loadExistingTitles() {
