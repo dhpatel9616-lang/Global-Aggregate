@@ -271,26 +271,26 @@ const FEED_URLS_BY_COUNTRY = {
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
   SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
   GA: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
-  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/feed' }], // 404 on two different guessed paths now -- needs real research (open the site, find the actual feed link), not another blind guess
+  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/posts/rss/xml' }], // confirmed real feed URL from page source (rel=alternate link tag) -- not a guess
   GD: [{ source: 'nowgrenada.com', feedUrl: 'https://nowgrenada.com/feed/' }],
   GN: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
   VA: [{ source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
   LV: [{ source: 'eng.lsm.lv', feedUrl: 'https://eng.lsm.lv/rss/' }],
   LS: [{ source: 'lestimes.com', feedUrl: 'https://lestimes.com/feed/' }], // feed itself has an unescaped "&" in it (invalid XML on their end) -- not fixable by changing the URL, same class of issue as the Jordan/Zimbabwe feeds already accepted as known-broken
-  LR: [{ source: 'frontpageafricaonline.com', feedUrl: 'https://frontpageafricaonline.com/?feed=rss2' }], // /feed/ served something not recognized as valid RSS -- retrying explicit WordPress rss2 param
+  LR: [{ source: 'fpa.news', feedUrl: 'https://fpa.news/feed/' }], // confirmed real feed URL from page source -- FrontPage Africa actually serves its feed from a completely different domain (fpa.news), not frontpageafricaonline.com
   LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
-  MV: [{ source: 'edition.mv', feedUrl: 'https://edition.mv/feed/' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
+  // MV (Maldives) confirmed NO RSS feed exists at all -- checked page source directly, no rel=alternate rss+xml tag anywhere (Nuxt SPA site). Not a path problem, genuinely not offered.
   MT: [{ source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }], // now resolves but returns 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco, not a path problem, no further URL guessing will help
   MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
   MU: [{ source: 'defimedia.info', feedUrl: 'https://defimedia.info/?feed=rss2' }], // feed exists at this path now (no more 404) but has malformed XML of its own -- source-side bug, same class as LS/TJ below
   MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }], // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
   ME: [{ source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' }],
   NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
-  PS: [{ source: 'wafa.ps', feedUrl: 'https://www.wafa.ps/rss.aspx' }], // 404 on two different subdomain guesses now -- needs real research, not another blind guess
-  KN: [{ source: 'sknvibes.com', feedUrl: 'https://www.sknvibes.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
+  // PS (Palestine/WAFA) confirmed NO real RSS feed -- an RSS icon exists on the site but its href is just "#" (a dead placeholder), not an actual feed link. Not a path problem, genuinely not offered.
+  // KN (St Kitts/sknvibes.com) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
   LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }],
   VC: [{ source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' }],
-  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/feed/' }], // 404 on two different guessed paths now -- needs real research, not another blind guess
+  // WS (Samoa Observer) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
   SC: [{ source: 'seychellesnewsagency.com', feedUrl: 'https://www.seychellesnewsagency.com/rss' }],
   SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
   SI: [{ source: 'sloveniatimes.com', feedUrl: 'https://sloveniatimes.com/feed' }],
