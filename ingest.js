@@ -559,6 +559,26 @@ function domainMatchesCountryTld(source, countryCode) {
   return source.toLowerCase().endsWith(`.${cctld}`);
 }
 
+// A handful of major international outlets publish genuine per-country
+// editions via a ccTLD subdomain prefix rather than a ccTLD itself (e.g.
+// "fr.investing.com" is Investing.com's real French edition, not a generic
+// wire feed). Confirmed via blockedSources logging across five different
+// countries in a single pass (ng./fr./br./pl./uk.investing.com all
+// incorrectly rejected) -- a clean, recurring pattern from one specific
+// publisher, not a one-off. Kept as a narrow, explicit base-domain list
+// rather than a blanket "any subdomain matching a country code passes"
+// rule, which would be far more false-positive-prone than the ccTLD check
+// above (subdomains are arbitrary strings anyone can set, unlike TLDs).
+const MULTI_COUNTRY_EDITION_BASES = ['investing.com'];
+
+function domainMatchesCountryEdition(source, countryCode) {
+  if (!source) return false;
+  const cctld = countryCode.toLowerCase();
+  if (HIJACKED_CCTLDS.has(cctld)) return false;
+  const normalized = source.toLowerCase();
+  return MULTI_COUNTRY_EDITION_BASES.some((base) => normalized === `${cctld}.${base}`);
+}
+
 function passesNationalRelevance(row) {
   if (!row.source) return false;
   const list = ALLOWLIST_BY_COUNTRY[row.country];
@@ -567,6 +587,7 @@ function passesNationalRelevance(row) {
     if (list.some((domain) => normalized.includes(domain))) return true;
   }
   if (domainMatchesCountryTld(row.source, row.country)) return true;
+  if (domainMatchesCountryEdition(row.source, row.country)) return true;
   const text = `${row.title} ${row.description || ''}`;
   return mentionsCountry(text, row.country);
 }
