@@ -652,7 +652,7 @@ async function upsertRows(countryName, rows, seenTitles) {
       noJunk.push(row);
     } else {
       reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
-      if (reason === 'not_on_country_allowlist' && row.source) {
+      if (reason === 'not_relevant_to_country' && row.source) {
         blockedSources.add(row.source);
       }
     }
@@ -682,7 +682,7 @@ async function upsertRows(countryName, rows, seenTitles) {
 
   if (deduped.length === 0) {
     console.warn(`[${countryName}] No new articles to insert.`);
-    return { country: countryName, inserted: 0 };
+    return { country: countryName, inserted: 0, rawCount: rows.length, junkSkipped };
   }
   const { error } = await supabase
     .from('articles')
@@ -693,10 +693,10 @@ async function upsertRows(countryName, rows, seenTitles) {
 
   if (error) {
     console.error(`[${countryName}] Supabase insert error: ${error.message}`);
-    return { country: countryName, inserted: 0, error: error.message };
+    return { country: countryName, inserted: 0, error: error.message, rawCount: rows.length, junkSkipped };
   }
   console.log(`[${countryName}] Upserted ${deduped.length} articles.`);
-  return { country: countryName, inserted: deduped.length };
+  return { country: countryName, inserted: deduped.length, rawCount: rows.length, junkSkipped };
 }
 
 // Extracts a readable domain from a URL to use as the source label.
@@ -973,7 +973,19 @@ async function main() {
   console.log(`\nDone. ${totalInserted} articles processed across ${countries.length - skipped.length} attempted countries (${skipped.length} skipped -- no API source).`);
   if (failed.length > 0) {
     console.log(`\nCountries with issues (0 articles or errors):`);
-    failed.forEach((r) => console.log(`  - ${r.country}${r.error ? `: ${r.error}` : ' (empty result)'}`));
+    failed.forEach((r) => {
+      if (r.error) {
+        console.log(`  - ${r.country}: ${r.error}`);
+      } else if (r.rawCount > 0) {
+        // Real results came back but the relevance/junk filters rejected all
+        // of them -- a completely different problem than a genuine empty API
+        // result, and one that was previously invisible because both cases
+        // printed the same "(empty result)" label.
+        console.log(`  - ${r.country} (${r.rawCount} returned, ${r.junkSkipped} filtered -- 100% rejected, see "Sources blocked" line above)`);
+      } else {
+        console.log(`  - ${r.country} (empty result -- API genuinely returned nothing)`);
+      }
+    });
   }
   if (skipped.length > 0) {
     console.log(`\nSkipped -- no viable API source at current caps (candidates for RSS or a dedicated fix, not errors):`);
