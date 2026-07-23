@@ -936,6 +936,20 @@ const SOURCE_OVERRIDES = {
   UA: 'NewsData.io',
 };
 
+// GNews's own technical docs (docs.gnews.io/endpoints/search-endpoint,
+// checked 2026-07-23) list exactly 37 supported country codes for the
+// `country` parameter -- notably NOT the "71 countries" figure GNews's
+// marketing page claims elsewhere. Confirmed via real run evidence: Vietnam
+// and Iran were being assigned to GNews despite not appearing on this list
+// at all, and both showed genuinely-empty results repeatedly. Same fix
+// pattern as CURRENTS_SUPPORTED_REGIONS_FALLBACK above -- don't burn a
+// request on a country the API was never going to serve.
+const GNEWS_SUPPORTED_COUNTRIES = new Set([
+  'AR', 'AU', 'BD', 'BR', 'CA', 'CN', 'CO', 'EG', 'FR', 'DE', 'GR', 'HK',
+  'IN', 'ID', 'IE', 'IL', 'IT', 'JP', 'MY', 'MX', 'NL', 'NO', 'PK', 'PE',
+  'PH', 'PT', 'RO', 'RU', 'SG', 'ES', 'SE', 'CH', 'TW', 'TR', 'UA', 'GB', 'US',
+]);
+
 // Assigns each country a source by filling GNews and NewsData up to their
 // caps first (in countries.json order), then routing everything else to
 // Currents -- EXCEPT countries Currents doesn't actually support (see
@@ -956,7 +970,7 @@ function assignSources(countryList, currentsSupportedRegions) {
       return SOURCES.find((s) => s.name === SOURCE_OVERRIDES[country.code]);
     }
     let sourceName;
-    if (counts['GNews'] < SOURCE_CAPS['GNews']) {
+    if (counts['GNews'] < SOURCE_CAPS['GNews'] && GNEWS_SUPPORTED_COUNTRIES.has(country.code)) {
       sourceName = 'GNews';
     } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
       sourceName = 'NewsData.io';
