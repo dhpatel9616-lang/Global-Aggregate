@@ -318,6 +318,8 @@ const FEED_URLS_BY_COUNTRY = {
   // independent national outlet" isn't a coherent research task -- the
   // outlet itself IS the government.
   KP: [{ source: 'kcnawatch.org', feedUrl: 'https://kcnawatch.org/newstream/feed/', stateMedia: true }],
+  // ^ Feed has malformed XML of its own (unquoted attribute value) -- same
+  // source-side-bug class as LS/TJ/SV, not fixable by URL changes.
   // ^ Deliberately NOT fetching kcna.kp directly -- KCNA's own DPRK-hosted
   // site has a documented history of malicious scripts and frequent outages.
   // KCNA Watch is a dedicated third-party mirror built specifically to work
@@ -325,11 +327,14 @@ const FEED_URLS_BY_COUNTRY = {
   BY: [{ source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true }],
   // ^ Confirmed working -- saw live, current-dated content at this URL directly.
   ER: [{ source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true }],
-  TM: [{ source: 'orient.tm', feedUrl: 'https://orient.tm/rss', stateMedia: true }],
-  // ^ Turkmenistan has no single clean "the state agency" with a public feed
-  // (TDH/tdh.gov.tm shows no evidence of one). Orient.tm is described as
-  // pro-government rather than strictly state-owned -- flagged as state
-  // media here as the closest honest approximation, not a perfect fit.
+  // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
+  // Malta, not a path problem, no further URL guessing will help.
+  TM: [{ source: 'orient.tm', feedUrl: 'https://orient.tm/en/rss', stateMedia: true }],
+  // ^ /rss 404'd -- retrying /en/rss. Turkmenistan has no single clean "the
+  // state agency" with a public feed (TDH/tdh.gov.tm shows no evidence of
+  // one). Orient.tm is described as pro-government rather than strictly
+  // state-owned -- flagged as state media here as the closest honest
+  // approximation, not a perfect fit.
 
   // --- Batch 5: English-outlet sweep for the 15 non-English-press
   // countries (Category A) plus Yemen (previously a low-confidence "not
@@ -340,15 +345,17 @@ const FEED_URLS_BY_COUNTRY = {
   // confirmed "English-language news providers solely in or about
   // Guatemala are relatively sparse," and the only candidate found was a
   // monthly print magazine, not a live news feed.
-  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/feed' }],
-  SV: [{ source: 'elsalvadordaily.com', feedUrl: 'https://www.elsalvadordaily.com/feed' }],
-  NI: [{ source: 'nicaraguadailytimes.com', feedUrl: 'https://nicaraguadailytimes.com/feed' }],
+  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/rss.xml' }], // /feed 500'd -- retrying standard /rss.xml
+  SV: [{ source: 'elsalvadordaily.com', feedUrl: 'https://www.elsalvadordaily.com/feed' }], // feed exists at this path but has malformed XML (unexpected close tag) -- source-side bug, same class as LS/TJ/KP, not fixable by URL changes
+  NI: [{ source: 'nicaraguadailytimes.com', feedUrl: 'https://nicaraguadailytimes.com/rss.xml' }], // /feed returned something not recognized as valid RSS -- retrying standard /rss.xml
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
-  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed' }],
+  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed/' }], // 404 without trailing slash -- retrying with one
   // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
   YE: [{ source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }],
+  // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
+  // Malta/Eritrea, not a path problem, no further URL guessing will help.
   // ^ Al-Masdar Online -- confirmed still actively publishing as of 2026,
   // maintains an English-language version. Corrects the earlier low-
   // confidence "no outlet found" flag from an earlier, less rigorous pass.
