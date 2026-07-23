@@ -302,17 +302,34 @@ const FEED_URLS_BY_COUNTRY = {
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 without trailing slash -- retrying with one
   VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // path is correct now (429 rate-limited, not 404) -- may succeed on a later run without any change needed
   // NOT FOUND -- no plausible independent English-language outlet located
-  // in this pass, or (for BY/ER/KP/TM) the press is state-controlled to a
-  // degree that a "national outlet" RSS feed isn't a meaningful concept --
-  // these realistically depend on wire-service mentions (WORLD feed) or
-  // exile/diaspora media that would need deliberate individual research:
-  // AD (Andorra), BY (Belarus), BI (Burundi), CV (Cabo Verde),
+  // in this pass, or these are genuinely tiny states with no discoverable
+  // English-language press at all:
+  // AD (Andorra), BI (Burundi), CV (Cabo Verde),
   // CF (Central African Republic), TD (Chad), KM (Comoros),
-  // DJ (Djibouti), GQ (Equatorial Guinea), ER (Eritrea),
+  // DJ (Djibouti), GQ (Equatorial Guinea),
   // GW (Guinea-Bissau), HN (Honduras), KI (Kiribati), LI (Liechtenstein),
-  // MH (Marshall Islands), FM (Micronesia), NR (Nauru), KP (North Korea),
+  // MH (Marshall Islands), FM (Micronesia), NR (Nauru),
   // PW (Palau), SM (San Marino), ST (Sao Tome and Principe),
-  // SR (Suriname), TM (Turkmenistan), TV (Tuvalu).
+  // SR (Suriname), TV (Tuvalu).
+
+  // --- State media (flagged stateMedia: true -> is_state_media on the row,
+  // for a frontend disclaimer badge, not a quality judgment). These are the
+  // 4 countries whose press is state-controlled enough that "find the
+  // independent national outlet" isn't a coherent research task -- the
+  // outlet itself IS the government.
+  KP: [{ source: 'kcnawatch.org', feedUrl: 'https://kcnawatch.org/newstream/feed/', stateMedia: true }],
+  // ^ Deliberately NOT fetching kcna.kp directly -- KCNA's own DPRK-hosted
+  // site has a documented history of malicious scripts and frequent outages.
+  // KCNA Watch is a dedicated third-party mirror built specifically to work
+  // around that risk while still surfacing genuine official DPRK output.
+  BY: [{ source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true }],
+  // ^ Confirmed working -- saw live, current-dated content at this URL directly.
+  ER: [{ source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true }],
+  TM: [{ source: 'orient.tm', feedUrl: 'https://orient.tm/rss', stateMedia: true }],
+  // ^ Turkmenistan has no single clean "the state agency" with a public feed
+  // (TDH/tdh.gov.tm shows no evidence of one). Orient.tm is described as
+  // pro-government rather than strictly state-owned -- flagged as state
+  // media here as the closest honest approximation, not a perfect fit.
 };
 
 async function loadExistingTitles() {
@@ -346,7 +363,7 @@ async function fetchFeed(feedUrl) {
   }
 }
 
-function buildRow(item, country, source) {
+function buildRow(item, country, source, isStateMedia) {
   return {
     source,
     country,
@@ -355,6 +372,7 @@ function buildRow(item, country, source) {
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
     url: item.link,
     published_at: item.isoDate ? new Date(item.isoDate).toISOString() : (item.pubDate ? new Date(item.pubDate).toISOString() : null),
+    is_state_media: !!isStateMedia,
     _rawCategory: item.categories,
   };
 }
@@ -376,7 +394,7 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
 
   const rows = items
     .filter((item) => item.title && item.link)
-    .map((item) => buildRow(item, country, feedEntry.source));
+    .map((item) => buildRow(item, country, feedEntry.source, feedEntry.stateMedia));
 
   const reasonCounts = {};
   const blockedSources = new Set();
@@ -460,7 +478,7 @@ async function main() {
         for (const targetCountry of targetCountries) {
           const rows = items
             .filter((item) => item.title && item.link)
-            .map((item) => buildRow(item, targetCountry, feedEntry.source));
+            .map((item) => buildRow(item, targetCountry, feedEntry.source, feedEntry.stateMedia));
           const clean = rows.filter((row) => {
             if (seenUrls.has(row.url)) return false;
             const reason = getJunkReason(row);
