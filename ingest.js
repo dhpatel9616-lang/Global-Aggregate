@@ -530,6 +530,35 @@ function mentionsCountry(text, countryCode) {
 // becomes a way to ALSO recall hyperlocal domestic content that doesn't
 // self-reference the country, not the only thing standing between a country
 // and total junk.
+// ccTLDs that are extensively used worldwide for their letters/branding
+// rather than their actual country -- trusting a domain match on these
+// would flood articles from completely unrelated countries in (bit.ly is
+// not Libyan, about.me is not Montenegrin). Kept as a short, static,
+// one-time list rather than the alternative of manually curating outlet
+// allowlists for 196 countries -- this is the scalability tradeoff this
+// whole relevance system is built around.
+const HIJACKED_CCTLDS = new Set([
+  'ly', 'me', 'tv', 'io', 'co', 'fm', 'ai', 'gg', 'to', 'cc', 'ws', 'nu',
+  'la', 'sh', 'im', 'gl', 'st', 'vc', 'cm', 'am',
+]);
+
+// Does the source domain's own TLD match the country being queried (e.g.
+// "swissinfo.ch" for Switzerland, "today.rtl.lu" for Luxembourg)? This is a
+// genuine, automatic relevance signal that scales to all 196 countries with
+// zero manual curation -- unlike the allowlist, which only helps the
+// handful of countries someone has actually sat down and researched.
+// Real domestic outlets keep getting blocked purely because they haven't
+// been manually allowlisted yet (confirmed via the blockedSources logging:
+// swissinfo.ch, thelocal.ch, today.rtl.lu, english.pnn.ps were all
+// incorrectly rejected in a single run before this existed) -- this closes
+// that gap structurally instead of one domain at a time.
+function domainMatchesCountryTld(source, countryCode) {
+  if (!source) return false;
+  const cctld = countryCode.toLowerCase();
+  if (HIJACKED_CCTLDS.has(cctld)) return false;
+  return source.toLowerCase().endsWith(`.${cctld}`);
+}
+
 function passesNationalRelevance(row) {
   if (!row.source) return false;
   const list = ALLOWLIST_BY_COUNTRY[row.country];
@@ -537,6 +566,7 @@ function passesNationalRelevance(row) {
     const normalized = row.source.toLowerCase();
     if (list.some((domain) => normalized.includes(domain))) return true;
   }
+  if (domainMatchesCountryTld(row.source, row.country)) return true;
   const text = `${row.title} ${row.description || ''}`;
   return mentionsCountry(text, row.country);
 }
