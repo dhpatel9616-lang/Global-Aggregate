@@ -330,6 +330,43 @@ const FEED_URLS_BY_COUNTRY = {
   // (TDH/tdh.gov.tm shows no evidence of one). Orient.tm is described as
   // pro-government rather than strictly state-owned -- flagged as state
   // media here as the closest honest approximation, not a perfect fit.
+
+  // --- Batch 5: English-outlet sweep for the 15 non-English-press
+  // countries (Category A) plus Yemen (previously a low-confidence "not
+  // found" -- rechecked properly this pass). Real, currently-active
+  // English outlets found for 8 of these; the rest fall back to the
+  // AllAfrica RDF pattern already proven for Gabon/Guinea/Mali/Niger/Togo.
+  // Guatemala is the one genuine remaining gap -- a source directly
+  // confirmed "English-language news providers solely in or about
+  // Guatemala are relatively sparse," and the only candidate found was a
+  // monthly print magazine, not a live news feed.
+  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/feed' }],
+  SV: [{ source: 'elsalvadordaily.com', feedUrl: 'https://www.elsalvadordaily.com/feed' }],
+  NI: [{ source: 'nicaraguadailytimes.com', feedUrl: 'https://nicaraguadailytimes.com/feed' }],
+  // ^ HN/SV/NI appear to be the same templated network of AI-summarized
+  // English news briefings (same subscription-alert pattern across all
+  // three) -- confirmed to exist via search, feed paths NOT yet verified.
+  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed' }],
+  // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
+  YE: [{ source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }],
+  // ^ Al-Masdar Online -- confirmed still actively publishing as of 2026,
+  // maintains an English-language version. Corrects the earlier low-
+  // confidence "no outlet found" flag from an earlier, less rigorous pass.
+  BI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' }],
+  DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
+  CV: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
+  GQ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/equatorialguinea/headlines.rdf' }],
+  GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
+  KM: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/comoros/headlines.rdf' }],
+  ST: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/saotomeandprincipe/headlines.rdf' }],
+  CF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
+  TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
+  BF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' }],
+  // ^ BI/DJ/CV/GQ/GW/KM/ST/CF/TD/BF: no dedicated English-language domestic
+  // outlet found for any of these (all Francophone/Lusophone press) --
+  // falling back to the AllAfrica RDF pattern already confirmed to work
+  // for similarly-situated countries. Genuinely no independent-outlet
+  // candidate exists, not a research shortcut.
 };
 
 async function loadExistingTitles() {
