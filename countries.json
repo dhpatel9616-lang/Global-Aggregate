@@ -660,11 +660,6 @@
     "continent": "Africa"
   },
   {
-    "name": "Andorra",
-    "code": "AD",
-    "continent": "Europe"
-  },
-  {
     "name": "Antigua and Barbuda",
     "code": "AG",
     "continent": "North America"
@@ -790,29 +785,14 @@
     "continent": "North America"
   },
   {
-    "name": "Kiribati",
-    "code": "KI",
-    "continent": "Oceania"
-  },
-  {
     "name": "Latvia",
     "code": "LV",
     "continent": "Europe"
   },
   {
-    "name": "Lesotho",
-    "code": "LS",
-    "continent": "Africa"
-  },
-  {
     "name": "Liberia",
     "code": "LR",
     "continent": "Africa"
-  },
-  {
-    "name": "Liechtenstein",
-    "code": "LI",
-    "continent": "Europe"
   },
   {
     "name": "Luxembourg",
@@ -830,11 +810,6 @@
     "continent": "Europe"
   },
   {
-    "name": "Marshall Islands",
-    "code": "MH",
-    "continent": "Oceania"
-  },
-  {
     "name": "Mauritania",
     "code": "MR",
     "continent": "Africa"
@@ -843,11 +818,6 @@
     "name": "Mauritius",
     "code": "MU",
     "continent": "Africa"
-  },
-  {
-    "name": "Micronesia",
-    "code": "FM",
-    "continent": "Oceania"
   },
   {
     "name": "Monaco",
@@ -860,11 +830,6 @@
     "continent": "Europe"
   },
   {
-    "name": "Nauru",
-    "code": "NR",
-    "continent": "Oceania"
-  },
-  {
     "name": "Niger",
     "code": "NE",
     "continent": "Africa"
@@ -873,11 +838,6 @@
     "name": "North Korea",
     "code": "KP",
     "continent": "Asia"
-  },
-  {
-    "name": "Palau",
-    "code": "PW",
-    "continent": "Oceania"
   },
   {
     "name": "Palestine",
@@ -903,11 +863,6 @@
     "name": "Samoa",
     "code": "WS",
     "continent": "Oceania"
-  },
-  {
-    "name": "San Marino",
-    "code": "SM",
-    "continent": "Europe"
   },
   {
     "name": "Sao Tome and Principe",
@@ -943,11 +898,6 @@
     "name": "Suriname",
     "code": "SR",
     "continent": "South America"
-  },
-  {
-    "name": "Tajikistan",
-    "code": "TJ",
-    "continent": "Asia"
   },
   {
     "name": "Timor-Leste",
