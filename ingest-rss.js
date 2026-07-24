@@ -276,7 +276,6 @@ const FEED_URLS_BY_COUNTRY = {
   GN: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
   VA: [{ source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
   LV: [{ source: 'eng.lsm.lv', feedUrl: 'https://eng.lsm.lv/rss/' }],
-  LS: [{ source: 'lestimes.com', feedUrl: 'https://lestimes.com/feed/' }], // feed itself has an unescaped "&" in it (invalid XML on their end) -- not fixable by changing the URL, same class of issue as the Jordan/Zimbabwe feeds already accepted as known-broken
   LR: [{ source: 'fpa.news', feedUrl: 'https://fpa.news/feed/' }], // confirmed real feed URL from page source -- FrontPage Africa actually serves its feed from a completely different domain (fpa.news), not frontpageafricaonline.com
   LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
   // MV (Maldives) confirmed NO RSS feed exists at all -- checked page source directly, no rel=alternate rss+xml tag anywhere (Nuxt SPA site). Not a path problem, genuinely not offered.
@@ -296,7 +295,6 @@ const FEED_URLS_BY_COUNTRY = {
   SI: [{ source: 'sloveniatimes.com', feedUrl: 'https://sloveniatimes.com/feed' }],
   SB: [{ source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' }],
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
-  TJ: [{ source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss/news' }], // same unescaped-"&" issue as LS above -- source-side XML bug, not fixable by URL changes
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
   TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 without trailing slash -- retrying with one
@@ -317,7 +315,16 @@ const FEED_URLS_BY_COUNTRY = {
   // 4 countries whose press is state-controlled enough that "find the
   // independent national outlet" isn't a coherent research task -- the
   // outlet itself IS the government.
-  KP: [{ source: 'kcnawatch.org', feedUrl: 'https://kcnawatch.org/newstream/feed/', stateMedia: true }],
+  KP: [
+    { source: 'kcnawatch.org', feedUrl: 'https://kcnawatch.org/newstream/feed/', stateMedia: true },
+    // ^ still malformed XML on their end, left in in case it self-resolves.
+    { source: 'dailynk.com', feedUrl: 'https://www.dailynk.com/english/feed/' },
+    // ^ Daily NK -- genuinely independent, defector-sourced reporting (the
+    // opposite of state media), actively updated, real RSS feed mentioned
+    // on-site. Much stronger primary source than the state mirror above.
+    // NOT flagged stateMedia -- this is independent journalism, not
+    // government output.
+  ],
   // ^ Feed has malformed XML of its own (unquoted attribute value) -- same
   // source-side-bug class as LS/TJ/SV, not fixable by URL changes.
   // ^ Deliberately NOT fetching kcna.kp directly -- KCNA's own DPRK-hosted
@@ -346,7 +353,13 @@ const FEED_URLS_BY_COUNTRY = {
   // Guatemala are relatively sparse," and the only candidate found was a
   // monthly print magazine, not a live news feed.
   HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/rss.xml' }], // /feed 500'd -- retrying standard /rss.xml
-  SV: [{ source: 'elsalvadordaily.com', feedUrl: 'https://www.elsalvadordaily.com/feed' }], // feed exists at this path but has malformed XML (unexpected close tag) -- source-side bug, same class as LS/TJ/KP, not fixable by URL changes
+  SV: [{ source: 'elsalvadorinenglish.com', feedUrl: 'https://elsalvadorinenglish.com/feed' }],
+  // ^ Replaced elsalvadordaily.com -- confirmed persistent malformed XML
+  // across two runs, abandoned rather than a third guess. This is a real,
+  // actively-updated (through July 2026) dedicated English-language site.
+  // Worth knowing: its editorial tone leans favorable toward the Bukele
+  // government in sample content -- not officially state-owned, but not
+  // neutral either.
   NI: [{ source: 'nicaraguadailytimes.com', feedUrl: 'https://nicaraguadailytimes.com/rss.xml' }], // /feed returned something not recognized as valid RSS -- retrying standard /rss.xml
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
@@ -374,6 +387,12 @@ const FEED_URLS_BY_COUNTRY = {
   // falling back to the AllAfrica RDF pattern already confirmed to work
   // for similarly-situated countries. Genuinely no independent-outlet
   // candidate exists, not a research shortcut.
+
+  TV: [{ source: 'tuvalutimes.com', feedUrl: 'https://www.tuvalutimes.com/feed' }],
+  // ^ Genuinely active, dedicated Tuvalu English-language site (current
+  // 2026 content confirmed). Removed from the "permanent gap" microstate
+  // list on this basis -- worth a real attempt rather than writing off
+  // alongside Andorra/Liechtenstein/etc., which showed no such candidate.
 };
 
 async function loadExistingTitles() {
