@@ -463,7 +463,7 @@ function buildRow(item, country, source, isStateMedia) {
   return {
     source,
     country,
-    topic: mapTopic(item.categories),
+    topic: mapTopic(item.categories, item.title),
     title: item.title ? item.title.trim() : null,
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
     url: item.link,
