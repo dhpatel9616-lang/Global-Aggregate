@@ -522,6 +522,7 @@ async function main() {
   console.log(`Loaded ${seenTitles.size} existing titles / ${seenUrls.size} existing URLs for dedup.\n`);
 
   const results = [];
+  let lastSource = null;
   for (const country of countryCodes) {
     // WORLD (wire) feeds get checked against every real country, since their
     // relevance depends on content (does it mention Kenya, Poland, etc.),
@@ -530,6 +531,19 @@ async function main() {
     const targetCountries = country === 'WORLD' ? countryCodes.filter((c) => c !== 'WORLD') : [country];
 
     for (const feedEntry of FEED_URLS_BY_COUNTRY[country]) {
+      // Same-domain requests need more breathing room than the standard 1s
+      // inter-feed delay. Confirmed via a real run: AllAfrica is hit 16
+      // times across this project's country batches (each addition looked
+      // fine in isolation at the time), and the first ~3 back-to-back calls
+      // succeeded while all 13 subsequent ones in the same run timed out --
+      // a rate-limit/throttle pattern, not AllAfrica being down. This is a
+      // structural risk for ANY domain reused across many countries, not
+      // just AllAfrica, so the check is generic rather than AllAfrica-specific.
+      if (feedEntry.source === lastSource) {
+        await sleep(4000);
+      }
+      lastSource = feedEntry.source;
+
       if (country === 'WORLD') {
         // Fetch once, but the row's country needs to be a real tag for
         // filtering/display purposes. Wire items get evaluated against each
