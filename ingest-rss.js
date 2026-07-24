@@ -398,6 +398,36 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ Right URL (no 404), but the feed itself has malformed XML (unexpected
   // close tag) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA
   // Watch, not fixable by changing the URL.
+
+  // --- Batch 6: first research pass on the 12 countries that had NO RSS
+  // entry at all yet (as opposed to the ~39 zero-content countries that
+  // already had an attempt sitting here unproductively -- those need a
+  // fresh run + log diagnosis, not more research). 9 real, currently-active
+  // dedicated English outlets found; Bolivia, Ecuador, and Paraguay did not
+  // turn up a clear candidate in this pass and are left for a future one
+  // rather than guessed.
+  BA: [{ source: 'sarajevotimes.com', feedUrl: 'https://sarajevotimes.com/feed' }],
+  // ^ Confirmed "the only Bosnian portal that gives news in English."
+  BD: [{ source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }],
+  // ^ The Daily Star -- Bangladesh's largest circulating English-language
+  // newspaper, feed URL confirmed via a curated OPML feed list, not guessed.
+  BE: [{ source: 'brusselstimes.com', feedUrl: 'https://www.brusselstimes.com/feed' }],
+  // ^ The Brussels Times -- Belgium's largest English-language news outlet.
+  KH: [{ source: 'phnompenhpost.com', feedUrl: 'https://www.phnompenhpost.com/feed' }],
+  // ^ Phnom Penh Post -- Cambodia's oldest English-language newspaper, confirmed active with current 2026 content.
+  CZ: [{ source: 'praguemonitor.com', feedUrl: 'https://praguemonitor.com/feed' }],
+  // ^ Prague Monitor -- confirmed active English-language Czech Republic news site since 2003.
+  MM: [{ source: 'irrawaddy.com', feedUrl: 'https://www.irrawaddy.com/feed' }],
+  // ^ The Irrawaddy -- genuinely independent (exile-founded, press-freedom-award-winning), confirmed active.
+  KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/feed' }],
+  // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
+  PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
+  // ^ Panama Expat Times -- confirmed active (Nov 2025 content), dedicated English coverage.
+  VE: [{ source: 'caracaschronicles.com', feedUrl: 'https://www.caracaschronicles.com/feed' }],
+  // ^ Caracas Chronicles -- genuinely independent, confirmed active with July 2026 content.
+  // NOT FOUND -- no clear dedicated English-language outlet turned up in
+  // this pass: BO (Bolivia), EC (Ecuador), PY (Paraguay). Worth a second,
+  // more targeted research pass rather than a guess.
 };
 
 async function loadExistingTitles() {
