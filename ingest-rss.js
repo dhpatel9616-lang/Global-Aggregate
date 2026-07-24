@@ -297,8 +297,8 @@ const FEED_URLS_BY_COUNTRY = {
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
   TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
-  TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 without trailing slash -- retrying with one
-  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // path is correct now (429 rate-limited, not 404) -- may succeed on a later run without any change needed
+  TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 on three separate runs now -- genuinely no feed at any guessed path, needs real research (view page source) rather than another guess
+  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // consistently 429 across two runs now (never 404) -- path is correct, this outlet's server is just rate-limiting GitHub Actions' shared IPs; no code change needed, may succeed on a future run
   // NOT FOUND -- no plausible independent English-language outlet located
   // in this pass, or these are genuinely tiny states with no discoverable
   // English-language press at all:
@@ -337,11 +337,12 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
   // Malta, not a path problem, no further URL guessing will help.
   TM: [{ source: 'en.hronikatm.com', feedUrl: 'https://en.hronikatm.com/feed/' }],
-  // ^ Chronicles of Turkmenistan -- genuinely independent (RSF-documented,
-  // actually banned inside Turkmenistan since 2007 for being too critical
-  // of the government). Replaces orient.tm (pro-government, 404'd twice
-  // anyway) -- this is a real independent voice, not state-adjacent, so NOT
-  // flagged stateMedia.
+  // ^ Real, correct URL but their server has an incomplete TLS certificate
+  // chain ("unable to verify the first certificate") -- a genuine
+  // misconfiguration on their end, same class of issue as Monaco's cert
+  // mismatch. Not fixable by changing the URL. Left in in case they fix
+  // their server config; still the right source (independent, RSF-
+  // documented), just currently unreachable.
   // ^ /rss 404'd -- retrying /en/rss. Turkmenistan has no single clean "the
   // state agency" with a public feed (TDH/tdh.gov.tm shows no evidence of
   // one). Orient.tm is described as pro-government rather than strictly
@@ -357,7 +358,7 @@ const FEED_URLS_BY_COUNTRY = {
   // confirmed "English-language news providers solely in or about
   // Guatemala are relatively sparse," and the only candidate found was a
   // monthly print magazine, not a live news feed.
-  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/rss.xml' }], // /feed 500'd -- retrying standard /rss.xml
+  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/rss.xml' }], // 500 on two different paths now -- their feed generator itself appears broken (not a path issue), needs real research or acceptance as a gap
   SV: [{ source: 'elsalvadorinenglish.com', feedUrl: 'https://elsalvadorinenglish.com/feed' }],
   // ^ Replaced elsalvadordaily.com -- confirmed persistent malformed XML
   // across two runs, abandoned rather than a third guess. This is a real,
@@ -369,7 +370,7 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
-  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed/' }], // 404 without trailing slash -- retrying with one
+  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed/' }], // 404 on two different paths now -- genuinely no feed at any guessed path. Also worth knowing: their recent content skews mostly Dutch, not English, so even a working feed would likely face heavy non_english filtering -- lower priority to keep chasing
   // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
   YE: [{ source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
@@ -394,10 +395,9 @@ const FEED_URLS_BY_COUNTRY = {
   // candidate exists, not a research shortcut.
 
   TV: [{ source: 'tuvalutimes.com', feedUrl: 'https://www.tuvalutimes.com/feed' }],
-  // ^ Genuinely active, dedicated Tuvalu English-language site (current
-  // 2026 content confirmed). Removed from the "permanent gap" microstate
-  // list on this basis -- worth a real attempt rather than writing off
-  // alongside Andorra/Liechtenstein/etc., which showed no such candidate.
+  // ^ Right URL (no 404), but the feed itself has malformed XML (unexpected
+  // close tag) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA
+  // Watch, not fixable by changing the URL.
 };
 
 async function loadExistingTitles() {
