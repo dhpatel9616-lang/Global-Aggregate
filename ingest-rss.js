@@ -266,7 +266,7 @@ const FEED_URLS_BY_COUNTRY = {
   BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
   BZ: [{ source: 'breakingbelizenews.com', feedUrl: 'https://www.breakingbelizenews.com/feed' }],
   BT: [{ source: 'kuenselonline.com', feedUrl: 'https://kuenselonline.com/feed/' }],
-  CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/republicofcongo/headlines.rdf' }],
+  CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/congo_brazzaville/headlines.rdf' }], // 404 on "republicofcongo" -- confirmed via allafrica.com/congo_brazzaville/ that this is the real page slug
   DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
   SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
@@ -409,7 +409,7 @@ async function loadExistingTitles() {
   return new Set(data.map((row) => normalizeTitle(row.title)));
 }
 
-async function fetchFeed(feedUrl) {
+async function fetchFeedOnce(feedUrl) {
   // Hard backstop independent of rss-parser's own `timeout` option (see
   // module-level comment on the Parser config) -- confirmed necessary after
   // a real hang (run #11, 2026-07-13) sat "In progress" for 3h47m+ instead
@@ -428,6 +428,34 @@ async function fetchFeed(feedUrl) {
     // dangling before, which kept the event loop alive for up to 15 more
     // seconds per feed in the overwhelming majority (successful) case.
     clearTimeout(timer);
+  }
+}
+
+function isRetryableError(err) {
+  // Only timeouts get retried -- a 404, malformed XML, or cert error will
+  // fail identically on a second attempt, so retrying just wastes time.
+  // Timeouts are the one failure mode that's plausibly transient (server
+  // load, throttling, network blip).
+  return /timed out/i.test(err.message);
+}
+
+async function fetchFeed(feedUrl) {
+  // One retry on timeout, after a real pause -- not more delay tuning.
+  // Confirmed via two real runs that hand-tuning the pre-emptive delay
+  // between same-domain requests doesn't behave predictably: going from
+  // 4s to 8s made AllAfrica's failure point WORSE (started failing at the
+  // 8th consecutive call instead of the 16th), the opposite of what a
+  // simple request-count throttle would predict. Rather than keep guessing
+  // at whatever AllAfrica's actual rate-limit mechanism is, this handles
+  // the failure reactively: if a fetch times out, wait a real amount
+  // (20s) and try exactly once more before giving up.
+  try {
+    return await fetchFeedOnce(feedUrl);
+  } catch (err) {
+    if (!isRetryableError(err)) throw err;
+    console.warn(`  (retrying after timeout, waiting 20s: ${feedUrl})`);
+    await sleep(20000);
+    return await fetchFeedOnce(feedUrl);
   }
 }
 
@@ -541,6 +569,12 @@ async function main() {
       // just AllAfrica, so the check is generic rather than AllAfrica-specific.
       if (feedEntry.source === lastSource) {
         await sleep(4000);
+        // ^ Reverted from 8000ms -- confirmed via a real run that 8s
+        // performed WORSE than 4s (failures started at the 8th consecutive
+        // same-domain call instead of the 16th), so more pre-emptive delay
+        // isn't the right lever. The real fix is the retry-on-timeout logic
+        // in fetchFeed() above; this delay is now just a light first line
+        // of defense, not the primary mechanism.
       }
       lastSource = feedEntry.source;
 
