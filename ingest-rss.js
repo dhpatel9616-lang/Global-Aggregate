@@ -336,7 +336,12 @@ const FEED_URLS_BY_COUNTRY = {
   ER: [{ source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true }],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
   // Malta, not a path problem, no further URL guessing will help.
-  TM: [{ source: 'orient.tm', feedUrl: 'https://orient.tm/en/rss', stateMedia: true }],
+  TM: [{ source: 'en.hronikatm.com', feedUrl: 'https://en.hronikatm.com/feed/' }],
+  // ^ Chronicles of Turkmenistan -- genuinely independent (RSF-documented,
+  // actually banned inside Turkmenistan since 2007 for being too critical
+  // of the government). Replaces orient.tm (pro-government, 404'd twice
+  // anyway) -- this is a real independent voice, not state-adjacent, so NOT
+  // flagged stateMedia.
   // ^ /rss 404'd -- retrying /en/rss. Turkmenistan has no single clean "the
   // state agency" with a public feed (TDH/tdh.gov.tm shows no evidence of
   // one). Orient.tm is described as pro-government rather than strictly
