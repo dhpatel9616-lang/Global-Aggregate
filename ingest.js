@@ -71,16 +71,45 @@ function safeStringify(value) {
   }
 }
 
-function mapTopic(rawCategory) {
-  if (!rawCategory) return 'World';
-  const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
-  const first = safeStringify(cats[0]).toLowerCase();
+// Keyword fallback for when a source provides no useful category data at
+// all -- GNews's top-headlines endpoint never returns categories (see
+// fetchGNews below), and NewsData/Currents sometimes omit them too. Without
+// this, every one of those articles silently defaulted to "World"
+// regardless of actual content -- confirmed via a live data audit showing
+// 89% of all 25,000+ stored articles tagged "World", an implausible real
+// distribution. Checked against the title only (descriptions vary too much
+// in structure to be a reliable keyword signal); ordered so more specific
+// terms are checked first to avoid one word swallowing another category
+// (e.g. "election" should win Politics even if the same headline also says
+// "market").
+const TOPIC_KEYWORDS = [
+  ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader)\b/i],
+  ['Business', /\b(stock market|shares|earnings|ipo|merger|acquisition|gdp|inflation|interest rate|central bank|bankruptcy|ceo|revenue|quarterly (results|profit))\b/i],
+  ['Tech', /\b(smartphone|artificial intelligence|\bai\b|software|app store|cybersecurity|data breach|chip(maker)?|semiconductor|startup|silicon valley|social media platform)\b/i],
+  ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout)\b/i],
+  ['Health', /\b(vaccine|hospital|outbreak|virus|disease|pandemic|who\b|health ministry|clinical trial|surgeon|patient(s)?)\b/i],
+];
 
-  if (first.includes('polit')) return 'Politics';
-  if (first.includes('business') || first.includes('economy') || first.includes('finance')) return 'Business';
-  if (first.includes('tech')) return 'Tech';
-  if (first.includes('sport')) return 'Sports';
-  if (first.includes('health')) return 'Health';
+function mapTopic(rawCategory, title) {
+  if (rawCategory) {
+    const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
+    // Check every category, not just the first -- a source might tag
+    // something ["Top Stories", "Politics"] with the useful category listed
+    // second, same reasoning as hasExcludedCategory below.
+    for (const cat of cats) {
+      const normalized = safeStringify(cat).toLowerCase();
+      if (normalized.includes('polit')) return 'Politics';
+      if (normalized.includes('business') || normalized.includes('economy') || normalized.includes('finance')) return 'Business';
+      if (normalized.includes('tech')) return 'Tech';
+      if (normalized.includes('sport')) return 'Sports';
+      if (normalized.includes('health')) return 'Health';
+    }
+  }
+  if (title) {
+    for (const [topic, pattern] of TOPIC_KEYWORDS) {
+      if (pattern.test(title)) return topic;
+    }
+  }
   return 'World';
 }
 
@@ -102,16 +131,40 @@ function mapTopic(rawCategory) {
 const EXCLUDED_CATEGORIES = [
   'entertainment', 'bollywood', 'hollywood', 'celebrity', 'celebrities',
   'lifestyle', 'fashion', 'beauty', 'food', 'recipe', 'travel',
-  'city', 'cities', 'local', 'metro', 'crime', // crime desk is almost
-  // always hyperlocal police-blotter content, not national news
+  'city', 'cities', 'local', 'metro',
   'opinion', 'editorial', 'blog', 'astrology', 'horoscope', 'gossip',
 ];
+
+// 'crime' is checked separately from the plain-substring list above because
+// a blanket substring match caught genuinely significant national/
+// international categories along with the hyperlocal police-blotter
+// content it was meant to catch -- confirmed via a live data audit showing
+// ZERO articles matching "terror" anywhere in the title across 25,000+
+// stored articles, an implausible result given real-world events in this
+// period. Categories like "War Crimes," "Crimes Against Humanity,"
+// "Organized Crime," "Financial Crime," and anything terrorism-related were
+// being excluded identically to "Crime Blotter" or "Local Crime." This
+// qualifier list lets a "crime"-containing category through if it also
+// signals real significance, rather than assuming every "crime" tag means
+// a local police report.
+const SIGNIFICANT_CRIME_QUALIFIERS = [
+  'war', 'humanity', 'organized', 'organised', 'financial', 'international',
+  'cyber', 'hate crime', 'trafficking', 'corruption', 'terror', 'genocide',
+  'national',
+];
+
+function hasExcludedCrimeCategory(normalized) {
+  if (!normalized.includes('crime')) return false;
+  if (SIGNIFICANT_CRIME_QUALIFIERS.some((q) => normalized.includes(q))) return false;
+  return true;
+}
 
 function hasExcludedCategory(rawCategory) {
   if (!rawCategory) return false;
   const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
   return cats.some((cat) => {
     const normalized = safeStringify(cat).toLowerCase();
+    if (hasExcludedCrimeCategory(normalized)) return true;
     return EXCLUDED_CATEGORIES.some((excluded) => normalized.includes(excluded));
   });
 }
@@ -263,6 +316,14 @@ const JUNK_PATTERNS = [
   /\bLive Updates?,/i,
   /\bDaily Catch-?Up\b/i,
   /News Live:/i,
+  // NEW: found via a live data audit (2026-07-24) -- these titles were each
+  // appearing 3-6+ times in the DB under generic, non-substantive titles,
+  // not genuinely distinct articles:
+  /^Front and Back Page$/i, // newspaper cover-image caption, not an article (PG source)
+  /headline news - [\w\s]+$/i, // generic feed/index title (e.g. "Taiwan headline news - Focus Taiwan"), not a specific story
+  /^sign up for (the |our )?.{0,40}newsletter\b/i, // newsletter subscription CTA parsed as an article (e.g. "Sign up for the Feast newsletter: our free Guardian food email")
+  /\bA roundup of the latest news on (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/i, // recurring daily-digest format
+  /:\s*latest developments$/i, // rolling live-blog update title, not a discrete article
 ];
 
 // Specific domains known to be content farms, press-release wires, or
@@ -648,6 +709,25 @@ function isPrWireContent(row) {
 // out" counts alone weren't enough to diagnose why entire countries (e.g.
 // Ghana: 20/20 filtered) were coming back empty -- without knowing WHICH
 // check caught them, every fix attempt was a guess.
+// Confirmed via a live data audit: 32 articles in the DB were published
+// more than 5 years ago (one from 2019), including a 10-article cluster
+// from dailysabah.com all dated the same day in Feb 2020 and a 6-article
+// cluster from total-montenegro-news.com dated Oct-Nov 2020 -- real
+// historical articles, but clearly not "latest news" by the time they were
+// ingested. Most likely cause: a feed briefly served archival/"most read"
+// content instead of true latest items. There was no guard against this at
+// all before -- any published_at, however old, was accepted as-is. 60 days
+// is a generous cutoff (this is a live news aggregator refreshed every 3
+// hours, not an archive) that still comfortably allows for feeds with
+// delayed/backdated publish timestamps.
+const MAX_ARTICLE_AGE_DAYS = 60;
+
+function isStale(publishedAt) {
+  if (!publishedAt) return false; // missing date isn't this check's problem
+  const ageMs = Date.now() - new Date(publishedAt).getTime();
+  return ageMs > MAX_ARTICLE_AGE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 function getJunkReason(row) {
   if (!row.title) return 'missing_title';
   if (isBlockedSource(row.source)) return 'blocked_source';
@@ -656,6 +736,7 @@ function getJunkReason(row) {
   if (isNonEnglish(row.title) || isNonEnglish(row.description)) return 'non_english';
   if (isPrWireContent(row)) return 'pr_wire_content';
   if (hasExcludedCategory(row._rawCategory)) return 'excluded_category';
+  if (isStale(row.published_at)) return 'stale_published_date';
   if (JUNK_PATTERNS.some((pattern) => pattern.test(row.title))) return 'junk_pattern_match';
   return null;
 }
@@ -767,10 +848,33 @@ async function upsertRows(countryName, rows, seenTitles) {
 // which of the 3 APIs or which specific source produced it.
 const MAX_DESCRIPTION_LENGTH = 500;
 
+// Decodes the small set of HTML entities that actually show up in
+// description text from these sources (confirmed via a live data audit:
+// &amp;, &#39;, &nbsp;, &quot; all leaking through unescaped). Not a full
+// HTML-entity library -- deliberately narrow to what's actually seen,
+// rather than pulling in a dependency for this.
+function decodeHtmlEntities(text) {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
+}
+
 function capDescription(text) {
   if (!text) return text;
-  if (text.length <= MAX_DESCRIPTION_LENGTH) return text;
-  return text.slice(0, MAX_DESCRIPTION_LENGTH).trim() + '...';
+  // Strip raw HTML tags first -- confirmed via a live data audit that
+  // sources like NewsData.io sometimes return description fields with
+  // literal <p> tags still in them, which were previously stored and shown
+  // to users as-is. Replaced with a space (not deleted outright) so
+  // "word</p><p>word" doesn't become "wordword" with no separator.
+  const stripped = decodeHtmlEntities(text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+  if (stripped.length <= MAX_DESCRIPTION_LENGTH) return stripped;
+  return stripped.slice(0, MAX_DESCRIPTION_LENGTH).trim() + '...';
 }
 
 function domainFromUrl(url) {
@@ -792,7 +896,7 @@ async function fetchNewsData(country) {
     .map((item) => ({
       source: domainFromUrl(item.link),
       country: country.code,
-      topic: mapTopic(item.category),
+      topic: mapTopic(item.category, item.title),
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.link,
@@ -808,13 +912,18 @@ async function fetchGNews(country) {
   const data = await res.json();
   if (!data.articles) throw new Error(data.errors ? JSON.stringify(data.errors) : 'GNews error');
 
-  // GNews top-headlines doesn't return a per-article category, so these default to "World".
+  // GNews top-headlines never returns a per-article category (confirmed via
+  // their API response shape) -- previously this hardcoded every single
+  // GNews article to "World" regardless of actual content, a real
+  // contributor to the 89% "World" skew found in a live data audit.
+  // mapTopic's title-keyword fallback (rawCategory=null here) now does real
+  // categorization work instead of a blanket default.
   const rows = data.articles
     .filter((item) => item.title && item.url)
     .map((item) => ({
       source: domainFromUrl(item.url),
       country: country.code,
-      topic: 'World',
+      topic: mapTopic(null, item.title),
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.url,
@@ -878,7 +987,7 @@ async function fetchCurrents(country) {
     .map((item) => ({
       source: domainFromUrl(item.url), // real domain, not a hardcoded label — needed so source-blocklist filtering actually works
       country: country.code,
-      topic: mapTopic(item.category),
+      topic: mapTopic(item.category, item.title),
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.url,
