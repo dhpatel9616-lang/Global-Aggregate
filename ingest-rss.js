@@ -213,25 +213,25 @@ const FEED_URLS_BY_COUNTRY = {
   BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
   BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
   BN: [{ source: 'borneobulletin.com.bn', feedUrl: 'https://borneobulletin.com.bn/feed/' }],
-  BW: [{ source: 'mmegi.bw', feedUrl: 'https://www.mmegi.bw/feed/' }], // 404 without trailing slash -- retrying with one
+  BW: [{ source: 'mmegi.bw', feedUrl: 'https://www.mmegi.bw/feed/' }], // 404 on two different guessed paths now -- needs real research (view page source), not another guess
   CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
   CM: [{ source: 'journalducameroun.com', feedUrl: 'https://www.journalducameroun.com/feed/' }], // 404 on /en/feed/ -- retrying without the /en/ prefix
   CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
   CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
   CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
   DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
-  DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/feed' }], // 404 on /en/rss -- retrying /en/feed
+  DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   GE: [{ source: 'agenda.ge', feedUrl: 'https://agenda.ge/en/rss' }], // their TLS certificate has expired -- a real admin oversight on their end, not a path problem or our bug. Left in in case they renew it.
-  GY: [{ source: 'stabroeknews.com', feedUrl: 'https://www.stabroeknews.com/feed' }], // 404 with trailing slash -- retrying without one
+  GY: [{ source: 'stabroeknews.com', feedUrl: 'https://www.stabroeknews.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
   HT: [{ source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' }],
   IS: [{ source: 'icelandreview.com', feedUrl: 'https://www.icelandreview.com/feed/' }],
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
   LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
-  LT: [{ source: 'lrt.lt', feedUrl: 'https://www.lrt.lt/en/feed' }], // 404 on /en/rss -- retrying /en/feed
+  LT: [{ source: 'lrt.lt', feedUrl: 'https://www.lrt.lt/en/feed' }], // now 403 (was 404 on a different path before) -- likely IP-reputation blocking rather than a path issue, same class as Kenya/Uganda/Morocco
   LY: [{ source: 'libyaobserver.ly', feedUrl: 'https://www.libyaobserver.ly/rss.xml' }],
-  MD: [{ source: 'agora.md', feedUrl: 'https://agora.md/feed' }], // 404 on /rss -- retrying /feed
+  MD: [{ source: 'agora.md', feedUrl: 'https://agora.md/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
   MK: [{ source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' }],
   ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
@@ -240,10 +240,10 @@ const FEED_URLS_BY_COUNTRY = {
   MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
   NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
   OM: [{ source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' }],
-  RW: [{ source: 'newtimes.co.rw', feedUrl: 'https://www.newtimes.co.rw/feed' }], // /rss.xml now returning 502 -- retrying standard /feed
+  RW: [{ source: 'newtimes.co.rw', feedUrl: 'https://www.newtimes.co.rw/feed' }], // failed differently on two different guessed paths now (502, then 404) -- needs real research, not another guess
   SD: [{ source: 'sudantribune.com', feedUrl: 'https://sudantribune.com/feed/' }],
   SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
-  SO: [{ source: 'garoweonline.com', feedUrl: 'https://www.garoweonline.com/feed' }], // /en/feed returning 500 -- retrying without /en/ prefix
+  SO: [{ source: 'garoweonline.com', feedUrl: 'https://www.garoweonline.com/feed' }], // failed differently on two different guessed paths now (500, then 404) -- needs real research, not another guess
   SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
   TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
   TT: [{ source: 'newsday.co.tt', feedUrl: 'https://newsday.co.tt/feed/' }],
@@ -263,10 +263,10 @@ const FEED_URLS_BY_COUNTRY = {
   // these countries have genuinely thin or state-controlled press, so
   // expect a higher break/skip rate than usual on the first real run.
   AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
-  BS: [{ source: 'tribune242.com', feedUrl: 'https://www.tribune242.com/feed' }], // 404 on /rss/news/ -- retrying standard /feed
+  BS: [{ source: 'tribune242.com', feedUrl: 'https://www.tribune242.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
   BZ: [{ source: 'breakingbelizenews.com', feedUrl: 'https://www.breakingbelizenews.com/feed' }],
-  BT: [{ source: 'kuenselonline.com', feedUrl: 'https://kuenselonline.com/feed' }], // 404 with trailing slash -- retrying without one
+  BT: [{ source: 'kuenselonline.com', feedUrl: 'https://kuenselonline.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/congo_brazzaville/headlines.rdf' }], // 404 on "republicofcongo" -- confirmed via allafrica.com/congo_brazzaville/ that this is the real page slug
   DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
