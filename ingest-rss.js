@@ -222,16 +222,16 @@ const FEED_URLS_BY_COUNTRY = {
   DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
   DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
   GE: [{ source: 'agenda.ge', feedUrl: 'https://agenda.ge/en/rss' }], // their TLS certificate has expired -- a real admin oversight on their end, not a path problem or our bug. Left in in case they renew it.
-  GY: [{ source: 'stabroeknews.com', feedUrl: 'https://www.stabroeknews.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
+  GY: [{ source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
   HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
   HT: [{ source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' }],
   IS: [{ source: 'icelandreview.com', feedUrl: 'https://www.icelandreview.com/feed/' }],
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
   LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
-  LT: [{ source: 'lrt.lt', feedUrl: 'https://www.lrt.lt/en/feed' }], // now 403 (was 404 on a different path before) -- likely IP-reputation blocking rather than a path issue, same class as Kenya/Uganda/Morocco
+  LT: [{ source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/feed/' }], // replaced lrt.lt -- confirmed 403-blocked. Baltic Times is a real independent outlet covering Estonia/Latvia/Lithuania. (Their Feedburner feed URL appeared in search results but was truncated -- using their own domain's standard path instead of guessing the exact Feedburner slug.)
   LY: [{ source: 'libyaobserver.ly', feedUrl: 'https://www.libyaobserver.ly/rss.xml' }],
-  MD: [{ source: 'agora.md', feedUrl: 'https://agora.md/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
+  MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
   MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
   MK: [{ source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' }],
   ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
@@ -243,7 +243,7 @@ const FEED_URLS_BY_COUNTRY = {
   RW: [{ source: 'newtimes.co.rw', feedUrl: 'https://www.newtimes.co.rw/feed' }], // failed differently on two different guessed paths now (502, then 404) -- needs real research, not another guess
   SD: [{ source: 'sudantribune.com', feedUrl: 'https://sudantribune.com/feed/' }],
   SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
-  SO: [{ source: 'garoweonline.com', feedUrl: 'https://www.garoweonline.com/feed' }], // failed differently on two different guessed paths now (500, then 404) -- needs real research, not another guess
+  SO: [{ source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
   SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
   TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
   TT: [{ source: 'newsday.co.tt', feedUrl: 'https://newsday.co.tt/feed/' }],
