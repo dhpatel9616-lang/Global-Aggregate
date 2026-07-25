@@ -420,7 +420,7 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ Prague Monitor -- confirmed active English-language Czech Republic news site since 2003.
   MM: [{ source: 'irrawaddy.com', feedUrl: 'https://www.irrawaddy.com/feed' }], // intermittent 403 (same IP-reputation pattern as Kenya/Uganda/Morocco) -- has succeeded at least once before, not a path problem
   // ^ The Irrawaddy -- genuinely independent (exile-founded, press-freedom-award-winning), confirmed active.
-  KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/?feed=rss2' }], // /feed 404'd -- retrying explicit WordPress rss2 param
+  KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/?feed=rss2' }], // path is correct now (no more 404), but the feed itself has malformed XML -- source-side bug, same class as Lesotho/Brussels Times, not fixable by URL changes
   // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
   PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
   // ^ Panama Expat Times -- confirmed active (Nov 2025 content), dedicated English coverage.
