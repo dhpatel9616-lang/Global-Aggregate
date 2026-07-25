@@ -1226,6 +1226,7 @@ module.exports = {
   isPrWireContent,
   mapTopic,
   normalizeTitle,
+  safeStringify,
   COUNTRY_NAME_BY_CODE,
   ALLOWLIST_BY_COUNTRY,
   BLOCKED_SOURCE_DOMAINS,
