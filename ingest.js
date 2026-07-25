@@ -106,8 +106,9 @@ function mapTopic(rawCategory, title) {
     }
   }
   if (title) {
+    const normalizedTitle = safeStringify(title);
     for (const [topic, pattern] of TOPIC_KEYWORDS) {
-      if (pattern.test(title)) return topic;
+      if (pattern.test(normalizedTitle)) return topic;
     }
   }
   return 'World';
