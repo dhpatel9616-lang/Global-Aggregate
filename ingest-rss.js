@@ -213,7 +213,7 @@ const FEED_URLS_BY_COUNTRY = {
   BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
   BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
   BN: [{ source: 'borneobulletin.com.bn', feedUrl: 'https://borneobulletin.com.bn/feed/' }],
-  BW: [{ source: 'mmegi.bw', feedUrl: 'https://www.mmegi.bw/feed/' }], // 404 on two different guessed paths now -- needs real research (view page source), not another guess
+  BW: [{ source: 'thevoicebw.com', feedUrl: 'https://www.thevoicebw.com/feed' }], // replaced mmegi.bw -- confirmed 404 twice on that domain, abandoned rather than a third guess. The Voice is a real, established Botswana outlet with a documented RSS feed at this exact path.
   CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
   CM: [{ source: 'journalducameroun.com', feedUrl: 'https://www.journalducameroun.com/feed/' }], // 404 on /en/feed/ -- retrying without the /en/ prefix
   CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
@@ -240,7 +240,7 @@ const FEED_URLS_BY_COUNTRY = {
   MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
   NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
   OM: [{ source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' }],
-  RW: [{ source: 'newtimes.co.rw', feedUrl: 'https://www.newtimes.co.rw/feed' }], // failed differently on two different guessed paths now (502, then 404) -- needs real research, not another guess
+  RW: [{ source: 'taarifa.rw', feedUrl: 'https://taarifa.rw/feed' }], // replaced newtimes.co.rw -- failed differently on two different guessed paths (502, then 404), abandoned rather than a third guess. Taarifa is a real Rwandan English-language news platform with a documented RSS feed at this exact path.
   SD: [{ source: 'sudantribune.com', feedUrl: 'https://sudantribune.com/feed/' }],
   SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
   SO: [{ source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
@@ -263,10 +263,10 @@ const FEED_URLS_BY_COUNTRY = {
   // these countries have genuinely thin or state-controlled press, so
   // expect a higher break/skip rate than usual on the first real run.
   AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
-  BS: [{ source: 'tribune242.com', feedUrl: 'https://www.tribune242.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
+  BS: [{ source: 'ewnews.com', feedUrl: 'https://ewnews.com/feed' }], // replaced tribune242.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Eye Witness News is the Bahamas' #1 local outlet, with a dedicated RSS feed page on their site ("/rss-feed-2/") confirming a feed exists -- using the standard /feed path first since the exact confirmed URL was on a landing page, not necessarily the raw feed itself.
   BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
   BZ: [{ source: 'breakingbelizenews.com', feedUrl: 'https://www.breakingbelizenews.com/feed' }],
-  BT: [{ source: 'kuenselonline.com', feedUrl: 'https://kuenselonline.com/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
+  BT: [{ source: 'dailybhutan.com', feedUrl: 'https://www.dailybhutan.com/feed' }], // replaced kuenselonline.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Daily Bhutan is confirmed very actively updated (May/June 2026 content seen directly), a stronger candidate than Kuensel.
   CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/congo_brazzaville/headlines.rdf' }], // 404 on "republicofcongo" -- confirmed via allafrica.com/congo_brazzaville/ that this is the real page slug
   DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
