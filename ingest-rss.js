@@ -26,6 +26,7 @@ const {
   capDescription,
   mapTopic,
   normalizeTitle,
+  safeStringify,
 } = require('./ingest.js');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -490,11 +491,19 @@ async function fetchFeed(feedUrl) {
 }
 
 function buildRow(item, country, source, isStateMedia) {
+  // item.title is assumed to always be a plain string by both this function
+  // and mapTopic, but isn't always -- confirmed via two separate crashes in
+  // production runs (both traced to Bangladesh's Daily Star feed returning
+  // a non-string title, likely from an unusual nested/CDATA XML structure).
+  // Sanitizing once here means every downstream use of row.title
+  // (normalizeTitle, dedup, display) is automatically safe too, rather than
+  // needing the same guard repeated at each call site.
+  const safeTitle = item.title ? safeStringify(item.title).trim() : null;
   return {
     source,
     country,
-    topic: mapTopic(item.categories, item.title),
-    title: item.title ? item.title.trim() : null,
+    topic: mapTopic(item.categories, safeTitle),
+    title: safeTitle,
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
     url: item.link,
     published_at: item.isoDate ? new Date(item.isoDate).toISOString() : (item.pubDate ? new Date(item.pubDate).toISOString() : null),
