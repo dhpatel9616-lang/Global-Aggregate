@@ -514,6 +514,23 @@ const FEED_URLS_BY_COUNTRY = {
   BF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' }],
   EC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' }],
   PY: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
+  // NEW (2026-07-28): these 9 countries had ZERO dedicated RSS feed --
+  // relying entirely on the capped 3-API pipeline (79/186 countries
+  // attempted per run), which explains why several major, well-known
+  // countries were stuck "thin" despite having real allowlisted outlets.
+  // FR/PL/NO/PS/CO/BR feed URLs confirmed via a live RSS-directory listing
+  // (FeedSpot), not guessed. UA/IQ/ET use the standard /feed/ convention on
+  // an already-allowlisted domain -- unverified by test fetch, confirm via
+  // next run's log.
+  FR: [{ source: 'lemonde.fr', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' }], // Le Monde's English digital edition (launched April 2022)
+  PL: [{ source: 'notesfrompoland.com', feedUrl: 'https://notesfrompoland.com/feed' }],
+  NO: [{ source: 'thelocal.no', feedUrl: 'https://feeds.thelocal.com/rss/no' }],
+  PS: [{ source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
+  CO: [{ source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' }],
+  BR: [{ source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' }],
+  UA: [{ source: 'kyivindependent.com', feedUrl: 'https://kyivindependent.com/feed/' }], // unverified path guess
+  IQ: [{ source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }], // unverified path guess
+  ET: [{ source: 'thereporterethiopia.com', feedUrl: 'https://www.thereporterethiopia.com/feed' }], // unverified path guess; deliberately not addisstandard.com -- its media license was revoked 2026-02 per Wikipedia, site status uncertain
 };
 
 async function loadExistingTitles() {
