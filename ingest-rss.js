@@ -528,9 +528,9 @@ const FEED_URLS_BY_COUNTRY = {
   PS: [{ source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
   CO: [{ source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' }],
   BR: [{ source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' }],
-  UA: [{ source: 'kyivindependent.com', feedUrl: 'https://kyivindependent.com/feed/' }], // unverified path guess
+  UA: [{ source: 'euromaidanpress.com', feedUrl: 'https://euromaidanpress.com/feed' }], // swapped from kyivindependent.com/feed/ (404, wrong path) -- this one confirmed via FeedSpot directory listing, not a guess
   IQ: [{ source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }], // unverified path guess
-  ET: [{ source: 'thereporterethiopia.com', feedUrl: 'https://www.thereporterethiopia.com/feed' }], // unverified path guess; deliberately not addisstandard.com -- its media license was revoked 2026-02 per Wikipedia, site status uncertain
+  ET: [{ source: 'capitalethiopia.com', feedUrl: 'https://www.capitalethiopia.com/feed/' }], // swapped from thereporterethiopia.com (403, bot-blocked) -- this one confirmed reachable, live content seen directly
 };
 
 async function loadExistingTitles() {
