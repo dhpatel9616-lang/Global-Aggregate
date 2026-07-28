@@ -160,13 +160,30 @@ function hasExcludedCrimeCategory(normalized) {
   return true;
 }
 
-function hasExcludedCategory(rawCategory) {
+// A handful of 'local'/'city'/'metro'-tagged sources are single-city or
+// single-island national outlets, where that categorization IS the national
+// news, not a hyperlocal subsection distinct from it (the distinction the
+// EXCLUDED_CATEGORIES list above was written for). Confirmed via two
+// consecutive real runs (2026-07-28): barbadostoday.bb and ewnews.com
+// (Bahamas) were losing 90-100% of their content specifically to this
+// exclusion, every run -- these are Barbados's and the Bahamas's own
+// national press, not local-interest noise. Only the 'local'/'city'/'metro'
+// terms are exempted for these sources; genuinely excludable categories
+// (entertainment, horoscope, etc.) still apply normally.
+const LOCAL_CATEGORY_EXEMPT_SOURCES = ['barbadostoday.bb', 'ewnews.com'];
+const HYPERLOCAL_TERMS = ['city', 'cities', 'local', 'metro'];
+
+function hasExcludedCategory(rawCategory, source) {
   if (!rawCategory) return false;
+  const exemptHyperlocal = source && LOCAL_CATEGORY_EXEMPT_SOURCES.some((s) => source.toLowerCase().includes(s));
   const cats = Array.isArray(rawCategory) ? rawCategory : [rawCategory];
   return cats.some((cat) => {
     const normalized = safeStringify(cat).toLowerCase();
     if (hasExcludedCrimeCategory(normalized)) return true;
-    return EXCLUDED_CATEGORIES.some((excluded) => normalized.includes(excluded));
+    return EXCLUDED_CATEGORIES.some((excluded) => {
+      if (exemptHyperlocal && HYPERLOCAL_TERMS.includes(excluded)) return false;
+      return normalized.includes(excluded);
+    });
   });
 }
 
@@ -441,11 +458,11 @@ const ALLOWLIST_BY_COUNTRY = {
   AR: ['batimes.com.ar', 'clarin.com', 'lanacion.com.ar', 'infobae.com', 'canal26.com', 'buenosairesherald.com'],
   AU: ['smh.com.au', 'theage.com.au', 'abc.net.au', 'news.com.au', 'theaustralian.com.au', 'heraldsun.com.au', '7news.com.au', '9news.com.au', 'thewest.com.au', 'perthnow.com.au', 'ntnews.com.au', 'drive.com.au'],
   BD: ['thedailystar.net', 'dhakatribune.com', 'tbsnews.net', 'prothomalo.com', 'daily-sun.com'],
-  BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br'],
+  BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br', 'riotimesonline.com'],
   CA: ['cbc.ca', 'ctvnews.ca', 'globalnews.ca', 'theglobeandmail.com', 'nationalpost.com', 'thestar.com'],
   CD: ['radiookapi.net', 'actualite.cd'],
   CN: ['xinhuanet.com', 'chinadaily.com.cn', 'cgtn.com', 'scmp.com', 'globaltimes.cn', 'ecns.cn', 'caixinglobal.com', 'sixthtone.com'],
-  CO: ['elespectador.com', 'eltiempo.com', 'semana.com', 'vanguardia.com'],
+  CO: ['elespectador.com', 'eltiempo.com', 'semana.com', 'vanguardia.com', 'colombiareports.com'],
   DE: ['dw.com', 'spiegel.de', 'faz.net', 'sueddeutsche.de', 'thelocal.de', 'zeit.de', 'tagesschau.de'],
   EG: ['egypttoday.com', 'egyptindependent.com', 'ahram.org.eg', 'dailynewsegypt.com'],
   ES: ['elpais.com', 'elmundo.es', 'abc.es', 'thelocal.es'],
@@ -516,6 +533,12 @@ const ALLOWLIST_BY_COUNTRY = {
   BS: ['ewnews.com'],
   VC: ['iwnsvg.com'],
   ME: ['total-montenegro-news.com'],
+  // NEW (2026-07-28): countries with zero prior allowlist entry, found while
+  // closing out the "thin countries" list. thelocal.no follows the same
+  // TheLocal-network pattern already trusted for DE/ES/FR/SE.
+  IQ: ['iraqinews.com'],
+  NO: ['thelocal.no'],
+  PS: ['palestinechronicle.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -748,7 +771,7 @@ function getJunkReason(row) {
   if (failsNationalAllowlist(row)) return 'not_relevant_to_country';
   if (isNonEnglish(row.title) || isNonEnglish(row.description)) return 'non_english';
   if (isPrWireContent(row)) return 'pr_wire_content';
-  if (hasExcludedCategory(row._rawCategory)) return 'excluded_category';
+  if (hasExcludedCategory(row._rawCategory, row.source)) return 'excluded_category';
   if (isStale(row.published_at)) return 'stale_published_date';
   if (JUNK_PATTERNS.some((pattern) => pattern.test(row.title))) return 'junk_pattern_match';
   return null;
