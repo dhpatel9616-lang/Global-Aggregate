@@ -16,10 +16,14 @@ jobs:
     # Hard backstop against hangs. GitHub Actions defaults to a 6-hour job
     # timeout if unset -- confirmed via a real run (#11, 2026-07-13) that sat
     # "In progress" for 3h47m+ on what should be a 1-2 minute job (13 feeds,
-    # each with a 10s internal timeout, plus clustering). 10 minutes is
-    # generous headroom and guarantees a future hang can't eat hours again,
-    # regardless of which specific call is the culprit.
-    timeout-minutes: 10
+    # each with a 10s internal timeout, plus clustering). 10 minutes was
+    # generous headroom for that 13-feed job. Bumped to 15 (2026-07-28) --
+    # the feed list has grown 10x since (142 feeds / 135 countries), and a
+    # run got hard-cancelled at the 10-minute mark with 18 country groups
+    # never attempted, even after fixing the AllAfrica same-domain cascade
+    # that caused it (see FEED_URLS_BY_COUNTRY comment in ingest-rss.js).
+    # This is margin on top of that fix, not a substitute for it.
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
