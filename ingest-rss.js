@@ -108,7 +108,10 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'punchng.com', feedUrl: 'https://punchng.com/feed/' },
   ],
   KE: [
-    { source: 'nation.africa', feedUrl: 'https://nation.africa/kenya/rss' },
+    { source: 'the-star.co.ke', feedUrl: 'https://www.the-star.co.ke/rss' },
+    // ^ Replaced nation.africa -- confirmed persistently 403-blocked across
+    // many runs (same IP-reputation pattern as Morocco/Sri Lanka/Uganda).
+    // The Star is a genuinely different domain/publisher, worth a real try.
   ],
   // Fetch-verified via search this session (real, current feed URLs)
   PK: [
@@ -126,10 +129,13 @@ const FEED_URLS_BY_COUNTRY = {
   // set, not a fixable allowlist problem. RSS has no such coverage ceiling.
   // Fetch-verified this session (live content confirmed directly):
   MA: [
-    { source: 'moroccoworldnews.com', feedUrl: 'https://www.moroccoworldnews.com/feed/' },
+    { source: 'en.hespress.com', feedUrl: 'https://en.hespress.com/feed' },
+    // ^ Replaced moroccoworldnews.com -- confirmed persistently 403-blocked.
+    // Hespress is Morocco's most-read news site, genuinely different domain.
   ],
   LK: [
-    { source: 'dailymirror.lk', feedUrl: 'https://www.dailymirror.lk/rss' },
+    { source: 'colombogazette.com', feedUrl: 'https://colombogazette.com/feed/' },
+    // ^ Replaced dailymirror.lk -- confirmed persistently 403-blocked.
   ],
   // Verified via a real feed-listing source this session, not directly
   // fetch-tested. allafrica.com's English feed avoids the problem that
@@ -146,7 +152,9 @@ const FEED_URLS_BY_COUNTRY = {
   // entry above. Exactly the kind of entry the diagnostic logging is meant
   // to validate or correct on the first real run.
   UG: [
-    { source: 'monitor.co.ug', feedUrl: 'https://www.monitor.co.ug/uganda/rss' },
+    { source: 'independent.co.ug', feedUrl: 'https://www.independent.co.ug/feed/' },
+    // ^ Replaced monitor.co.ug -- confirmed persistently 403-blocked (same
+    // Nation Media Group platform as Kenya's original blocked entry).
   ],
   // NOT fetch-tested -- standard WordPress /feed/ convention guessed from
   // the domain, no feed listing found to confirm. Same caveat as above.
@@ -206,13 +214,13 @@ const FEED_URLS_BY_COUNTRY = {
   // higher break rate here than batch 1/2 -- these are smaller, less
   // resourced outlets than BBC/Guardian/Times of India.
   AL: [{ source: 'albaniandailynews.com', feedUrl: 'https://albaniandailynews.com/index.php?feed=rss2' }],
-  AM: [{ source: 'armenpress.am', feedUrl: 'https://armenpress.am/eng/rss/' }],
+  AM: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
   AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
   AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
-  BG: [{ source: 'sofiaglobe.com', feedUrl: 'https://sofiaglobe.com/feed/' }],
+  BG: [{ source: 'novinite.com', feedUrl: 'https://www.novinite.com/services/news_rdf.php' }], // replaced sofiaglobe.com -- confirmed 403-blocked. Novinite is a genuinely different Bulgarian English-language outlet.
   BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
   BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
-  BN: [{ source: 'borneobulletin.com.bn', feedUrl: 'https://borneobulletin.com.bn/feed/' }],
+  BN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
   BW: [{ source: 'thevoicebw.com', feedUrl: 'https://www.thevoicebw.com/feed' }], // replaced mmegi.bw -- confirmed 404 twice on that domain, abandoned rather than a third guess. The Voice is a real, established Botswana outlet with a documented RSS feed at this exact path.
   CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
   CM: [{ source: 'journalducameroun.com', feedUrl: 'https://www.journalducameroun.com/feed/' }], // 404 on /en/feed/ -- retrying without the /en/ prefix
@@ -221,16 +229,16 @@ const FEED_URLS_BY_COUNTRY = {
   CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
   DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
   DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
-  GE: [{ source: 'agenda.ge', feedUrl: 'https://agenda.ge/en/rss' }], // their TLS certificate has expired -- a real admin oversight on their end, not a path problem or our bug. Left in in case they renew it.
+  GE: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
   GY: [{ source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
   HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
   HT: [{ source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' }],
-  IS: [{ source: 'icelandreview.com', feedUrl: 'https://www.icelandreview.com/feed/' }],
+  IS: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }], // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
   LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
   LT: [{ source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/feed/' }], // replaced lrt.lt -- confirmed 403-blocked. Baltic Times is a real independent outlet covering Estonia/Latvia/Lithuania. (Their Feedburner feed URL appeared in search results but was truncated -- using their own domain's standard path instead of guessing the exact Feedburner slug.)
-  LY: [{ source: 'libyaobserver.ly', feedUrl: 'https://www.libyaobserver.ly/rss.xml' }],
+  LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
   MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
   MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
   MK: [{ source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' }],
@@ -241,7 +249,7 @@ const FEED_URLS_BY_COUNTRY = {
   NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
   OM: [{ source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' }],
   RW: [{ source: 'taarifa.rw', feedUrl: 'https://taarifa.rw/feed' }], // replaced newtimes.co.rw -- failed differently on two different guessed paths (502, then 404), abandoned rather than a third guess. Taarifa is a real Rwandan English-language news platform with a documented RSS feed at this exact path.
-  SD: [{ source: 'sudantribune.com', feedUrl: 'https://sudantribune.com/feed/' }],
+  SD: [{ source: 'dabangasudan.org', feedUrl: 'https://www.dabangasudan.org/en/feed' }], // replaced sudantribune.com -- confirmed persistently blocked. Radio Dabanga's English feed was externally verified live with current content (not just guessed).
   SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
   SO: [{ source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
   SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
@@ -265,9 +273,9 @@ const FEED_URLS_BY_COUNTRY = {
   AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
   BS: [{ source: 'ewnews.com', feedUrl: 'https://ewnews.com/feed' }], // replaced tribune242.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Eye Witness News is the Bahamas' #1 local outlet, with a dedicated RSS feed page on their site ("/rss-feed-2/") confirming a feed exists -- using the standard /feed path first since the exact confirmed URL was on a landing page, not necessarily the raw feed itself.
   BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
-  BZ: [{ source: 'breakingbelizenews.com', feedUrl: 'https://www.breakingbelizenews.com/feed' }],
+  BZ: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Belize&hl=en&gl=BZ&ceid=BZ:en' }], // replaced breakingbelizenews.com -- confirmed persistently blocked. Google News RSS fallback.
   BT: [{ source: 'dailybhutan.com', feedUrl: 'https://www.dailybhutan.com/feed' }], // replaced kuenselonline.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Daily Bhutan is confirmed very actively updated (May/June 2026 content seen directly), a stronger candidate than Kuensel.
-  CG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/congo_brazzaville/headlines.rdf' }], // 404 on "republicofcongo" -- confirmed via allafrica.com/congo_brazzaville/ that this is the real page slug
+  CG: [{ source: 'africanews.com', feedUrl: 'https://www.africanews.com/feed/rss' }], // replaced the allafrica.com/congo_brazzaville RDF feed -- confirmed reachable (right slug) but returning zero items every run, a volume problem not a config one. Africanews is a pan-African feed externally verified live with July 2026 content; relies on the existing country-mention relevance check to filter for Congo-Brazzaville specifically, same as any WORLD-tier wire source.
   DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
   SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
@@ -291,9 +299,9 @@ const FEED_URLS_BY_COUNTRY = {
   LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }],
   VC: [{ source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' }],
   // WS (Samoa Observer) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
-  SC: [{ source: 'seychellesnewsagency.com', feedUrl: 'https://www.seychellesnewsagency.com/rss' }],
+  SC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Seychelles&hl=en&gl=SC&ceid=SC:en' }], // replaced seychellesnewsagency.com -- confirmed persistently blocked. Google News RSS fallback.
   SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
-  SI: [{ source: 'sloveniatimes.com', feedUrl: 'https://sloveniatimes.com/feed' }],
+  SI: [{ source: 'total-slovenia-news.com', feedUrl: 'https://www.total-slovenia-news.com/feed' }], // replaced sloveniatimes.com -- confirmed persistently blocked. Total Slovenia News is a genuinely different domain.
   SB: [{ source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' }],
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
@@ -359,7 +367,7 @@ const FEED_URLS_BY_COUNTRY = {
   // confirmed "English-language news providers solely in or about
   // Guatemala are relatively sparse," and the only candidate found was a
   // monthly print magazine, not a live news feed.
-  HN: [{ source: 'hondurasdaily.com', feedUrl: 'https://hondurasdaily.com/rss.xml' }], // 500 on two different paths now -- their feed generator itself appears broken (not a path issue), needs real research or acceptance as a gap
+  HN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Honduras&hl=en&gl=HN&ceid=HN:en' }], // replaced hondurasdaily.com -- confirmed broken feed generator (500 on two different paths). Google News RSS fallback.
   SV: [{ source: 'elsalvadorinenglish.com', feedUrl: 'https://elsalvadorinenglish.com/feed' }],
   // ^ Replaced elsalvadordaily.com -- confirmed persistent malformed XML
   // across two runs, abandoned rather than a third guess. This is a real,
@@ -367,11 +375,11 @@ const FEED_URLS_BY_COUNTRY = {
   // Worth knowing: its editorial tone leans favorable toward the Bukele
   // government in sample content -- not officially state-owned, but not
   // neutral either.
-  NI: [{ source: 'nicaraguadailytimes.com', feedUrl: 'https://nicaraguadailytimes.com/rss.xml' }], // /feed returned something not recognized as valid RSS -- retrying standard /rss.xml
+  NI: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Nicaragua&hl=en&gl=NI&ceid=NI:en' }], // replaced nicaraguadailytimes.com -- confirmed broken format on two different paths. Google News RSS fallback.
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
-  SR: [{ source: 'surinametimes.com', feedUrl: 'https://www.surinametimes.com/feed/' }], // 404 on two different paths now -- genuinely no feed at any guessed path. Also worth knowing: their recent content skews mostly Dutch, not English, so even a working feed would likely face heavy non_english filtering -- lower priority to keep chasing
+  SR: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Suriname&hl=en&gl=SR&ceid=SR:en' }], // replaced surinametimes.com -- confirmed 404 on two different paths, and their real content skews Dutch anyway. Google News RSS fallback (English-only via hl=en).
   // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
   YE: [{ source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
@@ -418,7 +426,10 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ Phnom Penh Post -- Cambodia's oldest English-language newspaper, confirmed active with current 2026 content.
   CZ: [{ source: 'praguemonitor.com', feedUrl: 'https://praguemonitor.com/feed' }],
   // ^ Prague Monitor -- confirmed active English-language Czech Republic news site since 2003.
-  MM: [{ source: 'irrawaddy.com', feedUrl: 'https://www.irrawaddy.com/feed' }], // intermittent 403 (same IP-reputation pattern as Kenya/Uganda/Morocco) -- has succeeded at least once before, not a path problem
+  MM: [
+    { source: 'irrawaddy.com', feedUrl: 'https://www.irrawaddy.com/feed' }, // intermittent 403 (same IP-reputation pattern as Kenya/Uganda/Morocco) -- has succeeded at least once before, not a path problem
+    { source: 'myanmar-now.org', feedUrl: 'https://myanmar-now.org/en/feed' }, // added as a second, genuinely different source rather than a replacement, since Irrawaddy does succeed sometimes
+  ],
   // ^ The Irrawaddy -- genuinely independent (exile-founded, press-freedom-award-winning), confirmed active.
   KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/?feed=rss2' }], // path is correct now (no more 404), but the feed itself has malformed XML -- source-side bug, same class as Lesotho/Brussels Times, not fixable by URL changes
   // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
@@ -429,6 +440,22 @@ const FEED_URLS_BY_COUNTRY = {
   // NOT FOUND -- no clear dedicated English-language outlet turned up in
   // this pass: BO (Bolivia), EC (Ecuador), PY (Paraguay). Worth a second,
   // more targeted research pass rather than a guess.
+
+  // --- Google News RSS fallback batch: for countries where real research
+  // (including a second, cross-referenced pass via an external feed-
+  // expansion report) found no dependable single-outlet feed. Confirmed
+  // still working with no API key as of July 2026. This is fundamentally
+  // different from every other entry in this file -- an aggregation of
+  // many sources via Google's own search, not one outlet -- so expect more
+  // duplicates and occasional off-topic hits; the existing relevance/junk
+  // filters do the real work of cleaning it up rather than the source
+  // itself being pre-vetted the way a dedicated outlet is.
+  GT: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Guatemala&hl=en&gl=GT&ceid=GT:en' }],
+  MV: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Maldives&hl=en&gl=MV&ceid=MV:en' }],
+  KN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Saint+Kitts+and+Nevis&hl=en&gl=KN&ceid=KN:en' }],
+  BO: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bolivia&hl=en&gl=BO&ceid=BO:en' }],
+  EC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' }],
+  PY: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
 };
 
 async function loadExistingTitles() {
