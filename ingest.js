@@ -504,6 +504,18 @@ const ALLOWLIST_BY_COUNTRY = {
   JM: ['jamaica-star.com', 'jamaica-gleaner.com'],
   JO: ['jordannews.jo', 'jordantimes.com', 'ammonnews.net'],
   QA: ['dohanews.co', 'thepeninsulaqatar.com', 'gulf-times.com'],
+  // NEW (2026-07-28): found while diagnosing the "thin/never-worked" list --
+  // these four already had a dedicated national outlet feeding via RSS
+  // (ingest-rss.js FEED_URLS_BY_COUNTRY), but were never added here, so
+  // every one of their own articles had to pass mentionsCountry() on top of
+  // coming from an admittedly single-country outlet. Confirmed via two
+  // consecutive real runs: total-montenegro-news.com alone was losing 18/50
+  // items per run to not_relevant_to_country despite being Montenegro's own
+  // English-language outlet by name.
+  BB: ['barbadostoday.bb'],
+  BS: ['ewnews.com'],
+  VC: ['iwnsvg.com'],
+  ME: ['total-montenegro-news.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
