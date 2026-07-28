@@ -267,7 +267,21 @@ const FEED_URLS_BY_COUNTRY = {
   LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
   MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
   MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
-  MK: [{ source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' }],
+  MK: [
+    { source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' },
+    // NEW (2026-07-28): mia.mk has returned 100% non_english across every
+    // run checked despite being sought as an English source -- confirmed
+    // via research that MIA's English service exists but this feed URL
+    // appears to serve the Macedonian edition. meta.mk is confirmed via
+    // multiple independent sources to actually publish in English (as well
+    // as Macedonian/Albanian) and is a legitimate, well-established
+    // independent Macedonian news agency. Feed URL below is an educated
+    // guess at their standard path (WordPress convention) -- NOT verified
+    // by a test fetch, since meta.mk isn't reachable from this sandbox.
+    // Let the next run's log confirm or correct it, per the established
+    // process.
+    { source: 'meta.mk', feedUrl: 'https://meta.mk/en/feed/' },
+  ],
   ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
   MN: [{ source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/rss' }],
   MW: [{ source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' }],
@@ -334,7 +348,18 @@ const FEED_URLS_BY_COUNTRY = {
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
   GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
-  TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
+  TG: [
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' },
+    // NEW (2026-07-28): AllAfrica's Togo feed has returned "zero items"
+    // every single run checked -- structurally empty, not flaky. TogoFirst
+    // is a real English-language Togo business/investment news outlet
+    // (operated by Ecofin Agency); this specific feed URL is listed
+    // directly in FeedSpot's RSS directory (a live-feed listing service,
+    // not a guess), so confidence is higher than the meta.mk candidate
+    // above, but still unverified by an actual test fetch from this
+    // sandbox -- confirm via next run's log.
+    { source: 'togofirst.com', feedUrl: 'https://www.togofirst.com/en/rss-en' },
+  ],
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 on three separate runs now -- genuinely no feed at any guessed path, needs real research (view page source) rather than another guess
   VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // consistently 429 across two runs now (never 404) -- path is correct, this outlet's server is just rate-limiting GitHub Actions' shared IPs; no code change needed, may succeed on a future run
   // NOT FOUND -- no plausible independent English-language outlet located
