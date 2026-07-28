@@ -539,6 +539,17 @@ const ALLOWLIST_BY_COUNTRY = {
   IQ: ['iraqinews.com'],
   NO: ['thelocal.no'],
   PS: ['palestinechronicle.com'],
+  // NEW (2026-07-28): found while closing out the "never-covered" list.
+  // praguemonitor.com was losing 17/30 items to not_relevant_to_country
+  // despite being a real, dedicated English-language Czech outlet -- same
+  // root cause as the BB/BS/VC/ME fixes. TM/MN added defensively even
+  // though their feeds are currently failing to fetch for unrelated reasons
+  // (cert error / timeout) -- costs nothing now, ready the moment those
+  // get fixed.
+  CZ: ['praguemonitor.com'],
+  TM: ['hronikatm.com'],
+  MN: ['montsame.mn'],
+  WS: ['samoaobserver.ws'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
