@@ -214,6 +214,7 @@ const FEED_URLS_BY_COUNTRY = {
   // higher break rate here than batch 1/2 -- these are smaller, less
   // resourced outlets than BBC/Guardian/Times of India.
   AL: [{ source: 'albaniandailynews.com', feedUrl: 'https://albaniandailynews.com/index.php?feed=rss2' }],
+  BI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' }],
   AM: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
   AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
   AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
@@ -238,6 +239,7 @@ const FEED_URLS_BY_COUNTRY = {
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
   LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
   LT: [{ source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/feed/' }], // replaced lrt.lt -- confirmed 403-blocked. Baltic Times is a real independent outlet covering Estonia/Latvia/Lithuania. (Their Feedburner feed URL appeared in search results but was truncated -- using their own domain's standard path instead of guessing the exact Feedburner slug.)
+  DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
   LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
   MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
   MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
@@ -255,6 +257,7 @@ const FEED_URLS_BY_COUNTRY = {
   SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
   TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
   TT: [{ source: 'newsday.co.tt', feedUrl: 'https://newsday.co.tt/feed/' }],
+  CV: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
   UZ: [{ source: 'daryo.uz', feedUrl: 'https://daryo.uz/en/feed' }],
   ZM: [{ source: 'lusakatimes.com', feedUrl: 'https://www.lusakatimes.com/feed/' }],
   // NOT YET FOUND -- no plausible, reliably-updated English-language outlet
@@ -278,6 +281,7 @@ const FEED_URLS_BY_COUNTRY = {
   CG: [{ source: 'africanews.com', feedUrl: 'https://www.africanews.com/feed/rss' }], // replaced the allafrica.com/congo_brazzaville RDF feed -- confirmed reachable (right slug) but returning zero items every run, a volume problem not a config one. Africanews is a pan-African feed externally verified live with July 2026 content; relies on the existing country-mention relevance check to filter for Congo-Brazzaville specifically, same as any WORLD-tier wire source.
   DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
   EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
+  GQ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/equatorialguinea/headlines.rdf' }],
   SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
   GA: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
   GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/posts/rss/xml' }], // confirmed real feed URL from page source (rel=alternate link tag) -- not a guess
@@ -304,6 +308,7 @@ const FEED_URLS_BY_COUNTRY = {
   SI: [{ source: 'total-slovenia-news.com', feedUrl: 'https://www.total-slovenia-news.com/feed' }], // replaced sloveniatimes.com -- confirmed persistently blocked. Total Slovenia News is a genuinely different domain.
   SB: [{ source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' }],
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
+  GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
   TG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' }],
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 on three separate runs now -- genuinely no feed at any guessed path, needs real research (view page source) rather than another guess
@@ -376,6 +381,7 @@ const FEED_URLS_BY_COUNTRY = {
   // government in sample content -- not officially state-owned, but not
   // neutral either.
   NI: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Nicaragua&hl=en&gl=NI&ceid=NI:en' }], // replaced nicaraguadailytimes.com -- confirmed broken format on two different paths. Google News RSS fallback.
+  KM: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/comoros/headlines.rdf' }],
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
@@ -387,23 +393,23 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ Al-Masdar Online -- confirmed still actively publishing as of 2026,
   // maintains an English-language version. Corrects the earlier low-
   // confidence "no outlet found" flag from an earlier, less rigorous pass.
-  BI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' }],
-  DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
-  CV: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
-  GQ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/equatorialguinea/headlines.rdf' }],
-  GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
-  KM: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/comoros/headlines.rdf' }],
-  ST: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/saotomeandprincipe/headlines.rdf' }],
-  CF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
-  TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
-  BF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' }],
-  // ^ BI/DJ/CV/GQ/GW/KM/ST/CF/TD/BF: no dedicated English-language domestic
+  // BI/DJ/CV/GQ/GW/KM/ST/CF/TD/BF: no dedicated English-language domestic
   // outlet found for any of these (all Francophone/Lusophone press) --
   // falling back to the AllAfrica RDF pattern already confirmed to work
   // for similarly-situated countries. Genuinely no independent-outlet
-  // candidate exists, not a research shortcut.
+  // candidate exists, not a research shortcut. Deliberately NOT listed
+  // consecutively here -- confirmed via a real run (2026-07-28) that 10
+  // AllAfrica entries in a row, on top of ~12 earlier AllAfrica calls
+  // already made that same run, cascaded into repeated 10s-timeout+20s-
+  // retry failures and ate enough of the job's time budget to get the
+  // whole run cancelled at the 10-minute mark with 18 country groups never
+  // even attempted. Same finding as the inter-domain delay comment above:
+  // AllAfrica's throttling doesn't respond predictably to more delay, so
+  // instead these 10 are spread out among unrelated-domain entries below,
+  // each several entries away from the next AllAfrica call.
 
   TV: [{ source: 'tuvalutimes.com', feedUrl: 'https://www.tuvalutimes.com/feed' }],
+  ST: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/saotomeandprincipe/headlines.rdf' }],
   // ^ Right URL (no 404), but the feed itself has malformed XML (unexpected
   // close tag) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA
   // Watch, not fixable by changing the URL.
@@ -418,6 +424,7 @@ const FEED_URLS_BY_COUNTRY = {
   BA: [{ source: 'sarajevotimes.com', feedUrl: 'https://sarajevotimes.com/feed' }],
   // ^ Confirmed "the only Bosnian portal that gives news in English."
   BD: [{ source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }], // right URL, but every item's title comes through unusable after sanitization (missing_title: 10/10) -- a source-side feed structure issue, not a path problem
+  CF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
   // ^ The Daily Star -- Bangladesh's largest circulating English-language
   // newspaper, feed URL confirmed via a curated OPML feed list, not guessed.
   BE: [{ source: 'brusselstimes.com', feedUrl: 'https://www.brusselstimes.com/feed' }], // malformed XML (unquoted attribute value) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA Watch
@@ -434,6 +441,7 @@ const FEED_URLS_BY_COUNTRY = {
   KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/?feed=rss2' }], // path is correct now (no more 404), but the feed itself has malformed XML -- source-side bug, same class as Lesotho/Brussels Times, not fixable by URL changes
   // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
   PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
+  TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
   // ^ Panama Expat Times -- confirmed active (Nov 2025 content), dedicated English coverage.
   VE: [{ source: 'caracaschronicles.com', feedUrl: 'https://www.caracaschronicles.com/feed' }],
   // ^ Caracas Chronicles -- genuinely independent, confirmed active with July 2026 content.
@@ -454,6 +462,7 @@ const FEED_URLS_BY_COUNTRY = {
   MV: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Maldives&hl=en&gl=MV&ceid=MV:en' }],
   KN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Saint+Kitts+and+Nevis&hl=en&gl=KN&ceid=KN:en' }],
   BO: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bolivia&hl=en&gl=BO&ceid=BO:en' }],
+  BF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' }],
   EC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' }],
   PY: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
 };
