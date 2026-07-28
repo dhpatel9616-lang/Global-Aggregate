@@ -361,7 +361,14 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'togofirst.com', feedUrl: 'https://www.togofirst.com/en/rss-en' },
   ],
   TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 on three separate runs now -- genuinely no feed at any guessed path, needs real research (view page source) rather than another guess
-  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // consistently 429 across two runs now (never 404) -- path is correct, this outlet's server is just rate-limiting GitHub Actions' shared IPs; no code change needed, may succeed on a future run
+  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // status has flip-flopped across runs (403, then 429, now 404) -- looks like a genuinely unstable small site rather than one fixable path issue
+  // NEW (2026-07-28): WS (Samoa) previously had no RSS entry at all. Samoa
+  // Observer is Samoa's real, independent, award-winning national daily
+  // (RSF profile confirms it's the country's flagship free press outlet).
+  // Feed path is a standard-convention guess -- unverified, confirm via
+  // next run's log. Uses Cloudflare per its own tech stack, so a 403 here
+  // wouldn't be surprising.
+  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/feed' }],
   // NOT FOUND -- no plausible independent English-language outlet located
   // in this pass, or these are genuinely tiny states with no discoverable
   // English-language press at all:
