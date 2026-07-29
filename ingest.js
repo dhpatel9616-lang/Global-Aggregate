@@ -565,6 +565,13 @@ const ALLOWLIST_BY_COUNTRY = {
   BF: ['fasonews.info'],
   AL: ['tiranatimes.com'],
   BE: ['thebulletin.be'],
+  KW: ['arabtimesonline.com'],
+  MU: ['mauritiustimes.com'],
+  DZ: ['al24news.com'],
+  ER: ['eritreadaily.net'],
+  TO: ['kanivatonga.co.nz'],
+  SB: ['theislandsun.com.sb'],
+  LA: ['vientianetimes.org.la'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -1298,7 +1305,7 @@ async function main() {
   // under 8s, instead of raising the per-call batch size (which would blow
   // the real ceiling -- confirmed directly: a manual 3000-item test call
   // failed with a Postgres statement-timeout error).
-  const CLUSTER_HARD_TIMEOUT_MS = 60000;
+  const CLUSTER_HARD_TIMEOUT_MS = 15000; // reduced from 60000 (2026-07-29) -- same reasoning as ingest-rss.js, no reason to allow a 6min worst case when 15s per call is already ~2x the real 8s server-side ceiling
   const CLUSTER_CALLS_PER_RUN = 6;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
