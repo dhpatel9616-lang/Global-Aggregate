@@ -248,7 +248,7 @@ const FEED_URLS_BY_COUNTRY = {
   BN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
   BW: [{ source: 'thevoicebw.com', feedUrl: 'https://www.thevoicebw.com/feed' }], // replaced mmegi.bw -- confirmed 404 twice on that domain, abandoned rather than a third guess. The Voice is a real, established Botswana outlet with a documented RSS feed at this exact path.
   CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
-  CM: [{ source: 'journalducameroun.com', feedUrl: 'https://www.journalducameroun.com/feed/' }], // 404 on /en/feed/ -- retrying without the /en/ prefix
+  CM: [{ source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
   CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
   CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
   CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
@@ -550,9 +550,9 @@ const FEED_URLS_BY_COUNTRY = {
   EG: [{ source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' }],
   CN: [{ source: 'scmp.com', feedUrl: 'https://www.scmp.com/rss/91/feed' }],
   RS: [{ source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/feed/' }],
-  RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss' }], // unverified path guess
-  AF: [{ source: 'tolonews.com', feedUrl: 'https://tolonews.com/rss.xml' }], // unverified path guess -- TOLOnews confirmed as Afghanistan's largest English-language outlet
-  LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss/lebanon' }], // moderate confidence -- confirmed via FeedSpot directory listing (path format there was truncated/non-standard, reconstructed here)
+  RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }], // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
+  AF: [{ source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }], // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
+  LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss.xml' }], // swapped from /rss/lebanon (404) -- trying standard root-level path, still unverified
 };
 
 async function loadExistingTitles() {
