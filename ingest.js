@@ -82,12 +82,19 @@ function safeStringify(value) {
 // terms are checked first to avoid one word swallowing another category
 // (e.g. "election" should win Politics even if the same headline also says
 // "market").
+// Data audit (2026-07-28) found 81%+ of recent articles defaulted to
+// 'World' -- traced to two causes: (1) most sources' feeds genuinely don't
+// carry per-item category tags (confirmed on BBC, Guardian, NDTV, NYT,
+// Times of India -- all 90%+ World despite mapTopic checking categories
+// first), so nearly everything falls to the title-keyword fallback, and (2)
+// that fallback was too narrow (5-6 words per topic) to catch normal news
+// phrasing. Expanded substantially below -- same structure, much wider net.
 const TOPIC_KEYWORDS = [
-  ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader)\b/i],
-  ['Business', /\b(stock market|shares|earnings|ipo|merger|acquisition|gdp|inflation|interest rate|central bank|bankruptcy|ceo|revenue|quarterly (results|profit))\b/i],
-  ['Tech', /\b(smartphone|artificial intelligence|\bai\b|software|app store|cybersecurity|data breach|chip(maker)?|semiconductor|startup|silicon valley|social media platform)\b/i],
-  ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout)\b/i],
-  ['Health', /\b(vaccine|hospital|outbreak|virus|disease|pandemic|who\b|health ministry|clinical trial|surgeon|patient(s)?)\b/i],
+  ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader|governor|mayor|lawmaker|legislation|bill passed|policy|diplomat|embassy|sanctions|treaty|summit|geopolit|military coup|martial law|protest|demonstrators|rally|strike action|human rights|constitution|judiciary|supreme court|verdict|lawsuit|corruption|scandal|resign(ed|ation)?|coalition|vote|ballot|campaign trail|foreign minister|un security council|nato|diplomatic)\b/i],
+  ['Business', /\b(stock market|shares|earnings|ipo|merger|acquisition|gdp|inflation|interest rate|central bank|bankruptcy|ceo|revenue|quarterly (results|profit)|economy|economic|trade deal|tariff|export|import|investment|investor|startup funding|venture capital|market cap|currency|exchange rate|unemployment|jobs report|manufacturing|supply chain|oil price|commodity|banking sector|fiscal|budget deficit|subsidy|price hike|cost of living|retail sales|corporate|industry|factory)\b/i],
+  ['Tech', /\b(smartphone|artificial intelligence|\bai\b|software|app store|cybersecurity|data breach|chip(maker)?|semiconductor|startup|silicon valley|social media platform|tech giant|app launch|digital platform|internet access|broadband|telecom|5g|satellite launch|space agency|electric vehicle|ev market|robot|automation|data center|cloud computing|crypto|blockchain|innovation hub)\b/i],
+  ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout|football|soccer|cricket|basketball|tennis|marathon|stadium|referee|squad|qualify(ing)?|semifinal|grand slam|premier league|fifa|uefa|striker|midfielder)\b/i],
+  ['Health', /\b(vaccine|hospital|outbreak|virus|disease|pandemic|who\b|health ministry|clinical trial|surgeon|patient(s)?|healthcare|medical|doctors|nurses|epidemic|infection|mental health|malaria|cholera|maternal health|public health|drug approval|medicine shortage|life expectancy|malnutrition)\b/i],
 ];
 
 function mapTopic(rawCategory, title) {
@@ -557,6 +564,7 @@ const ALLOWLIST_BY_COUNTRY = {
   BI: ['iwacu-burundi.org'],
   BF: ['fasonews.info'],
   AL: ['tiranatimes.com'],
+  BE: ['thebulletin.be'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -635,6 +643,34 @@ const COUNTRY_MENTION_ALIASES = {
   TN: ['tunisian', 'tunis'],
   UY: ['uruguayan', 'montevideo'],
   RS: ['serbian', 'belgrade'],
+  // NEW (2026-07-28): added while doing a fresh pass on the never-worked
+  // list -- 26 of 27 had zero aliases at all, same gap as the 14-cluster.
+  BE: ['belgian', 'brussels'],
+  BG: ['bulgarian', 'sofia'],
+  BT: ['bhutanese', 'thimphu'],
+  BW: ['botswanan', 'batswana', 'gaborone'],
+  CG: ['congolese', 'brazzaville'],
+  CV: ['cape verdean', 'cabo verdean', 'praia'],
+  CZ: ['czech', 'prague'],
+  DJ: ['djiboutian', 'djibouti city'],
+  DZ: ['algerian', 'algiers'],
+  ER: ['eritrean', 'asmara'],
+  KM: ['comoran', 'comorian', 'moroni'],
+  KW: ['kuwaiti'],
+  LA: ['laotian', 'lao pdr', 'vientiane'],
+  LT: ['lithuanian', 'vilnius'],
+  ME: ['montenegrin', 'podgorica'],
+  MN: ['mongolian', 'ulaanbaatar'],
+  MT: ['maltese', 'valletta'],
+  MU: ['mauritian', 'port louis'],
+  MZ: ['mozambican', 'maputo'],
+  SB: ['solomon islander', 'honiara'],
+  TM: ['turkmen', 'ashgabat'],
+  TO: ['tongan', "nuku'alofa"],
+  TV: ['tuvaluan', 'funafuti'],
+  UZ: ['uzbek', 'tashkent'],
+  VU: ['ni-vanuatu', 'port vila'],
+  WS: ['samoan', 'apia'],
 };
 
 function mentionsCountry(text, countryCode) {
@@ -1254,19 +1290,32 @@ async function main() {
   // it ran long. 40 gives a bit more headroom than RSS's 30 since this runs
   // far less often (every 3h vs every 15min) and can afford a slightly
   // bigger batch while staying comfortably under the real 8s ceiling.
+  //
+  // A live data audit (2026-07-28) found only 1.6% of the last 7 days'
+  // articles had ever been clustered, 6,900+ backlogged -- one 40-item call
+  // per 3-hour run is nowhere near enough at current volume. Same fix as
+  // ingest-rss.js: call the RPC multiple times per run, each still safely
+  // under 8s, instead of raising the per-call batch size (which would blow
+  // the real ceiling -- confirmed directly: a manual 3000-item test call
+  // failed with a Postgres statement-timeout error).
   const CLUSTER_HARD_TIMEOUT_MS = 60000;
-  const clusterTimeout = new Promise((resolve) =>
-    setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
-  );
-  const { error: clusterError } = await Promise.race([
-    supabase.rpc('cluster_related_articles', { max_batch_size: 40 }),
-    clusterTimeout,
-  ]);
-  if (clusterError) {
-    console.error('Clustering failed (non-fatal):', clusterError.message);
-  } else {
-    console.log('Clustering complete.');
+  const CLUSTER_CALLS_PER_RUN = 6;
+  let clusteredOk = 0;
+  for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
+    const clusterTimeout = new Promise((resolve) =>
+      setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
+    );
+    const { error: clusterError } = await Promise.race([
+      supabase.rpc('cluster_related_articles', { max_batch_size: 40 }),
+      clusterTimeout,
+    ]);
+    if (clusterError) {
+      console.error(`Clustering call ${i + 1}/${CLUSTER_CALLS_PER_RUN} failed (non-fatal): ${clusterError.message}`);
+      break;
+    }
+    clusteredOk++;
   }
+  console.log(`Clustering complete (${clusteredOk}/${CLUSTER_CALLS_PER_RUN} calls succeeded).`);
 }
 
 // Only auto-run when executed directly (node ingest.js), not when required
