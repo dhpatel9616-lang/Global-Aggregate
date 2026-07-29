@@ -538,6 +538,21 @@ const FEED_URLS_BY_COUNTRY = {
   UA: [{ source: 'euromaidanpress.com', feedUrl: 'https://euromaidanpress.com/feed' }], // swapped from kyivindependent.com/feed/ (404, wrong path) -- this one confirmed via FeedSpot directory listing, not a guess
   IQ: [{ source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }], // unverified path guess
   ET: [{ source: 'capitalethiopia.com', feedUrl: 'https://www.capitalethiopia.com/feed/' }], // swapped from thereporterethiopia.com (403, bot-blocked) -- this one confirmed reachable, live content seen directly
+  // NEW (2026-07-28): found while working the "stalled" list -- these 5
+  // major countries had ZERO dedicated RSS feed, relying purely on the
+  // capped API pipeline, which explains the stall. JP/EG/CN feed URLs
+  // confirmed via directory listing or live-fetched content, not guesses.
+  // RS's Balkan Insight is confirmed real but covers the whole Balkans
+  // region (like AllAfrica) -- correctly NOT allowlisted, relies on the
+  // country-mention relevance check same as any wire. RU's path is a
+  // standard-convention guess on an already-allowlisted domain, unverified.
+  JP: [{ source: 'japantimes.co.jp', feedUrl: 'https://www.japantimes.co.jp/feed' }],
+  EG: [{ source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' }],
+  CN: [{ source: 'scmp.com', feedUrl: 'https://www.scmp.com/rss/91/feed' }],
+  RS: [{ source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/feed/' }],
+  RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss' }], // unverified path guess
+  AF: [{ source: 'tolonews.com', feedUrl: 'https://tolonews.com/rss.xml' }], // unverified path guess -- TOLOnews confirmed as Afghanistan's largest English-language outlet
+  LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss/lebanon' }], // moderate confidence -- confirmed via FeedSpot directory listing (path format there was truncated/non-standard, reconstructed here)
 };
 
 async function loadExistingTitles() {
