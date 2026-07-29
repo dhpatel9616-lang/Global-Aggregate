@@ -511,7 +511,7 @@ const ALLOWLIST_BY_COUNTRY = {
   // 100% of onlinekhabar.com's content was filtered as not_relevant until
   // this was added. Same gap almost certainly affects LK/FJ/UG/PG/GR/ZW,
   // they just hadn't shown it yet (some were still 403-blocked).
-  LK: ['dailymirror.lk'],
+  LK: ['dailymirror.lk', 'nation.lk'],
   FJ: ['fbcnews.com.fj'],
   UG: ['monitor.co.ug'],
   PG: ['postcourier.com.pg'],
@@ -554,6 +554,9 @@ const ALLOWLIST_BY_COUNTRY = {
   DO: ['dominicantoday.com'],
   AF: ['tolonews.com'],
   LB: ['naharnet.com'],
+  BI: ['iwacu-burundi.org'],
+  BF: ['fasonews.info'],
+  AL: ['tiranatimes.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -609,6 +612,29 @@ const COUNTRY_MENTION_ALIASES = {
   CL: ['chilean', 'santiago'],
   PE: ['peruvian', 'lima'],
   NZ: ['new zealand', 'kiwi', 'wellington', 'auckland'],
+  // NEW (2026-07-28): added while diagnosing the AllAfrica-Francophone
+  // cluster and related stalled countries -- these had ZERO aliases beyond
+  // the exact countries.json name, which is a real, confirmed bug for CI
+  // specifically: AllAfrica's Cote d'Ivoire feed prefixes every headline
+  // "Cote d'Ivoire: ..." but countries.json's name is "Ivory Coast", so the
+  // relevance check was failing on the country's own already-tagged content.
+  CI: ["cote d'ivoire", 'côte d\'ivoire', 'ivorian', 'abidjan'],
+  SN: ['senegalese', 'dakar'],
+  ML: ['malian', 'bamako'],
+  BF: ['burkinabe', 'burkinabé', 'ouagadougou'],
+  CF: ['central african republic', 'car', 'bangui'],
+  ST: ['sao tome', 'são tomé', 'principe', 'príncipe'],
+  GW: ['bissau-guinean', 'bissau'],
+  GQ: ['equatorial guinean', 'equatoguinean', 'malabo'],
+  BI: ['burundian', 'bujumbura', 'gitega'],
+  MR: ['mauritanian', 'nouakchott'],
+  GN: ['guinean', 'conakry'],
+  GA: ['gabonese', 'libreville'],
+  BJ: ['beninese', 'porto-novo', 'cotonou'],
+  MG: ['malagasy', 'antananarivo'],
+  TN: ['tunisian', 'tunis'],
+  UY: ['uruguayan', 'montevideo'],
+  RS: ['serbian', 'belgrade'],
 };
 
 function mentionsCountry(text, countryCode) {
@@ -700,7 +726,7 @@ function passesNationalRelevance(row) {
   }
   if (domainMatchesCountryTld(row.source, row.country)) return true;
   if (domainMatchesCountryEdition(row.source, row.country)) return true;
-  const text = `${row.title} ${row.description || ''}`;
+  const text = `${row.title} ${row.description || ''} ${safeStringify(row._rawCategory || '')}`;
   return mentionsCountry(text, row.country);
 }
 
