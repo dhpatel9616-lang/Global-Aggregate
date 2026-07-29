@@ -496,7 +496,7 @@ const FEED_URLS_BY_COUNTRY = {
   CF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
   // ^ The Daily Star -- Bangladesh's largest circulating English-language
   // newspaper, feed URL confirmed via a curated OPML feed list, not guessed.
-  BE: [{ source: 'brusselstimes.com', feedUrl: 'https://www.brusselstimes.com/feed' }], // malformed XML (unquoted attribute value) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA Watch
+  BE: [{ source: 'thebulletin.be', feedUrl: 'https://www.thebulletin.be/rss.xml' }], // swapped from brusselstimes.com (malformed XML) -- The Bulletin confirmed via directory with exact feed URL, genuinely different outlet
   // ^ The Brussels Times -- Belgium's largest English-language news outlet.
   KH: [{ source: 'phnompenhpost.com', feedUrl: 'https://www.phnompenhpost.com/feed' }],
   // ^ Phnom Penh Post -- Cambodia's oldest English-language newspaper, confirmed active with current 2026 content.
@@ -827,19 +827,34 @@ async function main() {
   // a real timeout (confirmed: 478 of 483 articles in the last 6h were still
   // unclustered at the time it failed). 1 hour comfortably covers several
   // missed cycles' worth of buffer without re-scanning that much backlog.
+  //
+  // max_batch_size=30 is correctly tuned to PostgREST's real 8s
+  // statement_timeout per call (see below) -- but a single 30-item call per
+  // run was nowhere near enough at current volume. A live data audit
+  // (2026-07-28) found only 1.6% of the last 7 days' articles had ever been
+  // clustered, with a 6,900+ article backlog -- the vast majority of
+  // articles were simply never reaching the clustering function at all
+  // before aging out of the 1h window forever. Fix: call the RPC multiple
+  // times per run instead of once, each call still safely bounded to 30
+  // items / under 8s, but ~8x the total throughput per run.
   const CLUSTER_HARD_TIMEOUT_MS = 60000;
-  const clusterTimeout = new Promise((resolve) =>
-    setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
-  );
-  const { error: clusterError } = await Promise.race([
-    supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 30 }),
-    clusterTimeout,
-  ]);
-  if (clusterError) {
-    console.error('Clustering failed (non-fatal):', clusterError.message);
-  } else {
-    console.log('Clustering complete.');
+  const CLUSTER_CALLS_PER_RUN = 8;
+  let clusteredOk = 0;
+  for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
+    const clusterTimeout = new Promise((resolve) =>
+      setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
+    );
+    const { error: clusterError } = await Promise.race([
+      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 30 }),
+      clusterTimeout,
+    ]);
+    if (clusterError) {
+      console.error(`Clustering call ${i + 1}/${CLUSTER_CALLS_PER_RUN} failed (non-fatal): ${clusterError.message}`);
+      break; // if one call is timing out, later ones will too -- stop wasting run time
+    }
+    clusteredOk++;
   }
+  console.log(`Clustering complete (${clusteredOk}/${CLUSTER_CALLS_PER_RUN} calls succeeded).`);
 }
 
 main()
