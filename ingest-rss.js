@@ -266,7 +266,7 @@ const FEED_URLS_BY_COUNTRY = {
   CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
   CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
   DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
-  DZ: [{ source: 'aps.dz', feedUrl: 'https://www.aps.dz/en/feed' }], // 404 on two different guessed paths now -- needs real research, not another guess
+  DZ: [{ source: 'al24news.com', feedUrl: 'https://al24news.com/feed' }], // swapped from aps.dz (404 twice) -- AL24 News confirmed real, active, English-language Algerian state international broadcaster, path unverified
   GE: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
   GY: [{ source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
   HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
@@ -274,7 +274,7 @@ const FEED_URLS_BY_COUNTRY = {
   IS: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }], // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
-  LA: [{ source: 'laotiantimes.com', feedUrl: 'https://laotiantimes.com/feed/' }],
+  LA: [{ source: 'vientianetimes.org.la', feedUrl: 'https://www.vientianetimes.org.la/feed' }], // swapped from laotiantimes.com (malformed XML) -- Vientiane Times confirmed as Laos' actual established national English/Lao paper since 1994, path unverified
   LT: [{ source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/feed/' }], // replaced lrt.lt -- confirmed 403-blocked. Baltic Times is a real independent outlet covering Estonia/Latvia/Lithuania. (Their Feedburner feed URL appeared in search results but was truncated -- using their own domain's standard path instead of guessing the exact Feedburner slug.)
   DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
   LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
@@ -343,9 +343,15 @@ const FEED_URLS_BY_COUNTRY = {
   LR: [{ source: 'fpa.news', feedUrl: 'https://fpa.news/feed/' }], // confirmed real feed URL from page source -- FrontPage Africa actually serves its feed from a completely different domain (fpa.news), not frontpageafricaonline.com
   LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
   // MV (Maldives) confirmed NO RSS feed exists at all -- checked page source directly, no rel=alternate rss+xml tag anywhere (Nuxt SPA site). Not a path problem, genuinely not offered.
-  MT: [{ source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }], // now resolves but returns 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco, not a path problem, no further URL guessing will help
+  MT: [
+    { source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }, // now resolves but returns 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco, not a path problem, no further URL guessing will help
+    // NEW (2026-07-28): trying Malta Today as a second, genuinely different
+    // outlet -- confirmed real, established English-language Maltese paper,
+    // not previously attempted. Path unverified.
+    { source: 'maltatoday.com.mt', feedUrl: 'https://www.maltatoday.com.mt/rss' },
+  ],
   MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
-  MU: [{ source: 'defimedia.info', feedUrl: 'https://defimedia.info/?feed=rss2' }], // feed exists at this path now (no more 404) but has malformed XML of its own -- source-side bug, same class as LS/TJ below
+  MU: [{ source: 'mauritiustimes.com', feedUrl: 'https://www.mauritiustimes.com/feed' }], // swapped from defimedia.info (malformed XML) -- Mauritius Times confirmed via Wikipedia's newspaper directory as a real, established English/French outlet, path unverified
   MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }], // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
   ME: [{ source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' }],
   NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
@@ -357,7 +363,13 @@ const FEED_URLS_BY_COUNTRY = {
   SC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Seychelles&hl=en&gl=SC&ceid=SC:en' }], // replaced seychellesnewsagency.com -- confirmed persistently blocked. Google News RSS fallback.
   SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
   SI: [{ source: 'total-slovenia-news.com', feedUrl: 'https://www.total-slovenia-news.com/feed' }], // replaced sloveniatimes.com -- confirmed persistently blocked. Total Slovenia News is a genuinely different domain.
-  SB: [{ source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' }],
+  SB: [
+    { source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' },
+    // NEW (2026-07-28): Island Sun confirmed real, established, privately
+    // owned Solomon Islands daily -- genuinely different outlet than the
+    // already-blocked Solomon Star. Path unverified.
+    { source: 'theislandsun.com.sb', feedUrl: 'https://theislandsun.com.sb/feed' },
+  ],
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
   GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
   TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
@@ -373,7 +385,7 @@ const FEED_URLS_BY_COUNTRY = {
     // sandbox -- confirm via next run's log.
     { source: 'togofirst.com', feedUrl: 'https://www.togofirst.com/en/rss-en' },
   ],
-  TO: [{ source: 'matangitonga.to', feedUrl: 'https://matangitonga.to/feed/' }], // 404 on three separate runs now -- genuinely no feed at any guessed path, needs real research (view page source) rather than another guess
+  TO: [{ source: 'kanivatonga.co.nz', feedUrl: 'https://kanivatonga.co.nz/feed' }], // swapped from matangitonga.to (404 x3, abandoned) -- Kaniva Tonga confirmed real, active, with live current content seen directly, path unverified
   VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // status has flip-flopped across runs (403, then 429, now 404) -- looks like a genuinely unstable small site rather than one fixable path issue
   // NEW (2026-07-28): WS (Samoa) previously had no RSS entry at all. Samoa
   // Observer is Samoa's real, independent, award-winning national daily
@@ -416,7 +428,17 @@ const FEED_URLS_BY_COUNTRY = {
   // around that risk while still surfacing genuine official DPRK output.
   BY: [{ source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true }],
   // ^ Confirmed working -- saw live, current-dated content at this URL directly.
-  ER: [{ source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true }],
+  ER: [
+    { source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true },
+    // NEW (2026-07-28): EritreaDaily.net confirmed via University of
+    // Michigan's academic library guide as a real, independent outlet
+    // dedicated to Eritrea, distinct from state-run shabait.com (already
+    // blocked). Eritrea has essentially no free domestic press (RSF ranks
+    // it among the worst globally for press freedom), so an
+    // exile/diaspora-run site is the realistic ceiling here. Path
+    // unverified.
+    { source: 'eritreadaily.net', feedUrl: 'https://eritreadaily.net/feed' },
+  ],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
   // Malta, not a path problem, no further URL guessing will help.
   TM: [{ source: 'en.hronikatm.com', feedUrl: 'https://en.hronikatm.com/feed/' }],
@@ -507,7 +529,7 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'myanmar-now.org', feedUrl: 'https://myanmar-now.org/en/feed' }, // added as a second, genuinely different source rather than a replacement, since Irrawaddy does succeed sometimes
   ],
   // ^ The Irrawaddy -- genuinely independent (exile-founded, press-freedom-award-winning), confirmed active.
-  KW: [{ source: 'kuwaittimes.com', feedUrl: 'https://www.kuwaittimes.com/?feed=rss2' }], // path is correct now (no more 404), but the feed itself has malformed XML -- source-side bug, same class as Lesotho/Brussels Times, not fixable by URL changes
+  KW: [{ source: 'arabtimesonline.com', feedUrl: 'https://www.arabtimesonline.com/rssFeed/47/' }], // swapped from kuwaittimes.com (malformed XML) -- exact feed URL confirmed directly on Arab Times' own /rss/ page, not a guess
   // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
   PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
   TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
@@ -732,6 +754,12 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
 }
 
 async function main() {
+  const runStart = Date.now();
+  // Job timeout is 15 minutes (see ingest-rss.yml). Leaving a ~3-minute
+  // safety margin for clustering + final logging/exit, since a hard
+  // GitHub Actions cancellation mid-request loses the whole run's progress,
+  // while stopping early here still commits everything fetched so far.
+  const TIME_BUDGET_MS = 12 * 60 * 1000;
   const countryCodes = Object.keys(FEED_URLS_BY_COUNTRY);
   const totalFeeds = countryCodes.reduce((sum, c) => sum + FEED_URLS_BY_COUNTRY[c].length, 0);
   console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s)...\n`);
@@ -743,7 +771,15 @@ async function main() {
 
   const results = [];
   let lastSource = null;
-  for (const country of countryCodes) {
+  let budgetExceeded = false;
+  for (const [countryIndex, country] of countryCodes.entries()) {
+    if (Date.now() - runStart > TIME_BUDGET_MS) {
+      const skipped = countryCodes.slice(countryIndex);
+      console.warn(`\nTime budget (${TIME_BUDGET_MS / 60000}min) reached -- skipping remaining ${skipped.length} country group(s) this run: ${skipped.join(', ')}`);
+      budgetExceeded = true;
+      break;
+    }
+
     // WORLD (wire) feeds get checked against every real country, since their
     // relevance depends on content (does it mention Kenya, Poland, etc.),
     // not which feed group they were fetched under -- same principle as the
@@ -817,7 +853,7 @@ async function main() {
   }
 
   const totalInserted = results.reduce((sum, r) => sum + r.inserted, 0);
-  console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s).`);
+  console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s)${budgetExceeded ? ' (run cut short by time budget)' : ''}.`);
 
   console.log('\nClustering related stories across countries...');
   // RSS runs every 15 minutes, not every 3 hours like the API pipeline --
@@ -837,10 +873,30 @@ async function main() {
   // before aging out of the 1h window forever. Fix: call the RPC multiple
   // times per run instead of once, each call still safely bounded to 30
   // items / under 8s, but ~8x the total throughput per run.
-  const CLUSTER_HARD_TIMEOUT_MS = 60000;
-  const CLUSTER_CALLS_PER_RUN = 8;
+  // max_batch_size=30 is correctly tuned to PostgREST's real 8s
+  // statement_timeout per call (see below) -- but a single 30-item call per
+  // run was nowhere near enough at current volume. A live data audit
+  // (2026-07-28) found only 1.6% of the last 7 days' articles had ever been
+  // clustered, with a 6,900+ article backlog -- the vast majority of
+  // articles were simply never reaching the clustering function at all
+  // before aging out of the 1h window forever. Fix: call the RPC multiple
+  // times per run instead of once, each call still safely bounded to 30
+  // items / under 8s.
+  //
+  // Hard timeout reduced from 60s to 15s and iterations from 8 to 5
+  // (2026-07-29): the original 60s x 8 was a worst case of ~8 minutes if
+  // calls ran slow without technically erroring -- confirmed as a likely
+  // contributor to some runs timing out at the 15-minute job ceiling while
+  // others didn't, alongside feed count growing from 144 to 169 this same
+  // session. 15s is still ~2x the real ~8s server-side ceiling.
+  const CLUSTER_HARD_TIMEOUT_MS = 15000;
+  const CLUSTER_CALLS_PER_RUN = 5;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
+    if (Date.now() - runStart > TIME_BUDGET_MS) {
+      console.warn(`Time budget reached during clustering -- stopping after ${clusteredOk}/${CLUSTER_CALLS_PER_RUN} calls.`);
+      break;
+    }
     const clusterTimeout = new Promise((resolve) =>
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
