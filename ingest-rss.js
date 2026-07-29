@@ -160,6 +160,11 @@ const FEED_URLS_BY_COUNTRY = {
   LK: [
     { source: 'colombogazette.com', feedUrl: 'https://colombogazette.com/feed/' },
     // ^ Replaced dailymirror.lk -- confirmed persistently 403-blocked.
+    // NEW (2026-07-28): colombogazette.com itself started failing with
+    // malformed XML ("Attribute without value"). Trying The Nation instead
+    // -- exact feed URL confirmed via directory listing, a different outlet
+    // than the already-blocked dailymirror.lk, not the same domain retried.
+    { source: 'nation.lk', feedUrl: 'https://www.nation.lk/online/rss.xml' },
   ],
   // Verified via a real feed-listing source this session, not directly
   // fetch-tested. allafrica.com's English feed avoids the problem that
@@ -237,8 +242,16 @@ const FEED_URLS_BY_COUNTRY = {
   // validates or corrects these, not pre-research. Expect a meaningfully
   // higher break rate here than batch 1/2 -- these are smaller, less
   // resourced outlets than BBC/Guardian/Times of India.
-  AL: [{ source: 'albaniandailynews.com', feedUrl: 'https://albaniandailynews.com/index.php?feed=rss2' }],
-  BI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' }],
+  AL: [{ source: 'tiranatimes.com', feedUrl: 'https://www.tiranatimes.com/feed' }], // swapped from albaniandailynews.com (malformed XML) -- Tirana Times confirmed as Albania's English-language "newspaper of record", path unverified
+  BI: [
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' },
+    // NEW (2026-07-28): IWACU is a real, well-established independent
+    // Burundian outlet with a dedicated English section -- confirmed via
+    // FeedSpot directory, breaks the "no English press" assumption for this
+    // one country in the cluster. Path reconstructed from a truncated
+    // directory listing ("iwacu-burundi.org/englishnew.."), unverified.
+    { source: 'iwacu-burundi.org', feedUrl: 'https://www.iwacu-burundi.org/englishnews/feed' },
+  ],
   AM: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
   AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
   AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
@@ -518,7 +531,14 @@ const FEED_URLS_BY_COUNTRY = {
   MV: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Maldives&hl=en&gl=MV&ceid=MV:en' }],
   KN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Saint+Kitts+and+Nevis&hl=en&gl=KN&ceid=KN:en' }],
   BO: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bolivia&hl=en&gl=BO&ceid=BO:en' }],
-  BF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' }],
+  BF: [
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' },
+    // NEW (2026-07-28): Faso News confirmed real and active via search --
+    // live, current-dated (July 2026) English-language content specifically
+    // about Burkina Faso and the wider Sahel region. Feed path unverified
+    // (standard WordPress convention guess).
+    { source: 'fasonews.info', feedUrl: 'https://fasonews.info/feed' },
+  ],
   EC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' }],
   PY: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
   // NEW (2026-07-28): these 9 countries had ZERO dedicated RSS feed --
