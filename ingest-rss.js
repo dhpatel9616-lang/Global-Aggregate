@@ -553,6 +553,15 @@ const FEED_URLS_BY_COUNTRY = {
   RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }], // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
   AF: [{ source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }], // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
   LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss.xml' }], // swapped from /rss/lebanon (404) -- trying standard root-level path, still unverified
+  // NEW (2026-07-28): UY and CL are already covered by the generic MercoPress
+  // WORLD wire, but that clearly isn't surfacing enough Uruguay/Chile-tagged
+  // content on its own (both stalled). MercoPress confirmed to publish
+  // dedicated per-country category pages (en.mercopress.com/uruguay,
+  // en.mercopress.com/chile both real, active). Feed path follows the
+  // confirmed en.mercopress.com/rss/latin-america convention -- unverified
+  // for these two specific country slugs, confirm via next run's log.
+  UY: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/uruguay' }],
+  CL: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/chile' }],
 };
 
 async function loadExistingTitles() {
