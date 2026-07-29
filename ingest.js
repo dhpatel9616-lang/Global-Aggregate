@@ -550,6 +550,10 @@ const ALLOWLIST_BY_COUNTRY = {
   TM: ['hronikatm.com'],
   MN: ['montsame.mn'],
   WS: ['samoaobserver.ws'],
+  CM: ['journalducameroun.com'],
+  DO: ['dominicantoday.com'],
+  AF: ['tolonews.com'],
+  LB: ['naharnet.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
