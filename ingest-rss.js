@@ -760,9 +760,20 @@ async function main() {
   // GitHub Actions cancellation mid-request loses the whole run's progress,
   // while stopping early here still commits everything fetched so far.
   const TIME_BUDGET_MS = 12 * 60 * 1000;
-  const countryCodes = Object.keys(FEED_URLS_BY_COUNTRY);
-  const totalFeeds = countryCodes.reduce((sum, c) => sum + FEED_URLS_BY_COUNTRY[c].length, 0);
-  console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s)...\n`);
+  const allCountryCodes = Object.keys(FEED_URLS_BY_COUNTRY);
+  const totalFeeds = allCountryCodes.reduce((sum, c) => sum + FEED_URLS_BY_COUNTRY[c].length, 0);
+  // Rotate the starting point each run so a time-budget cutoff doesn't
+  // always sacrifice the same tail of countries. Confirmed via a real run
+  // (2026-07-29): with a fixed iteration order, every major country added
+  // late in the file (Japan, France, China, Brazil, Egypt, Poland, Russia,
+  // Ukraine...) landed at the end and got skipped, every time the budget
+  // was hit -- a silent, permanent blackout for exactly the countries this
+  // session worked hardest to add. 15-minute buckets roughly match this
+  // workflow's intended run cadence, so consecutive runs start at
+  // meaningfully different points without needing any persisted state.
+  const rotationOffset = Math.floor(Date.now() / (15 * 60 * 1000)) % allCountryCodes.length;
+  const countryCodes = [...allCountryCodes.slice(rotationOffset), ...allCountryCodes.slice(0, rotationOffset)];
+  console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s) (rotation offset ${rotationOffset})...\n`);
 
   const seenTitles = await loadExistingTitles();
   const { data: existingUrls } = await supabase.from('articles').select('url');
