@@ -572,6 +572,8 @@ const ALLOWLIST_BY_COUNTRY = {
   TO: ['kanivatonga.co.nz'],
   SB: ['theislandsun.com.sb'],
   LA: ['vientianetimes.org.la'],
+  UZ: ['tashkenttimes.uz'],
+  BT: ['dailybhutan.com', 'businessbhutan.bt'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
