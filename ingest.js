@@ -524,7 +524,7 @@ const ALLOWLIST_BY_COUNTRY = {
   PG: ['postcourier.com.pg'],
   NP: ['onlinekhabar.com'],
   GR: ['thenationalherald.com', 'ekathimerini.com', 'greekreporter.com'],
-  ZW: ['herald.co.zw', 'newsday.co.zw', 'zimlive.com'],
+  ZW: ['herald.co.zw', 'newsday.co.zw', 'zimlive.com', 'fingaz.co.zw', 'zwnews.com'],
   JM: ['jamaica-star.com', 'jamaica-gleaner.com'],
   JO: ['jordannews.jo', 'jordantimes.com', 'ammonnews.net'],
   QA: ['dohanews.co', 'thepeninsulaqatar.com', 'gulf-times.com'],
@@ -576,6 +576,8 @@ const ALLOWLIST_BY_COUNTRY = {
   BT: ['dailybhutan.com', 'businessbhutan.bt'],
   TT: ['cnc3.co.tt'],
   SL: ['thesierraleonetelegraph.com'],
+  SD: ['dabangasudan.org'],
+  HT: ['haitiantimes.com', 'haitilibre.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -683,6 +685,10 @@ const COUNTRY_MENTION_ALIASES = {
   VU: ['ni-vanuatu', 'port vila'],
   WS: ['samoan', 'apia'],
   SL: ['sierra leonean', 'freetown'],
+  AM: ['armenian', 'yerevan'],
+  SD: ['sudanese', 'khartoum'],
+  ZW: ['zimbabwean', 'harare'],
+  HT: ['haitian', 'port-au-prince'],
 };
 
 function mentionsCountry(text, countryCode) {
