@@ -552,7 +552,16 @@ const FEED_URLS_BY_COUNTRY = {
   PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
   TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
   // ^ Panama Expat Times -- confirmed active (Nov 2025 content), dedicated English coverage.
-  VE: [{ source: 'caracaschronicles.com', feedUrl: 'https://www.caracaschronicles.com/feed' }],
+  VE: [
+    { source: 'caracaschronicles.com', feedUrl: 'https://www.caracaschronicles.com/feed' },
+    // NEW (2026-07-30): El Diario confirmed real and active via directory
+    // listing, distinct outlet. Deliberately did NOT add the also-listed
+    // "Venezuela News" (venezuela-news.com) after confirming via Wikipedia
+    // it's a Bolivarian-government-linked disinformation site with a
+    // documented history of digital manipulation -- not a legitimate
+    // source regardless of RSS availability.
+    { source: 'eldiario.com', feedUrl: 'https://eldiario.com/feed' },
+  ],
   // ^ Caracas Chronicles -- genuinely independent, confirmed active with July 2026 content.
   // NOT FOUND -- no clear dedicated English-language outlet turned up in
   // this pass: BO (Bolivia), EC (Ecuador), PY (Paraguay). Worth a second,
