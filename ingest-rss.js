@@ -307,7 +307,7 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'meta.mk', feedUrl: 'https://meta.mk/en/feed/' },
   ],
   ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
-  MN: [{ source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/rss' }],
+  MN: [{ source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/feed' }], // swapped from /en/rss (404) -- Wikipedia confirms montsame.mn/en/ is the correct official English base, trying the standard /feed suffix instead
   MW: [{ source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' }],
   MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
   NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
