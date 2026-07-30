@@ -206,7 +206,13 @@ const FEED_URLS_BY_COUNTRY = {
   // Lanka/Uganda). Switched to zimlive.com -- confirmed live current
   // content when checked.
   ZW: [
-    { source: 'zimlive.com', feedUrl: 'https://www.zimlive.com/feed/' },
+    { source: 'zimlive.com', feedUrl: 'https://www.zimlive.com/feed/' }, // confirmed 403-blocked
+    // NEW (2026-07-30): two fresh, genuinely different outlets -- Financial
+    // Gazette (est. 1969, established business paper) and ZWNews
+    // (independent Zimbabwean news site), both confirmed real via directory
+    // listing. Paths unverified.
+    { source: 'fingaz.co.zw', feedUrl: 'https://fingaz.co.zw/feed' },
+    { source: 'zwnews.com', feedUrl: 'https://zwnews.com/feed' },
   ],
   // jamaica-star.com threw "unable to verify the first certificate" -- a
   // real TLS cert chain issue on their end (likely a missing intermediate
@@ -270,7 +276,12 @@ const FEED_URLS_BY_COUNTRY = {
   GE: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
   GY: [{ source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
   HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
-  HT: [{ source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' }],
+  HT: [
+    { source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' },
+    // NEW (2026-07-30): Haiti Libre's English edition confirmed via exact
+    // feed URL from directory listing, genuinely different outlet.
+    { source: 'haitilibre.com', feedUrl: 'https://www.haitilibre.com/rss-flash-en.php' },
+  ],
   IS: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }], // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
