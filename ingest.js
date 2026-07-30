@@ -177,7 +177,7 @@ function hasExcludedCrimeCategory(normalized) {
 // national press, not local-interest noise. Only the 'local'/'city'/'metro'
 // terms are exempted for these sources; genuinely excludable categories
 // (entertainment, horoscope, etc.) still apply normally.
-const LOCAL_CATEGORY_EXEMPT_SOURCES = ['barbadostoday.bb', 'ewnews.com', 'iwnsvg.com'];
+const LOCAL_CATEGORY_EXEMPT_SOURCES = ['barbadostoday.bb', 'ewnews.com', 'iwnsvg.com', 'total-montenegro-news.com'];
 const HYPERLOCAL_TERMS = ['city', 'cities', 'local', 'metro'];
 
 function hasExcludedCategory(rawCategory, source) {
