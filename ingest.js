@@ -798,8 +798,19 @@ function isNonEnglish(text) {
   if (!text) return false;
   // CJK, Arabic, Cyrillic, Hangul, Vietnamese -- unambiguous, zero false-positive risk
   if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9]/.test(text)) return true;
-  // Diacritics/punctuation common in Spanish/Portuguese/French -- catches SOME but not all, see stopword check below
-  if (/[áéíóúñüãõçàâêîôû¿¡]/i.test(text)) return true;
+  // Diacritics/punctuation common in Spanish/Portuguese/French. A low
+  // threshold isn't enough -- confirmed via a real run (2026-07-29) that a
+  // threshold of 1 punished Buenos Aires Times (Argentina's only
+  // English-language newspaper) at 98/100 items, and testing showed even a
+  // threshold of 2 still misflagged genuine English sentences mentioning
+  // 2-3 Spanish-named people/places (very common in Argentina/Brazil
+  // coverage, e.g. "Alberto Fernández and José Contreras discussed the
+  // Córdoba summit" -- all English, 3 diacritics). 4 correctly passes every
+  // realistic English test case while still catching genuine Spanish/
+  // Portuguese text, which carries diacritics throughout, not just on 2-3
+  // proper nouns.
+  const diacriticMatches = text.match(/[áéíóúñüãõçàâêîôû¿¡]/gi);
+  if (diacriticMatches && diacriticMatches.length >= 4) return true;
   // Frequency-based check: common Spanish/Portuguese/French function words as
   // whole words. A single incidental match (e.g. "la Liga" in English sports
   // writing) isn't enough to flag -- requires 2+ distinct-position matches,
