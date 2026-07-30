@@ -578,6 +578,7 @@ const ALLOWLIST_BY_COUNTRY = {
   SL: ['thesierraleonetelegraph.com'],
   SD: ['dabangasudan.org'],
   HT: ['haitiantimes.com', 'haitilibre.com'],
+  VE: ['caracaschronicles.com', 'eldiario.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -689,6 +690,7 @@ const COUNTRY_MENTION_ALIASES = {
   SD: ['sudanese', 'khartoum'],
   ZW: ['zimbabwean', 'harare'],
   HT: ['haitian', 'port-au-prince'],
+  VE: ['venezuelan', 'caracas'],
 };
 
 function mentionsCountry(text, countryCode) {
