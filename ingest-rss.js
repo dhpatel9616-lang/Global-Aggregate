@@ -29,6 +29,11 @@ const {
   safeStringify,
 } = require('./ingest.js');
 
+// TEMPORARY diagnostic list (2026-07-30): sources where an excluded_category
+// fix didn't behave as expected, so we're logging real raw category values
+// instead of guessing again. Remove once the real cause is confirmed.
+const DEBUG_CATEGORY_SOURCES = ['total-montenegro-news.com'];
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -748,6 +753,14 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
       continue;
     }
     const reason = getJunkReasonForRss(row);
+    if (reason === 'excluded_category' && DEBUG_CATEGORY_SOURCES.some((s) => row.source.toLowerCase().includes(s))) {
+      // TEMPORARY (2026-07-30): the local-category exemption fix for ME
+      // didn't change its excluded_category count at all (22/50 identical
+      // before and after), meaning the assumed cause (local/city/metro
+      // terms) was wrong. Logging the real raw category value here to see
+      // what's actually being matched, instead of guessing again.
+      console.log(`[DEBUG excluded_category] ${row.source}: "${safeStringify(row._rawCategory)}" -- title: "${row.title.slice(0, 60)}"`);
+    }
     if (reason === null) {
       const key = normalizeTitle(row.title);
       if (seenTitles.has(key)) {
