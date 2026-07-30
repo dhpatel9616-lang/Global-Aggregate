@@ -307,7 +307,7 @@ const FEED_URLS_BY_COUNTRY = {
   SO: [{ source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
   SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
   TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
-  TT: [{ source: 'newsday.co.tt', feedUrl: 'https://newsday.co.tt/feed/' }],
+  TT: [{ source: 'cnc3.co.tt', feedUrl: 'https://cnc3.co.tt/feed' }], // swapped from newsday.co.tt (cert expired, ongoing) -- CNC3 confirmed via directory listing with exact feed URL, real established Trinidad TV/news outlet
   CV: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
   UZ: [{ source: 'tashkenttimes.uz', feedUrl: 'https://tashkenttimes.uz/?format=feed' }], // swapped from daryo.uz (malformed XML) -- Tashkent Times confirmed via directory listing with the ?format=feed pattern, genuinely different outlet
   ZM: [{ source: 'lusakatimes.com', feedUrl: 'https://www.lusakatimes.com/feed/' }],
@@ -611,6 +611,12 @@ const FEED_URLS_BY_COUNTRY = {
   // for these two specific country slugs, confirm via next run's log.
   UY: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/uruguay' }],
   CL: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/chile' }],
+  // NEW (2026-07-29): Argentina had zero dedicated RSS feed despite already
+  // having real English-language outlets allowlisted (batimes.com.ar,
+  // buenosairesherald.com) -- same "major country, API-only" gap as the
+  // FR/BR/CO/JP/EG/CN batch from earlier. Exact feed URL confirmed via
+  // directory listing, not a guess.
+  AR: [{ source: 'batimes.com.ar', feedUrl: 'https://www.batimes.com.ar/feed' }],
 };
 
 async function loadExistingTitles() {
