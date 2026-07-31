@@ -928,5 +928,35 @@
     "name": "Vanuatu",
     "code": "VU",
     "continent": "Oceania"
+  },
+  {
+    "name": "Lesotho",
+    "code": "LS",
+    "continent": "Africa"
+  },
+  {
+    "name": "Tajikistan",
+    "code": "TJ",
+    "continent": "Asia"
+  },
+  {
+    "name": "Micronesia",
+    "code": "FM",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Nauru",
+    "code": "NR",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Marshall Islands",
+    "code": "MH",
+    "continent": "Oceania"
+  },
+  {
+    "name": "Palau",
+    "code": "PW",
+    "continent": "Oceania"
   }
 ]
