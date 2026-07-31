@@ -463,7 +463,7 @@ function isObscureSports(row) {
 // over time rather than treating this as final.
 const ALLOWLIST_BY_COUNTRY = {
   AR: ['batimes.com.ar', 'clarin.com', 'lanacion.com.ar', 'infobae.com', 'canal26.com', 'buenosairesherald.com'],
-  AU: ['smh.com.au', 'theage.com.au', 'abc.net.au', 'news.com.au', 'theaustralian.com.au', 'heraldsun.com.au', '7news.com.au', '9news.com.au', 'thewest.com.au', 'perthnow.com.au', 'ntnews.com.au', 'drive.com.au'],
+  AU: ['smh.com.au', 'theage.com.au', 'abc.net.au', 'news.com.au', 'theaustralian.com.au', 'heraldsun.com.au', '7news.com.au', '9news.com.au', 'thewest.com.au', 'perthnow.com.au', 'ntnews.com.au', 'drive.com.au', 'sbs.com.au'],
   BD: ['thedailystar.net', 'dhakatribune.com', 'tbsnews.net', 'prothomalo.com', 'daily-sun.com'],
   BR: ['g1.globo.com', 'folha.uol.com.br', 'estadao.com.br', 'riotimesonline.com'],
   CA: ['cbc.ca', 'ctvnews.ca', 'globalnews.ca', 'theglobeandmail.com', 'nationalpost.com', 'thestar.com'],
@@ -579,6 +579,7 @@ const ALLOWLIST_BY_COUNTRY = {
   SD: ['dabangasudan.org'],
   HT: ['haitiantimes.com', 'haitilibre.com'],
   VE: ['caracaschronicles.com', 'eldiario.com'],
+  AT: ['thelocal.at'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -691,6 +692,7 @@ const COUNTRY_MENTION_ALIASES = {
   ZW: ['zimbabwean', 'harare'],
   HT: ['haitian', 'port-au-prince'],
   VE: ['venezuelan', 'caracas'],
+  AT: ['austrian', 'vienna'],
 };
 
 function mentionsCountry(text, countryCode) {
