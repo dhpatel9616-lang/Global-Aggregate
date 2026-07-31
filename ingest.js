@@ -693,6 +693,9 @@ const COUNTRY_MENTION_ALIASES = {
   HT: ['haitian', 'port-au-prince'],
   VE: ['venezuelan', 'caracas'],
   AT: ['austrian', 'vienna'],
+  JO: ['jordanian', 'amman'],
+  LB: ['lebanese', 'beirut'],
+  SR: ['surinamese', 'paramaribo'],
 };
 
 function escapeRegex(str) {
