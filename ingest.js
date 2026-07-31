@@ -580,6 +580,10 @@ const ALLOWLIST_BY_COUNTRY = {
   HT: ['haitiantimes.com', 'haitilibre.com'],
   VE: ['caracaschronicles.com', 'eldiario.com'],
   AT: ['thelocal.at'],
+  LS: ['lestimes.com'],
+  TJ: ['asiaplustj.info'],
+  FM: ['micronesiatoday.com'],
+  NR: ['advancenauru.com'],
 };
 
 // Built from the real countries.json at runtime, not hardcoded, so it can't
@@ -696,6 +700,12 @@ const COUNTRY_MENTION_ALIASES = {
   JO: ['jordanian', 'amman'],
   LB: ['lebanese', 'beirut'],
   SR: ['surinamese', 'paramaribo'],
+  LS: ['basotho', 'mosotho', 'maseru'],
+  TJ: ['tajik', 'dushanbe'],
+  FM: ['micronesian', 'palikir', 'pohnpei', 'chuuk', 'yap', 'kosrae'],
+  NR: ['nauruan', 'naoero', 'yaren'],
+  MH: ['marshallese', 'majuro'],
+  PW: ['palauan', 'ngerulmud', 'koror'],
 };
 
 function escapeRegex(str) {
