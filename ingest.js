@@ -695,13 +695,34 @@ const COUNTRY_MENTION_ALIASES = {
   AT: ['austrian', 'vienna'],
 };
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Cache compiled regexes per alias/name string -- this runs against every
+// article for every country candidate, so avoid rebuilding a RegExp from
+// scratch on every single call.
+const MENTION_REGEX_CACHE = new Map();
+function mentionRegexFor(term) {
+  let re = MENTION_REGEX_CACHE.get(term);
+  if (!re) {
+    // (?<!...)/(?!...) instead of \b: \b fails to anchor correctly right
+    // after trailing punctuation (e.g. "u.s." followed by a space has no
+    // \w/\W transition at the final period), so this checks directly that
+    // the adjacent character isn't alphanumeric, which handles punctuation
+    // in the term correctly either way.
+    re = new RegExp(`(?<![a-z0-9])${escapeRegex(term)}(?![a-z0-9])`, 'i');
+    MENTION_REGEX_CACHE.set(term, re);
+  }
+  return re;
+}
+
 function mentionsCountry(text, countryCode) {
   if (!text) return false;
-  const normalized = text.toLowerCase();
   const name = COUNTRY_NAME_BY_CODE[countryCode];
-  if (name && normalized.includes(name.toLowerCase())) return true;
+  if (name && mentionRegexFor(name).test(text)) return true;
   const aliases = COUNTRY_MENTION_ALIASES[countryCode] || [];
-  return aliases.some((alias) => normalized.includes(alias));
+  return aliases.some((alias) => mentionRegexFor(alias).test(text));
 }
 
 // A source is trusted as domestic for a country in one of two ways:
@@ -806,8 +827,15 @@ function failsNationalAllowlist(row) {
 // have been added to the script-range check.
 function isNonEnglish(text) {
   if (!text) return false;
-  // CJK, Arabic, Cyrillic, Hangul, Vietnamese -- unambiguous, zero false-positive risk
-  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9]/.test(text)) return true;
+  // CJK, Arabic, Cyrillic, Hangul, Vietnamese, Devanagari (Hindi/Nepali),
+  // Bengali, Thai, Sinhala, Myanmar, Khmer, Lao, Georgian, Armenian,
+  // Amharic/Ethiopic, Tibetan -- all unambiguous, zero false-positive risk.
+  // Expanded (2026-07-30) after a Nepali headline was found slipping
+  // through live -- Devanagari wasn't covered at all, and auditing the rest
+  // of the covered-country list found 10 more major scripts with the same
+  // gap (Bangladesh, Sri Lanka, Thailand, Ethiopia, Georgia, Armenia, Laos,
+  // Cambodia, Myanmar all have real coverage now and could hit this).
+  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9\u0900-\u097F\u0980-\u09FF\u0E00-\u0E7F\u0D80-\u0DFF\u1000-\u109F\u1780-\u17FF\u0E80-\u0EFF\u10A0-\u10FF\u0530-\u058F\u1200-\u137F\u0F00-\u0FFF]/.test(text)) return true;
   // Diacritics/punctuation common in Spanish/Portuguese/French. A low
   // threshold isn't enough -- confirmed via a real run (2026-07-29) that a
   // threshold of 1 punished Buenos Aires Times (Argentina's only
