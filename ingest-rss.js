@@ -671,6 +671,23 @@ const FEED_URLS_BY_COUNTRY = {
   SG: [{ source: 'straitstimes.com', feedUrl: 'https://www.straitstimes.com/news/singapore/rss.xml' }],
   ZA: [{ source: 'news24.com', feedUrl: 'https://www.news24.com/news24/rss' }],
   NZ: [{ source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/national.xml' }],
+  // NEW (2026-08-01): these 6 countries were previously removed from
+  // countries.json entirely as confirmed dead ends. Fresh research this
+  // session found real, active English-language sources for all of them --
+  // re-added to countries.json and configured here. LS/TJ/FM/NR have
+  // genuine single-country-dedicated outlets (allowlisted). MH/PW share a
+  // real regional outlet (Marianas Business Journal, Guam-based, explicitly
+  // covers both) -- correctly not allowlisted since it's regional, relies
+  // on mentionsCountry same as oc-media.org for Armenia/Georgia. All paths
+  // below are directory-confirmed except micronesiatoday.com and
+  // advancenauru.com's exact feed path, which are educated guesses on
+  // confirmed-real, confirmed-active sites.
+  LS: [{ source: 'lestimes.com', feedUrl: 'https://www.lestimes.com/feed' }],
+  TJ: [{ source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss.xml' }],
+  FM: [{ source: 'micronesiatoday.com', feedUrl: 'https://www.micronesiatoday.com/feed' }],
+  NR: [{ source: 'advancenauru.com', feedUrl: 'https://advancenauru.com/feed' }],
+  MH: [{ source: 'mbjguam.com', feedUrl: 'https://www.mbjguam.com/feed' }],
+  PW: [{ source: 'mbjguam.com', feedUrl: 'https://www.mbjguam.com/feed' }],
 };
 
 async function loadExistingTitles() {
