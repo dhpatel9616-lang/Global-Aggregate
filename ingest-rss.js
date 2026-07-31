@@ -642,6 +642,35 @@ const FEED_URLS_BY_COUNTRY = {
   // FR/BR/CO/JP/EG/CN batch from earlier. Exact feed URL confirmed via
   // directory listing, not a guess.
   AR: [{ source: 'batimes.com.ar', feedUrl: 'https://www.batimes.com.ar/feed' }],
+  // NEW (2026-07-30): Austria had zero RSS entry and zero allowlist entry
+  // despite being a major European country. thelocal.at confirmed real,
+  // same TheLocal network already trusted for DE/ES/FR/NO/SE.
+  AT: [{ source: 'thelocal.at', feedUrl: 'https://feeds.thelocal.com/rss/at' }], // switched to the confirmed-working TheLocal network pattern (same as NO, DK) instead of an untested thelocal.at/feed guess
+  // NEW (2026-07-30): found while pushing toward 150 healthy -- 31 major
+  // countries had ZERO RSS entry despite most already having vetted
+  // ALLOWLIST_BY_COUNTRY sources. DE/ES use the same confirmed
+  // feeds.thelocal.com/rss/{cc} pattern already proven for NO/DK. CA and AU
+  // use exact feed URLs confirmed via directory listing.
+  DE: [{ source: 'thelocal.de', feedUrl: 'https://feeds.thelocal.com/rss/de' }],
+  ES: [{ source: 'thelocal.es', feedUrl: 'https://feeds.thelocal.com/rss/es' }],
+  CA: [{ source: 'globalnews.ca', feedUrl: 'https://globalnews.ca/feed' }],
+  AU: [{ source: 'sbs.com.au', feedUrl: 'https://www.sbs.com.au/news/feed' }],
+  KR: [{ source: 'koreaherald.com', feedUrl: 'https://www.koreaherald.com/rss' }],
+  ID: [{ source: 'thejakartapost.com', feedUrl: 'https://www.thejakartapost.com/rss' }],
+  MY: [{ source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss' }],
+  PH: [{ source: 'inquirer.net', feedUrl: 'https://www.inquirer.net/feed' }],
+  MX: [{ source: 'mexiconewsdaily.com', feedUrl: 'https://mexiconewsdaily.com/feed' }],
+  // NEW (2026-07-30): remaining major no-RSS countries, using their
+  // already-allowlisted top domain with standard RSS path conventions.
+  // Lower confidence than the batch above -- these specific paths weren't
+  // individually confirmed via directory listing, so treat as educated
+  // guesses on a verified-legitimate domain, not verified paths. Next run's
+  // log will confirm or reject each.
+  SA: [{ source: 'arabnews.com', feedUrl: 'https://www.arabnews.com/rss.xml' }],
+  AE: [{ source: 'thenationalnews.com', feedUrl: 'https://www.thenationalnews.com/rss' }],
+  SG: [{ source: 'straitstimes.com', feedUrl: 'https://www.straitstimes.com/news/singapore/rss.xml' }],
+  ZA: [{ source: 'news24.com', feedUrl: 'https://www.news24.com/news24/rss' }],
+  NZ: [{ source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/national.xml' }],
 };
 
 async function loadExistingTitles() {
