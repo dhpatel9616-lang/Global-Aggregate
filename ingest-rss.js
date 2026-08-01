@@ -464,7 +464,15 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
   // Malta, not a path problem, no further URL guessing will help.
-  TM: [{ source: 'en.hronikatm.com', feedUrl: 'https://en.hronikatm.com/feed/' }],
+  TM: [
+    { source: 'en.hronikatm.com', feedUrl: 'https://en.hronikatm.com/feed/' },
+    // NEW (2026-08-01): two more real, independent Turkmenistan outlets,
+    // both exact-confirmed via directory listing -- genuinely different
+    // domains from en.hronikatm.com (which has a persistent TLS cert
+    // issue), not just retries of the same one.
+    { source: 'turkmenistanlive.com', feedUrl: 'https://turkmenistanlive.com/feed' },
+    { source: 'en.turkmen.news', feedUrl: 'https://en.turkmen.news/feed' },
+  ],
   // ^ Real, correct URL but their server has an incomplete TLS certificate
   // chain ("unable to verify the first certificate") -- a genuine
   // misconfiguration on their end, same class of issue as Monaco's cert
@@ -682,12 +690,18 @@ const FEED_URLS_BY_COUNTRY = {
   // below are directory-confirmed except micronesiatoday.com and
   // advancenauru.com's exact feed path, which are educated guesses on
   // confirmed-real, confirmed-active sites.
-  LS: [{ source: 'lestimes.com', feedUrl: 'https://www.lestimes.com/feed' }],
+  LS: [
+    { source: 'lestimes.com', feedUrl: 'https://www.lestimes.com/feed' },
+    // NEW (2026-08-01): lestimes.com returned a 503 last run -- adding The
+    // Reporter as a second, genuinely different Lesotho outlet, exact
+    // feed URL confirmed via directory listing.
+    { source: 'thereporter.co.ls', feedUrl: 'https://www.thereporter.co.ls/feed' },
+  ],
   TJ: [{ source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss.xml' }],
   FM: [{ source: 'micronesiatoday.com', feedUrl: 'https://www.micronesiatoday.com/feed' }],
   NR: [{ source: 'advancenauru.com', feedUrl: 'https://advancenauru.com/feed' }],
-  MH: [{ source: 'mbjguam.com', feedUrl: 'https://www.mbjguam.com/feed' }],
-  PW: [{ source: 'mbjguam.com', feedUrl: 'https://www.mbjguam.com/feed' }],
+  MH: [{ source: 'marshallislandsjournal.com', feedUrl: 'https://marshallislandsjournal.com/feed' }], // swapped from mbjguam.com -- no discoverable RSS feed found for that one despite research. Marshall Islands Journal confirmed via Wikipedia as the country's sole newspaper since 1970, genuinely dedicated not regional. Path unverified.
+  PW: [{ source: 'islandtimes.org', feedUrl: 'https://islandtimes.org/feed' }], // swapped from mbjguam.com -- Island Times confirmed real and active with live current Palau-specific content, genuinely dedicated not regional. Path unverified.
 };
 
 async function loadExistingTitles() {
