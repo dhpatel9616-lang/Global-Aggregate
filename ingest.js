@@ -554,7 +554,7 @@ const ALLOWLIST_BY_COUNTRY = {
   // (cert error / timeout) -- costs nothing now, ready the moment those
   // get fixed.
   CZ: ['praguemonitor.com'],
-  TM: ['hronikatm.com'],
+  TM: ['hronikatm.com', 'turkmenistanlive.com', 'turkmen.news'],
   MN: ['montsame.mn'],
   WS: ['samoaobserver.ws'],
   CM: ['journalducameroun.com'],
@@ -581,9 +581,11 @@ const ALLOWLIST_BY_COUNTRY = {
   VE: ['caracaschronicles.com', 'eldiario.com'],
   AT: ['thelocal.at'],
   BW: ['thevoicebw.com', 'sundaystandard.info', 'guardiansun.co.bw'],
-  LS: ['lestimes.com'],
+  LS: ['lestimes.com', 'thereporter.co.ls'],
   TJ: ['asiaplustj.info'],
   FM: ['micronesiatoday.com'],
+  MH: ['marshallislandsjournal.com'],
+  PW: ['islandtimes.org'],
   NR: ['advancenauru.com'],
 };
 
