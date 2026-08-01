@@ -582,6 +582,7 @@ const ALLOWLIST_BY_COUNTRY = {
   AT: ['thelocal.at'],
   BW: ['thevoicebw.com', 'sundaystandard.info', 'guardiansun.co.bw'],
   LS: ['lestimes.com', 'thereporter.co.ls'],
+  MT: ['timesofmalta.com', 'maltatoday.com.mt', 'independent.com.mt'],
   TJ: ['asiaplustj.info'],
   FM: ['micronesiatoday.com'],
   MH: ['marshallislandsjournal.com'],
