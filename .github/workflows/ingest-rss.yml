@@ -1,15 +1,19 @@
 name: Ingest RSS Feeds
 on:
-  # Lets you click "Run workflow" manually in GitHub Actions tab
+  # Lets you click "Run workflow" manually in GitHub Actions tab -- also
+  # what the external scheduler (cron-job.org) calls via the REST API.
   workflow_dispatch:
-  # Runs every 15 minutes, offset from :00/:15/:30/:45 to avoid GitHub's
-  # top-of-quarter-hour scheduler congestion -- the same reason ingest.yml
-  # uses "17 */3 * * *" instead of a clean hour mark. This workflow's original
-  # */15 schedule fired on the congested marks and, per GitHub Actions run
-  # history, never actually triggered on schedule in 6 days (only manual
-  # workflow_dispatch runs) -- this offset is the fix.
-  schedule:
-    - cron: '4,19,34,49 * * * *'
+  # NATIVE CRON DISABLED (2026-08-01): moved to an external scheduler
+  # (cron-job.org) calling workflow_dispatch on a reliable timer, after
+  # confirmed multi-day silent gaps from GitHub's native schedule trigger
+  # not firing reliably (this workflow specifically went 6 days without a
+  # single scheduled run before the offset fix below, and individual
+  # countries have gone 3+ days dark even after that fix). Left here,
+  # commented out, in case of a future rollback -- do not re-enable
+  # alongside the external scheduler, or the job will run twice on
+  # overlapping schedules.
+  # schedule:
+  #   - cron: '4,19,34,49 * * * *'
 jobs:
   ingest-rss:
     runs-on: ubuntu-latest
