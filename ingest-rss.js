@@ -883,7 +883,7 @@ async function main() {
   // safety margin for clustering + final logging/exit, since a hard
   // GitHub Actions cancellation mid-request loses the whole run's progress,
   // while stopping early here still commits everything fetched so far.
-  const TIME_BUDGET_MS = 12 * 60 * 1000;
+  const TIME_BUDGET_MS = 13 * 60 * 1000; // raised from 12 (2026-08-01) -- the inter-feed sleep reduction above recovered ~2 min of headroom; using about half of it for more coverage, banking the rest as safety margin. Deliberately NOT raising the job's timeout-minutes (still 15) to match -- this runs every 15 min via the external scheduler, so a longer ceiling risks two runs overlapping rather than fixing anything.
   const allCountryCodes = Object.keys(FEED_URLS_BY_COUNTRY);
   const totalFeeds = allCountryCodes.reduce((sum, c) => sum + FEED_URLS_BY_COUNTRY[c].length, 0);
   // Rotate the starting point each run so a time-budget cutoff doesn't
@@ -983,7 +983,7 @@ async function main() {
         const result = await processFeed(country, feedEntry, seenTitles, seenUrls);
         results.push(result);
       }
-      await sleep(1000); // be a polite RSS consumer even though there's no hard rate limit
+      await sleep(400); // reduced from 1000ms (2026-08-01) -- confirmed via direct calculation that at 202 feeds, the old 1s delay alone cost 3.4 min out of the 12-min time budget, the real driver behind recurring time-budget skips as the feed count grew 40% this session (144->202). Still a genuine politeness delay, not zero; the separate 4s same-domain delay elsewhere still protects against bursting any single server.
     }
   }
 
