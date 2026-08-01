@@ -266,7 +266,15 @@ const FEED_URLS_BY_COUNTRY = {
   AM: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
   AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
   AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
-  BG: [{ source: 'novinite.com', feedUrl: 'https://www.novinite.com/services/news_rdf.php' }], // replaced sofiaglobe.com -- confirmed 403-blocked. Novinite is a genuinely different Bulgarian English-language outlet.
+  BG: [
+    { source: 'novinite.com', feedUrl: 'https://www.novinite.com/services/news_rdf.php' }, // replaced sofiaglobe.com -- confirmed 403-blocked. Novinite is a genuinely different Bulgarian English-language outlet.
+    // NEW (2026-08-01): RFE/RL's dedicated Bulgaria feed -- exact API
+    // endpoint URL pulled directly from RFE/RL's own RSS directory page
+    // (rferl.org/rssfeeds), not a guess. RFE/RL is a real, established
+    // international broadcaster (US Agency for Global Media) with genuine
+    // per-country feeds, unlike most broadcasters which are region-only.
+    { source: 'rferl.org', feedUrl: 'https://www.rferl.org/api/zgkim_l-vomx-tpe-p_my' },
+  ],
   BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
   BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
   BN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
@@ -372,11 +380,21 @@ const FEED_URLS_BY_COUNTRY = {
     // outlet -- confirmed real, established English-language Maltese paper,
     // not previously attempted. Path unverified.
     { source: 'maltatoday.com.mt', feedUrl: 'https://www.maltatoday.com.mt/rss' },
+    // NEW (2026-08-01): The Malta Independent confirmed real and active --
+    // live current-dated content seen directly (July 30, 2026 articles).
+    // Genuinely different outlet, third attempt for this country. Path
+    // unverified.
+    { source: 'independent.com.mt', feedUrl: 'https://www.independent.com.mt/rss' },
   ],
   MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
   MU: [{ source: 'mauritiustimes.com', feedUrl: 'https://www.mauritiustimes.com/feed' }], // swapped from defimedia.info (malformed XML) -- Mauritius Times confirmed via Wikipedia's newspaper directory as a real, established English/French outlet, path unverified
   MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }], // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
-  ME: [{ source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' }],
+  ME: [
+    { source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' },
+    // NEW (2026-08-01): RFE/RL's dedicated Montenegro feed, same real
+    // exact-URL find as Bulgaria above.
+    { source: 'rferl.org', feedUrl: 'https://www.rferl.org/api/zbiiol-vomx-tpeqjmo' },
+  ],
   NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
   // PS (Palestine/WAFA) confirmed NO real RSS feed -- an RSS icon exists on the site but its href is just "#" (a dead placeholder), not an actual feed link. Not a path problem, genuinely not offered.
   // KN (St Kitts/sknvibes.com) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
