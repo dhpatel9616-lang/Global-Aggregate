@@ -1,13 +1,16 @@
 name: Ingest News Articles
 on:
-  # Lets you click "Run workflow" manually in GitHub's Actions tab
+  # Lets you click "Run workflow" manually in GitHub's Actions tab -- also
+  # what the external scheduler (cron-job.org) calls via the REST API.
   workflow_dispatch:
-  # Runs automatically every 3 hours. Deliberately NOT on the hour (:00) --
-  # GitHub's own docs note scheduled workflows are more likely to be delayed
-  # right at the top of the hour, since that's when the highest volume of
-  # scheduled jobs across all of GitHub compete for the same window.
-  schedule:
-    - cron: '17 */3 * * *'
+  # NATIVE CRON DISABLED (2026-08-01): moved to an external scheduler
+  # (cron-job.org) calling workflow_dispatch on a reliable timer, after
+  # confirmed multi-day silent gaps from GitHub's native schedule trigger
+  # not firing reliably. Left here, commented out, in case of a future
+  # rollback -- do not re-enable alongside the external scheduler, or the
+  # job will run twice on overlapping schedules.
+  # schedule:
+  #   - cron: '17 */3 * * *'
 jobs:
   ingest:
     runs-on: ubuntu-latest
