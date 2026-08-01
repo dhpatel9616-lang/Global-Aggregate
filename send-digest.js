@@ -20,6 +20,16 @@
 // (Brevo dashboard -> Senders, Domains & Dedicated IPs -> Senders).
 
 const { createClient } = require('@supabase/supabase-js');
+const countries = require('./countries.json');
+
+// Built from the same countries.json ingest.js uses -- deliberately NOT
+// importing ingest.js itself, since it process.exit(1)s at require-time if
+// unrelated API keys (GNEWS_API_KEY etc.) aren't set, which this workflow's
+// environment doesn't have. Duplicating this one-line derivation from the
+// single shared data file is safe; duplicating the actual name data would
+// not have been (that's exactly the bug that caused "IN"/"CN" instead of
+// "India"/"China" to leak into emails).
+const COUNTRY_NAME_BY_CODE = Object.fromEntries(countries.map((c) => [c.code, c.name]));
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -104,6 +114,9 @@ async function getArticlesFor(filter) {
   return deduped;
 }
 
+const BRAND_COLOR = '#0d9488'; // teal, matches the site's accent -- adjust here if it doesn't match exactly, this is the only place the color is defined
+const SITE_URL = 'https://globalaggregate.org';
+
 function buildEmailHtml(filterName, articles, unsubscribeUrl) {
   const grouped = {};
   for (const a of articles) {
@@ -111,19 +124,22 @@ function buildEmailHtml(filterName, articles, unsubscribeUrl) {
     grouped[a.topic].push(a);
   }
 
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   const sections = Object.entries(grouped)
     .map(([topic, items]) => {
       const emoji = TOPIC_EMOJI[topic] || '';
       const rows = items
-        .map(
-          (a) => `
+        .map((a) => {
+          const countryName = COUNTRY_NAME_BY_CODE[a.country] || a.country;
+          return `
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #eee;">
             <a href="${escapeHtml(a.url)}" style="color: #1a1a1a; text-decoration: none; font-weight: 600; font-size: 15px;">${escapeHtml(a.title)}</a>
-            <div style="color: #888; font-size: 12px; margin-top: 4px;">${escapeHtml(a.source)} &middot; ${escapeHtml(a.country)}</div>
+            <div style="color: #888; font-size: 12px; margin-top: 4px;">${escapeHtml(a.source)} &middot; ${escapeHtml(countryName)}</div>
           </td>
-        </tr>`
-        )
+        </tr>`;
+        })
         .join('');
       return `
       <tr><td style="padding: 20px 0 8px;"><h2 style="font-size: 16px; margin: 0; color: #1a1a1a;">${emoji} ${escapeHtml(topic)}</h2></td></tr>
@@ -131,14 +147,22 @@ function buildEmailHtml(filterName, articles, unsubscribeUrl) {
     })
     .join('');
 
-  return `<!DOCTYPE html><html><body style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
-    <h1 style="font-size: 20px; margin-bottom: 4px;">${escapeHtml(filterName)}</h1>
-    <p style="color: #888; font-size: 13px; margin-top: 0;">${articles.length} stories from your saved filter</p>
-    <table style="width: 100%; border-collapse: collapse;">${sections}</table>
-    <p style="color: #aaa; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
-      <a href="${unsubscribeUrl}" style="color: #aaa;">Stop emails for this filter</a>
-      &middot; you can still get digests for your other saved filters, and re-enable this one anytime
-    </p>
+  return `<!DOCTYPE html><html><body style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 0; color: #1a1a1a; background: #fafafa;">
+    <div style="background: ${BRAND_COLOR}; padding: 24px 24px 20px; border-radius: 0 0 12px 12px;">
+      <div style="color: #ffffff; font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">GlobalAggregate</div>
+      <div style="color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 2px;">${dateStr}</div>
+    </div>
+    <div style="padding: 24px; background: #ffffff;">
+      <h1 style="font-size: 18px; margin: 0 0 2px; color: #1a1a1a;">${escapeHtml(filterName)}</h1>
+      <p style="color: #888; font-size: 13px; margin: 0 0 8px;">${articles.length} ${articles.length === 1 ? 'story' : 'stories'} from your saved filter</p>
+      <table style="width: 100%; border-collapse: collapse;">${sections}</table>
+      <p style="color: #aaa; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
+        <a href="${SITE_URL}" style="color: ${BRAND_COLOR}; text-decoration: none; font-weight: 600;">Open GlobalAggregate</a>
+        &middot;
+        <a href="${unsubscribeUrl}" style="color: #aaa;">Stop emails for this filter</a>
+        &middot; you can still get digests for your other saved filters, and re-enable this one anytime
+      </p>
+    </div>
   </body></html>`;
 }
 
@@ -203,7 +227,7 @@ async function main() {
 
     const unsubscribeUrl = `https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/unsubscribe?token=${filter.digest_unsubscribe_token}`;
     const html = buildEmailHtml(filter.group_name, articles, unsubscribeUrl);
-    const subject = `${filter.group_name}: ${articles.length} stories (${filter.digest_frequency})`;
+    const subject = `GlobalAggregate: ${articles.length} ${articles.length === 1 ? 'story' : 'stories'} for "${filter.group_name}"`;
 
     try {
       await sendEmail(email, subject, html);
