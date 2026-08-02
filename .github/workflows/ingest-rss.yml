@@ -2,7 +2,19 @@ name: Ingest RSS Feeds
 on:
   # Lets you click "Run workflow" manually in GitHub Actions tab -- also
   # what the external scheduler (cron-job.org) calls via the REST API.
+  # SHARDING (2026-08-02): the feed list outgrew what fits in one run's time
+  # budget (confirmed: a run losing 36 of 176 country groups to the time
+  # ceiling). Now split across two separate scheduled triggers, each
+  # covering roughly half the feeds -- see ingest-rss.js for how the split
+  # itself is computed. Leave shard blank (or omit inputs entirely) to
+  # process everyone in one run, same as before sharding existed -- useful
+  # for manual runs via the Actions tab "Run workflow" button.
   workflow_dispatch:
+    inputs:
+      shard:
+        description: 'Which half to run: A, B, or blank/both for everyone'
+        required: false
+        default: 'both'
   # NATIVE CRON DISABLED (2026-08-01): moved to an external scheduler
   # (cron-job.org) calling workflow_dispatch on a reliable timer, after
   # confirmed multi-day silent gaps from GitHub's native schedule trigger
@@ -26,7 +38,9 @@ jobs:
     # run got hard-cancelled at the 10-minute mark with 18 country groups
     # never attempted, even after fixing the AllAfrica same-domain cascade
     # that caused it (see FEED_URLS_BY_COUNTRY comment in ingest-rss.js).
-    # This is margin on top of that fix, not a substitute for it.
+    # This is margin on top of that fix, not a substitute for it. Left
+    # unchanged with sharding -- each shard now has real headroom under
+    # this ceiling instead of running right up against it.
     timeout-minutes: 15
     steps:
       - name: Checkout repository
@@ -41,4 +55,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SHARD: ${{ github.event.inputs.shard || 'both' }}
         run: node ingest-rss.js
