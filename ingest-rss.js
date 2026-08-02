@@ -135,16 +135,19 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   NG: [
     { source: 'punchng.com', feedUrl: 'https://punchng.com/feed/' },
+    { source: 'legit.ng', feedUrl: 'https://www.legit.ng/rss/all.rss' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
   KE: [
     { source: 'the-star.co.ke', feedUrl: 'https://www.the-star.co.ke/rss' },
     // ^ Replaced nation.africa -- confirmed persistently 403-blocked across
     // many runs (same IP-reputation pattern as Morocco/Sri Lanka/Uganda).
     // The Star is a genuinely different domain/publisher, worth a real try.
+    { source: 'standardmedia.co.ke', feedUrl: 'https://www.standardmedia.co.ke/rss/headlines.php' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
   // Fetch-verified via search this session (real, current feed URLs)
   PK: [
     { source: 'dawn.com', feedUrl: 'https://www.dawn.com/feeds/home' },
+    { source: 'tribune.com.pk', feedUrl: 'https://tribune.com.pk/feed/home' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
   TH: [
     { source: 'bangkokpost.com', feedUrl: 'https://www.bangkokpost.com/rss/data/topstories.xml' },
@@ -226,6 +229,7 @@ const FEED_URLS_BY_COUNTRY = {
   // still serve http even when their https cert chain is broken.
   JM: [
     { source: 'jamaica-star.com', feedUrl: 'http://jamaica-star.com/feed/news.xml' },
+    { source: 'jamaica-gleaner.com', feedUrl: 'http://jamaica-gleaner.com/feed/rss.xml' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
   // jordannews.jo's feed was malformed XML (unquoted attribute value --
   // broken on their end, not fixable client-side). Switched to Ammon News,
@@ -283,7 +287,10 @@ const FEED_URLS_BY_COUNTRY = {
   CM: [{ source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
   CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
   CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
-  CY: [{ source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' }],
+  CY: [
+    { source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' },
+    { source: 'sigmalive.com', feedUrl: 'http://www.sigmalive.com/rss' }, // NEW (2026-08-02): confirmed valid via community RSS directory
+  ],
   DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
   DZ: [{ source: 'al24news.com', feedUrl: 'https://al24news.com/feed' }], // swapped from aps.dz (404 twice) -- AL24 News confirmed real, active, English-language Algerian state international broadcaster, path unverified
   GE: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
@@ -349,9 +356,15 @@ const FEED_URLS_BY_COUNTRY = {
   // these countries have genuinely thin or state-controlled press, so
   // expect a higher break/skip rate than usual on the first real run.
   AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
-  BS: [{ source: 'ewnews.com', feedUrl: 'https://ewnews.com/feed' }], // replaced tribune242.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Eye Witness News is the Bahamas' #1 local outlet, with a dedicated RSS feed page on their site ("/rss-feed-2/") confirming a feed exists -- using the standard /feed path first since the exact confirmed URL was on a landing page, not necessarily the raw feed itself.
+  BS: [
+    { source: 'ewnews.com', feedUrl: 'https://ewnews.com/feed' }, // replaced tribune242.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Eye Witness News is the Bahamas' #1 local outlet, with a dedicated RSS feed page on their site ("/rss-feed-2/") confirming a feed exists -- using the standard /feed path first since the exact confirmed URL was on a landing page, not necessarily the raw feed itself.
+    { source: 'bahamaspress.com', feedUrl: 'http://bahamaspress.com/feed/' }, // NEW (2026-08-02): confirmed valid via community RSS directory
+  ],
   BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
-  BZ: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Belize&hl=en&gl=BZ&ceid=BZ:en' }], // replaced breakingbelizenews.com -- confirmed persistently blocked. Google News RSS fallback.
+  BZ: [
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Belize&hl=en&gl=BZ&ceid=BZ:en' }, // replaced breakingbelizenews.com -- confirmed persistently blocked. Google News RSS fallback.
+    { source: 'amandala.com.bz', feedUrl: 'http://amandala.com.bz/news/feed/' }, // NEW (2026-08-02): confirmed valid via community RSS directory, genuine dedicated Belize outlet
+  ],
   BT: [
     { source: 'dailybhutan.com', feedUrl: 'https://www.dailybhutan.com/feed' }, // replaced kuenselonline.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Daily Bhutan is confirmed very actively updated (May/June 2026 content seen directly), a stronger candidate than Kuensel.
     // NEW (2026-07-29): dailybhutan.com turned out malformed too. Business
@@ -694,8 +707,14 @@ const FEED_URLS_BY_COUNTRY = {
   // log will confirm or reject each.
   SA: [{ source: 'arabnews.com', feedUrl: 'https://www.arabnews.com/rss.xml' }],
   AE: [{ source: 'thenationalnews.com', feedUrl: 'https://www.thenationalnews.com/rss' }],
-  SG: [{ source: 'straitstimes.com', feedUrl: 'https://www.straitstimes.com/news/singapore/rss.xml' }],
-  ZA: [{ source: 'news24.com', feedUrl: 'https://www.news24.com/news24/rss' }],
+  SG: [
+    { source: 'straitstimes.com', feedUrl: 'https://www.straitstimes.com/news/singapore/rss.xml' },
+    { source: 'tnp.sg', feedUrl: 'http://www.tnp.sg/rss.xml' }, // NEW (2026-08-02): confirmed valid via community RSS directory
+  ],
+  ZA: [
+    { source: 'news24.com', feedUrl: 'https://www.news24.com/news24/rss' },
+    { source: 'dailymaverick.co.za', feedUrl: 'https://www.dailymaverick.co.za/dmrss/' }, // NEW (2026-08-02): confirmed valid via community RSS directory
+  ],
   NZ: [{ source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/national.xml' }],
   // NEW (2026-08-01): these 6 countries were previously removed from
   // countries.json entirely as confirmed dead ends. Fresh research this
@@ -720,6 +739,27 @@ const FEED_URLS_BY_COUNTRY = {
   NR: [{ source: 'advancenauru.com', feedUrl: 'https://advancenauru.com/feed' }],
   MH: [{ source: 'marshallislandsjournal.com', feedUrl: 'https://marshallislandsjournal.com/feed' }], // swapped from mbjguam.com -- no discoverable RSS feed found for that one despite research. Marshall Islands Journal confirmed via Wikipedia as the country's sole newspaper since 1970, genuinely dedicated not regional. Path unverified.
   PW: [{ source: 'islandtimes.org', feedUrl: 'https://islandtimes.org/feed' }], // swapped from mbjguam.com -- Island Times confirmed real and active with live current Palau-specific content, genuinely dedicated not regional. Path unverified.
+  // NEW (2026-08-02): comprehensive research pass -- found via analysis
+  // that 17 configured countries had zero RSS entry at all (relying purely
+  // on the capped API pipeline) and 155 more had only a single source.
+  // Starting with the zero-RSS majors, since those are the clearest gap.
+  IT: [{ source: 'ansa.it', feedUrl: 'https://www.ansa.it/sito/ansait_rss.xml' }], // ANSA's English edition (ansa.it/english), Italy's major news agency, 2M+ followers, exact feed URL confirmed via directory listing
+  // NEW (2026-08-02): found via a comprehensive community-maintained RSS
+  // directory (github.com/yavuz/news-feed-list-of-countries) with built-in
+  // feed validation status -- all entries below confirmed "valid" there.
+  IE: [
+    { source: 'thejournal.ie', feedUrl: 'https://www.thejournal.ie/feed/' },
+    { source: 'independent.ie', feedUrl: 'https://www.independent.ie/irish-news/rss' },
+  ],
+  IL: [{ source: 'jpost.com', feedUrl: 'https://www.jpost.com/RSS/RssFeedsFrontPage.aspx' }], // Jerusalem Post, Israel's most-read English news site
+  RO: [{ source: 'biziday.ro', feedUrl: 'https://www.biziday.ro/feed/' }],
+  CD: [{ source: 'congoplanet.com', feedUrl: 'http://www.congoplanet.com/feeds/rss_congo_africa.xml' }],
+  IR: [{ source: 'khabaronline.ir', feedUrl: 'http://english.khabaronline.ir/rss/' }],
+  FI: [{ source: 'yle.fi', feedUrl: 'https://yle.fi/uutiset/rss/uutiset.rss?osasto=news' }], // Finland's national broadcaster, English edition
+  NL: [
+    { source: 'nltimes.nl', feedUrl: 'https://nltimes.nl/rssfeed2' }, // "the fastest-growing publisher of English-language news from the Netherlands", exact URL confirmed
+    { source: 'dutchnews.nl', feedUrl: 'https://www.dutchnews.nl/feed' }, // genuinely different second English-language Dutch outlet, exact URL confirmed
+  ],
 };
 
 async function loadExistingTitles() {
