@@ -1082,6 +1082,23 @@ function decodeHtmlEntities(text) {
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
 }
 
+// CRASH FIX (2026-08-02): a real RSS run died with "RangeError: Invalid
+// time value" thrown from Date.toISOString() on an unparseable date string
+// from one feed -- and because it was unhandled, it didn't just drop that
+// item, it killed the *entire remaining run*, silently losing every
+// country still queued behind it. This same unguarded new Date(x)
+// .toISOString() pattern existed in three places in this file's own
+// fetchers too (just not yet triggered here -- NewsData/GNews/Currents
+// tend to return cleaner date formats than arbitrary RSS feeds, but
+// there's no guarantee that holds forever). Centralizing the safe version
+// here, shared by both ingestion paths, so neither can regress back to the
+// crashing pattern independently.
+function safeParseDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 function capDescription(text) {
   if (!text) return text;
   // Strip raw HTML tags first -- confirmed via a live data audit that
@@ -1117,7 +1134,7 @@ async function fetchNewsData(country) {
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.link,
-      published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+      published_at: safeParseDate(item.pubDate),
       _rawCategory: item.category,
     }));
   return rows;
@@ -1144,7 +1161,7 @@ async function fetchGNews(country) {
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.url,
-      published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : null,
+      published_at: safeParseDate(item.publishedAt),
     }));
   return rows;
 }
@@ -1208,7 +1225,7 @@ async function fetchCurrents(country) {
       title: item.title,
       description: capDescription(item.description) || null,
       url: item.url,
-      published_at: item.published ? new Date(item.published).toISOString() : null,
+      published_at: safeParseDate(item.published),
       _rawCategory: item.category,
     }));
   return rows;
@@ -1450,6 +1467,7 @@ module.exports = {
   getJunkReason,
   isJunk,
   capDescription,
+  safeParseDate,
   mentionsCountry,
   isNonEnglish,
   isPrWireContent,
