@@ -256,7 +256,9 @@ const FEED_URLS_BY_COUNTRY = {
   // guarantee its own RSS feed won't hit the same IP-reputation blocking
   // that's affected several other feeds -- worth checking the next log.
   QA: [
-    { source: 'thepeninsulaqatar.com', feedUrl: 'https://thepeninsulaqatar.com/feed' },
+    { source: 'thepeninsulaqatar.com', feedUrl: 'https://thepeninsulaqatar.com/feed' }, // "Attribute without value" persisted even after the sanitizer shipped -- consistent with this now serving a non-RSS HTML page (bot-block/challenge page) rather than malformed-but-real RSS, which no XML sanitizer can fix
+    // NEW (2026-08-02): Google News fallback so Qatar isn't a hard zero.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Qatar&hl=en&gl=QA&ceid=QA:en' },
   ],
 
   // --- Batch 3: countries with NO working API path at all (not on GNews's
@@ -518,8 +520,15 @@ const FEED_URLS_BY_COUNTRY = {
   // independent national outlet" isn't a coherent research task -- the
   // outlet itself IS the government.
   KP: [
-    { source: 'kcnawatch.org', feedUrl: 'https://kcnawatch.org/newstream/feed/', stateMedia: true },
-    // ^ still malformed XML on their end, left in in case it self-resolves.
+    // kcnawatch.org DROPPED (2026-08-02): confirmed chronically malformed
+    // across three separate runs, identical error position each time
+    // (Line 5, Column 39 -- "Unquoted attribute value") -- that's their feed
+    // generator, not a wrong path, and the position sitting inside the
+    // channel header (not an item description) means the CDATA-wrap
+    // sanitizer can't reach it without risking corrupting real markup
+    // elsewhere. Not chasing this further -- dailynk.com below is a
+    // stronger source anyway (independent, defector-sourced reporting vs.
+    // a state mirror).
     { source: 'dailynk.com', feedUrl: 'https://www.dailynk.com/english/feed/' },
     // ^ Daily NK -- genuinely independent, defector-sourced reporting (the
     // opposite of state media), actively updated, real RSS feed mentioned
@@ -527,12 +536,6 @@ const FEED_URLS_BY_COUNTRY = {
     // NOT flagged stateMedia -- this is independent journalism, not
     // government output.
   ],
-  // ^ Feed has malformed XML of its own (unquoted attribute value) -- same
-  // source-side-bug class as LS/TJ/SV, not fixable by URL changes.
-  // ^ Deliberately NOT fetching kcna.kp directly -- KCNA's own DPRK-hosted
-  // site has a documented history of malicious scripts and frequent outages.
-  // KCNA Watch is a dedicated third-party mirror built specifically to work
-  // around that risk while still surfacing genuine official DPRK output.
   BY: [{ source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true }],
   // ^ Confirmed working -- saw live, current-dated content at this URL directly.
   ER: [
@@ -810,7 +813,11 @@ const FEED_URLS_BY_COUNTRY = {
   // guesses on a verified-legitimate domain, not verified paths. Next run's
   // log will confirm or reject each.
   SA: [{ source: 'arabnews.com', feedUrl: 'https://www.arabnews.com/rss.xml' }],
-  AE: [{ source: 'thenationalnews.com', feedUrl: 'https://www.thenationalnews.com/rss' }],
+  AE: [
+    { source: 'thenationalnews.com', feedUrl: 'https://www.thenationalnews.com/rss' }, // newly 404ing -- may be a path change on their end, not re-researched this round
+    // NEW (2026-08-02): Google News fallback so UAE isn't a hard zero.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=United+Arab+Emirates&hl=en&gl=AE&ceid=AE:en' },
+  ],
   SG: [
     { source: 'straitstimes.com', feedUrl: 'https://www.straitstimes.com/news/singapore/rss.xml' },
     { source: 'tnp.sg', feedUrl: 'http://www.tnp.sg/rss.xml' }, // NEW (2026-08-02): confirmed valid via community RSS directory
@@ -905,52 +912,96 @@ function fetchRawXml(feedUrl) {
   const MAX_REDIRECTS = 5;
   const CONNECT_TIMEOUT_MS = 10000;
   return new Promise((resolve, reject) => {
-    function doGet(currentUrl, redirectsLeft) {
+    // settled guard: with retries/redirects recursing through doGet, and
+    // several independent event listeners (data/end/error/timeout) all
+    // capable of firing, this makes the "only resolve/reject once" intent
+    // explicit and keeps the function easy to reason about.
+    let settled = false;
+    const safeResolve = (v) => { if (!settled) { settled = true; resolve(v); } };
+    const safeReject = (e) => { if (!settled) { settled = true; reject(e); } };
+
+    function doGet(rawUrl, redirectsLeft, base) {
       let parsedUrl;
       try {
-        parsedUrl = new URL(currentUrl);
-      } catch {
-        return reject(new Error(`Invalid feed URL: ${currentUrl}`));
+        parsedUrl = base ? new URL(rawUrl, base) : new URL(rawUrl);
+      } catch (e) {
+        return safeReject(new Error(`Invalid feed URL "${rawUrl}": ${e.message}`));
       }
+      const currentUrl = parsedUrl.toString();
       const lib = parsedUrl.protocol === 'http:' ? http : https;
-      const req = lib.get(currentUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-          'Accept-Encoding': 'gzip, deflate, br',
-        },
-        timeout: CONNECT_TIMEOUT_MS,
-      }, (res) => {
-        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && redirectsLeft > 0) {
-          res.resume();
-          return doGet(new URL(res.headers.location, currentUrl).toString(), redirectsLeft - 1);
-        }
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          res.resume();
-          return reject(new Error(`Status code ${res.statusCode}`));
-        }
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => {
-          const buf = Buffer.concat(chunks);
-          const encoding = (res.headers['content-encoding'] || '').toLowerCase();
+      let req;
+      try {
+        req = lib.get(currentUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Encoding': 'gzip, deflate, br',
+          },
+          timeout: CONNECT_TIMEOUT_MS,
+        }, (res) => {
+          // CRASH FIX (2026-08-02): this whole callback is now wrapped in
+          // try/catch. It runs as an http module event callback, not
+          // inside the Promise executor's own synchronous scope, so a
+          // throw in here does NOT automatically become a promise
+          // rejection -- it becomes an uncaught exception that kills the
+          // whole process. This is exactly what happened for real: a 302
+          // with a bare "http://" Location header (confirmed, from
+          // baltictimes.com) threw out of the previously-unguarded
+          // redirect-URL resolution below, uncaught, and took the entire
+          // run down mid-shard. Confirmed fixed via local reproduction of
+          // that exact failure plus a battery of other malformed-response
+          // cases (redirect loops, garbage Location headers, corrupt gzip,
+          // connection resets) -- zero uncaught exceptions before this
+          // shipped.
           try {
-            let out;
-            if (encoding.includes('br')) out = zlib.brotliDecompressSync(buf);
-            else if (encoding.includes('gzip')) out = zlib.gunzipSync(buf);
-            else if (encoding.includes('deflate')) out = zlib.inflateSync(buf);
-            else if (buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b) out = zlib.gunzipSync(buf); // undeclared gzip fallback
-            else out = buf;
-            resolve(out.toString('utf8'));
+            if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && redirectsLeft > 0) {
+              res.resume();
+              return doGet(res.headers.location, redirectsLeft - 1, currentUrl);
+            }
+            if ([301, 302, 303, 307, 308].includes(res.statusCode) && redirectsLeft <= 0) {
+              res.resume();
+              return safeReject(new Error('Too many redirects'));
+            }
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+              res.resume();
+              return safeReject(new Error(`Status code ${res.statusCode}`));
+            }
+            const chunks = [];
+            res.on('data', (c) => chunks.push(c));
+            res.on('error', (e) => safeReject(e));
+            res.on('end', () => {
+              // 'encoding' declared here, outside try/catch, deliberately --
+              // a first version of this fix declared it with const inside
+              // the try block, which meant the catch block's own reference
+              // to it for the error message threw ReferenceError (const is
+              // block-scoped; try and catch are separate blocks). Caught by
+              // stress-testing before shipping, not in production.
+              let encoding = '';
+              try {
+                const buf = Buffer.concat(chunks);
+                encoding = (res.headers['content-encoding'] || '').toLowerCase();
+                let out;
+                if (encoding.includes('br')) out = zlib.brotliDecompressSync(buf);
+                else if (encoding.includes('gzip')) out = zlib.gunzipSync(buf);
+                else if (encoding.includes('deflate')) out = zlib.inflateSync(buf);
+                else if (buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b) out = zlib.gunzipSync(buf); // undeclared gzip fallback
+                else out = buf;
+                safeResolve(out.toString('utf8'));
+              } catch (e) {
+                safeReject(new Error(`Decompression failed (content-encoding="${encoding}"): ${e.message}`));
+              }
+            });
           } catch (e) {
-            reject(new Error(`Decompression failed (content-encoding="${encoding}"): ${e.message}`));
+            safeReject(e);
           }
         });
-      });
+      } catch (e) {
+        return safeReject(e);
+      }
       req.on('timeout', () => req.destroy(new Error('timed out')));
-      req.on('error', reject);
+      req.on('error', (e) => safeReject(e));
     }
-    doGet(feedUrl, MAX_REDIRECTS);
+    doGet(feedUrl, MAX_REDIRECTS, null);
   });
 }
 
