@@ -199,7 +199,16 @@ const FEED_URLS_BY_COUNTRY = {
   // BOTH the API pipeline (empty/error results in ingest.js logs) and RSS
   // (never had a feed at all until now).
   NP: [
-    { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
+    // FIXED (2026-08-02): bare onlinekhabar.com is confirmed to be the
+    // Nepali-language edition ("Nepal's #1 news portal in Nepali" per
+    // their own description) -- this is WHY the language-detection fix
+    // correctly filtered 55/55 items as non-English, not a threshold bug.
+    // Swapped to their real English subdomain, confirmed via live current
+    // content (english.onlinekhabar.com). Added The Himalayan Times as a
+    // second genuine English source ("Nepal's No.1 English Daily
+    // Newspaper", exact RSS URL confirmed). Both paths partially unverified.
+    { source: 'english.onlinekhabar.com', feedUrl: 'https://english.onlinekhabar.com/feed' },
+    { source: 'thehimalayantimes.com', feedUrl: 'https://www.thehimalayantimes.com/feed' },
   ],
   // greekreporter.com/greece/feed 403'd (likely IP-reputation blocking,
   // same category as Kenya/Morocco/Sri Lanka/Uganda -- a UA header alone
