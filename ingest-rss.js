@@ -19,11 +19,15 @@
 // that turn out broken. Expect to prune/expand this list after the first
 // few real runs, not to get it perfect on the first try.
 
+const http = require('http');
+const https = require('https');
+const zlib = require('zlib');
 const { createClient } = require('@supabase/supabase-js');
 const Parser = require('rss-parser');
 const {
   getJunkReason,
   capDescription,
+  safeParseDate,
   mapTopic,
   normalizeTitle,
   safeStringify,
@@ -129,6 +133,14 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   US: [
     { source: 'nytimes.com', feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml' },
+    // NEW (2026-08-02): NPR and CNN top-stories feeds -- both extremely
+    // long-stable, widely-documented URLs (years-old, cited across
+    // countless RSS directories unchanged), not individually
+    // fetch-verified this session but a different confidence tier than a
+    // typical outlet guess. Added for outlet diversity on the single
+    // biggest country in the dataset.
+    { source: 'npr.org', feedUrl: 'https://feeds.npr.org/1001/rss.xml' },
+    { source: 'cnn.com', feedUrl: 'http://rss.cnn.com/rss/cnn_topstories.rss' },
   ],
   TR: [
     { source: 'dailysabah.com', feedUrl: 'https://www.dailysabah.com/rssFeed/10000' },
@@ -279,10 +291,25 @@ const FEED_URLS_BY_COUNTRY = {
     // per-country feeds, unlike most broadcasters which are region-only.
     { source: 'rferl.org', feedUrl: 'https://www.rferl.org/api/zgkim_l-vomx-tpe-p_my' },
   ],
-  BH: [{ source: 'bna.bh', feedUrl: 'https://www.bna.bh/en/rss.aspx' }],
+  // FIXED (2026-08-02): bna.bh/en/rss.aspx returns 405 -- BNA's site appears
+  // to have migrated to a beta.bna.bh domain, and the old RSS endpoint no
+  // longer accepts plain GET. Replaced with Biz Bahrain, confirmed via a
+  // feed directory listing with an exact, specific /feed path (WordPress-
+  // style, high confidence). Also state media was the only source here
+  // before -- Biz Bahrain gives some outlet diversity too.
+  BH: [
+    { source: 'bizbahrain.com', feedUrl: 'https://bizbahrain.com/feed' },
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bahrain&hl=en&gl=BH&ceid=BH:en' },
+  ],
   BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
   BN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
-  BW: [{ source: 'thevoicebw.com', feedUrl: 'https://www.thevoicebw.com/feed' }], // replaced mmegi.bw -- confirmed 404 twice on that domain, abandoned rather than a third guess. The Voice is a real, established Botswana outlet with a documented RSS feed at this exact path.
+  // FIXED (2026-08-02): the previous URL's ENOTFOUND was specifically on
+  // the `www.` subdomain -- search results confirm the bare domain (no www)
+  // resolves and serves live, current-dated content directly
+  // (thevoicebw.com/latest-news/, thevoicebw.com/category/latest_news/).
+  // Dropping the www prefix rather than abandoning a real, established
+  // outlet over what looks like a missing DNS record for that one label.
+  BW: [{ source: 'thevoicebw.com', feedUrl: 'https://thevoicebw.com/feed' }],
   CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
   CM: [{ source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
   CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
@@ -305,8 +332,19 @@ const FEED_URLS_BY_COUNTRY = {
   IS: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }], // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
   KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
   KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
-  LA: [{ source: 'vientianetimes.org.la', feedUrl: 'https://www.vientianetimes.org.la/feed' }], // swapped from laotiantimes.com (malformed XML) -- Vientiane Times confirmed as Laos' actual established national English/Lao paper since 1994, path unverified
-  LT: [{ source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/feed/' }], // replaced lrt.lt -- confirmed 403-blocked. Baltic Times is a real independent outlet covering Estonia/Latvia/Lithuania. (Their Feedburner feed URL appeared in search results but was truncated -- using their own domain's standard path instead of guessing the exact Feedburner slug.)
+  LA: [
+    { source: 'vientianetimes.org.la', feedUrl: 'https://www.vientianetimes.org.la/feed' }, // still 404ing -- their site runs on old custom .php pages (onlinesub.php, About_us.htm), not a standard CMS, so a real RSS feed may genuinely not exist here rather than this being a wrong path
+    // NEW (2026-08-02): Google News fallback.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Laos&hl=en&gl=LA&ceid=LA:en' },
+  ],
+  // FIXED (2026-08-02): /feed/ fails with a blank error. A separate feed
+  // directory lists a different path, /rss.xml, for the same outlet --
+  // trying that instead of guessing blind, plus a Google News fallback
+  // since the exact current path is still not independently confirmed.
+  LT: [
+    { source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/rss.xml' },
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Lithuania&hl=en&gl=LT&ceid=LT:en' },
+  ],
   DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
   LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
   MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
@@ -327,7 +365,14 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'meta.mk', feedUrl: 'https://meta.mk/en/feed/' },
   ],
   ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
-  MN: [{ source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/feed' }], // swapped from /en/rss (404) -- Wikipedia confirms montsame.mn/en/ is the correct official English base, trying the standard /feed suffix instead
+  // Two confirmed dead ends across sessions now: /en/rss (404), then /en/feed
+  // (also 404). Not chasing a third guess at Montsame's path -- adding a
+  // Google News fallback instead so Mongolia isn't fully dependent on
+  // guessing their exact feed URL right.
+  MN: [
+    { source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/feed' },
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Mongolia&hl=en&gl=MN&ceid=MN:en' },
+  ],
   MW: [{ source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' }],
   MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
   NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
@@ -398,6 +443,11 @@ const FEED_URLS_BY_COUNTRY = {
     // Genuinely different outlet, third attempt for this country. Path
     // unverified.
     { source: 'independent.com.mt', feedUrl: 'https://www.independent.com.mt/rss' },
+    // NEW (2026-08-02): all three outlets above are now confirmed 403 in
+    // the same run -- three genuinely different outlets, same bot-block
+    // signature, no fourth guess likely to fare differently. Google News
+    // fallback so Malta isn't fully dependent on any of them.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Malta&hl=en&gl=MT&ceid=MT:en' },
   ],
   MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
   MU: [{ source: 'mauritiustimes.com', feedUrl: 'https://www.mauritiustimes.com/feed' }], // swapped from defimedia.info (malformed XML) -- Mauritius Times confirmed via Wikipedia's newspaper directory as a real, established English/French outlet, path unverified
@@ -423,6 +473,9 @@ const FEED_URLS_BY_COUNTRY = {
     // owned Solomon Islands daily -- genuinely different outlet than the
     // already-blocked Solomon Star. Path unverified.
     { source: 'theislandsun.com.sb', feedUrl: 'https://theislandsun.com.sb/feed' },
+    // NEW (2026-08-02): both outlets above confirmed 403 in the same run.
+    // Google News fallback.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Solomon+Islands&hl=en&gl=SB&ceid=SB:en' },
   ],
   SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
   GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
@@ -540,7 +593,11 @@ const FEED_URLS_BY_COUNTRY = {
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
   SR: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Suriname&hl=en&gl=SR&ceid=SR:en' }], // replaced surinametimes.com -- confirmed 404 on two different paths, and their real content skews Dutch anyway. Google News RSS fallback (English-only via hl=en).
   // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
-  YE: [{ source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }],
+  YE: [
+    { source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }, // confirmed 403 -- same bot-blocking pattern as others, not a path problem
+    // NEW (2026-08-02): Google News fallback.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Yemen&hl=en&gl=YE&ceid=YE:en' },
+  ],
   // ^ 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco/
   // Malta/Eritrea, not a path problem, no further URL guessing will help.
   // ^ Al-Masdar Online -- confirmed still actively publishing as of 2026,
@@ -582,7 +639,11 @@ const FEED_URLS_BY_COUNTRY = {
   // newspaper, feed URL confirmed via a curated OPML feed list, not guessed.
   BE: [{ source: 'thebulletin.be', feedUrl: 'https://www.thebulletin.be/rss.xml' }], // swapped from brusselstimes.com (malformed XML) -- The Bulletin confirmed via directory with exact feed URL, genuinely different outlet
   // ^ The Brussels Times -- Belgium's largest English-language news outlet.
-  KH: [{ source: 'phnompenhpost.com', feedUrl: 'https://www.phnompenhpost.com/feed' }],
+  KH: [
+    { source: 'phnompenhpost.com', feedUrl: 'https://www.phnompenhpost.com/feed' }, // confirmed 403 -- same bot-blocking pattern as Malta/Kenya, not a path problem
+    // NEW (2026-08-02): Google News fallback.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Cambodia&hl=en&gl=KH&ceid=KH:en' },
+  ],
   // ^ Phnom Penh Post -- Cambodia's oldest English-language newspaper, confirmed active with current 2026 content.
   CZ: [{ source: 'praguemonitor.com', feedUrl: 'https://praguemonitor.com/feed' }],
   // ^ Prague Monitor -- confirmed active English-language Czech Republic news site since 2003.
@@ -648,7 +709,15 @@ const FEED_URLS_BY_COUNTRY = {
   PS: [{ source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
   CO: [{ source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' }],
   BR: [{ source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' }],
-  UA: [{ source: 'euromaidanpress.com', feedUrl: 'https://euromaidanpress.com/feed' }], // swapped from kyivindependent.com/feed/ (404, wrong path) -- this one confirmed via FeedSpot directory listing, not a guess
+  // NEW (2026-08-02): euromaidanpress.com (added last session as the fix
+  // for a dead kyivindependent.com path) is now also confirmed 403 in the
+  // most recent run. Adding a Google News fallback rather than a third
+  // per-outlet guess, given Ukrainian outlets seem to be hitting the same
+  // bot-blocking pattern one after another.
+  UA: [
+    { source: 'euromaidanpress.com', feedUrl: 'https://euromaidanpress.com/feed' },
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ukraine&hl=en&gl=UA&ceid=UA:en' },
+  ],
   IQ: [{ source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }], // unverified path guess
   ET: [{ source: 'capitalethiopia.com', feedUrl: 'https://www.capitalethiopia.com/feed/' }], // swapped from thereporterethiopia.com (403, bot-blocked) -- this one confirmed reachable, live content seen directly
   // NEW (2026-07-28): found while working the "stalled" list -- these 5
@@ -659,12 +728,22 @@ const FEED_URLS_BY_COUNTRY = {
   // region (like AllAfrica) -- correctly NOT allowlisted, relies on the
   // country-mention relevance check same as any wire. RU's path is a
   // standard-convention guess on an already-allowlisted domain, unverified.
-  JP: [{ source: 'japantimes.co.jp', feedUrl: 'https://www.japantimes.co.jp/feed' }],
+  JP: [
+    { source: 'japantimes.co.jp', feedUrl: 'https://www.japantimes.co.jp/feed' },
+    // NEW (2026-08-02): NHK World, Japan's public broadcaster's English
+    // service -- long-documented standard feed path, not individually
+    // fetch-verified this session.
+    { source: 'nhk.or.jp', feedUrl: 'https://www3.nhk.or.jp/nhkworld/en/news/feeds/' },
+  ],
   EG: [{ source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' }],
   CN: [{ source: 'scmp.com', feedUrl: 'https://www.scmp.com/rss/91/feed' }],
   RS: [{ source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/feed/' }],
   RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }], // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
-  AF: [{ source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }], // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
+  AF: [
+    { source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }, // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
+    // NEW (2026-08-02): now confirmed 403. Google News fallback.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Afghanistan&hl=en&gl=AF&ceid=AF:en' },
+  ],
   LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss.xml' }], // swapped from /rss/lebanon (404) -- trying standard root-level path, still unverified
   // NEW (2026-07-28): UY and CL are already covered by the generic MercoPress
   // WORLD wire, but that clearly isn't surfacing enough Uruguay/Chile-tagged
@@ -692,11 +771,36 @@ const FEED_URLS_BY_COUNTRY = {
   // use exact feed URLs confirmed via directory listing.
   DE: [{ source: 'thelocal.de', feedUrl: 'https://feeds.thelocal.com/rss/de' }],
   ES: [{ source: 'thelocal.es', feedUrl: 'https://feeds.thelocal.com/rss/es' }],
-  CA: [{ source: 'globalnews.ca', feedUrl: 'https://globalnews.ca/feed' }],
-  AU: [{ source: 'sbs.com.au', feedUrl: 'https://www.sbs.com.au/news/feed' }],
+  CA: [
+    { source: 'globalnews.ca', feedUrl: 'https://globalnews.ca/feed' },
+    // NEW (2026-08-02): CBC News top stories -- Canada's public
+    // broadcaster, long-documented standard feed path, not individually
+    // fetch-verified this session.
+    { source: 'cbc.ca', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
+  ],
+  AU: [
+    { source: 'sbs.com.au', feedUrl: 'https://www.sbs.com.au/news/feed' },
+    // NEW (2026-08-02): ABC News Australia top stories -- public
+    // broadcaster, long-documented standard feed path, not individually
+    // fetch-verified this session.
+    { source: 'abc.net.au', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
+  ],
   KR: [{ source: 'koreaherald.com', feedUrl: 'https://www.koreaherald.com/rss' }],
-  ID: [{ source: 'thejakartapost.com', feedUrl: 'https://www.thejakartapost.com/rss' }],
-  MY: [{ source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss' }],
+  ID: [
+    { source: 'thejakartapost.com', feedUrl: 'https://www.thejakartapost.com/rss' }, // still 404ing -- couldn't confirm a working replacement path this round (their listing services obscure the real URL), left in place in case it's a temporary outage
+    // NEW (2026-08-02): Google News fallback so Indonesia isn't fully
+    // dependent on the one dead feed above. Confirmed pattern (see Brunei
+    // entry for rationale).
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Indonesia&hl=en&gl=ID&ceid=ID:en' },
+  ],
+  // FIXED (2026-08-02): /rss 404'd. Confirmed real path directly from The
+  // Star's own RSS directory page (thestar.com.my/RSS) -- their feeds live
+  // under /rss/News, /rss/Business, etc, not a bare /rss. Worth knowing:
+  // that same directory page's terms of use say the feed is "STRICTLY FOR
+  // PERSONAL, NON-COMMERCIAL USE" and may not be used with ads attached --
+  // same category of ToS flag as GNews' free tier, worth revisiting before
+  // Stage 6 (ads).
+  MY: [{ source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss/News' }],
   PH: [{ source: 'inquirer.net', feedUrl: 'https://www.inquirer.net/feed' }],
   MX: [{ source: 'mexiconewsdaily.com', feedUrl: 'https://mexiconewsdaily.com/feed' }],
   // NEW (2026-07-30): remaining major no-RSS countries, using their
@@ -771,6 +875,110 @@ async function loadExistingTitles() {
   return new Set(data.map((row) => normalizeTitle(row.title)));
 }
 
+// RAW FETCH + SANITIZE (2026-08-02): replaces reliance on rss-parser's own
+// parser.parseURL(). Added after a sweep of real failures across ~20
+// countries in a single shard run fell into two buckets neither of which
+// parser.parseURL() could recover from on its own:
+//
+//   1. Genuinely malformed source XML -- unescaped bare "&" in titles/links
+//      (Invalid character in entity name -- Lesotho, Algeria, Bhutan), and
+//      raw un-CDATA-wrapped HTML leaking into <description>/<content:encoded>
+//      (Attribute without value / Unquoted attribute value / Unexpected
+//      close tag -- Jordan, Oman, North Korea, Tuvalu). Confirmed via
+//      synthetic reproductions matching the exact error text and column
+//      position seen in the real logs, not a guess.
+//   2. A response starting with the gzip magic byte (0x1f) instead of "<"
+//      (Non-whitespace before first tag -- Marshall Islands) -- rss-parser's
+//      internal fetch uses plain http.get/https.get with no Content-Encoding
+//      handling at all, so a server that gzips regardless of what's
+//      requested (common behind some CDNs) silently hands back compressed
+//      bytes as if they were the XML body.
+//
+// This does its own fetch (with redirect + gzip/deflate/br handling, falling
+// back to sniffing the gzip magic bytes even when the server doesn't
+// declare Content-Encoding) so the raw text can be sanitized *before*
+// rss-parser ever sees it, then hands the cleaned string to
+// parser.parseString() instead. Feeds that were already fine pass through
+// the sanitizer unchanged (verified: already-CDATA-wrapped and plain-text
+// descriptions are left byte-for-byte alone).
+function fetchRawXml(feedUrl) {
+  const MAX_REDIRECTS = 5;
+  const CONNECT_TIMEOUT_MS = 10000;
+  return new Promise((resolve, reject) => {
+    function doGet(currentUrl, redirectsLeft) {
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(currentUrl);
+      } catch {
+        return reject(new Error(`Invalid feed URL: ${currentUrl}`));
+      }
+      const lib = parsedUrl.protocol === 'http:' ? http : https;
+      const req = lib.get(currentUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          'Accept-Encoding': 'gzip, deflate, br',
+        },
+        timeout: CONNECT_TIMEOUT_MS,
+      }, (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && redirectsLeft > 0) {
+          res.resume();
+          return doGet(new URL(res.headers.location, currentUrl).toString(), redirectsLeft - 1);
+        }
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          return reject(new Error(`Status code ${res.statusCode}`));
+        }
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const buf = Buffer.concat(chunks);
+          const encoding = (res.headers['content-encoding'] || '').toLowerCase();
+          try {
+            let out;
+            if (encoding.includes('br')) out = zlib.brotliDecompressSync(buf);
+            else if (encoding.includes('gzip')) out = zlib.gunzipSync(buf);
+            else if (encoding.includes('deflate')) out = zlib.inflateSync(buf);
+            else if (buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b) out = zlib.gunzipSync(buf); // undeclared gzip fallback
+            else out = buf;
+            resolve(out.toString('utf8'));
+          } catch (e) {
+            reject(new Error(`Decompression failed (content-encoding="${encoding}"): ${e.message}`));
+          }
+        });
+      });
+      req.on('timeout', () => req.destroy(new Error('timed out')));
+      req.on('error', reject);
+    }
+    doGet(feedUrl, MAX_REDIRECTS);
+  });
+}
+
+const CDATA_WRAP_TAGS = ['description', 'content:encoded', 'summary', 'itunes:summary'];
+
+function sanitizeXml(xml) {
+  let out = xml
+    // Escape bare "&" not already starting a valid entity reference.
+    .replace(/&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;')
+    // Strip control characters invalid in XML 1.0 (leftover binary noise,
+    // stray bytes, etc.) without touching normal whitespace.
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+  // CDATA-wrap raw HTML in known text-bearing tags that weren't already
+  // CDATA-wrapped -- the standard fix for feed generators that forget to
+  // escape embedded markup. Only touches tags containing a literal "<" so
+  // plain-text descriptions (the common case) are left untouched.
+  for (const tag of CDATA_WRAP_TAGS) {
+    const re = new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g');
+    out = out.replace(re, (match, inner) => {
+      if (inner.trim().startsWith('<![CDATA[')) return match;
+      if (!inner.includes('<')) return match;
+      const safeInner = inner.replace(/]]>/g, ']]]]><![CDATA[>');
+      return `<${tag}><![CDATA[${safeInner}]]></${tag}>`;
+    });
+  }
+  return out;
+}
+
 async function fetchFeedOnce(feedUrl) {
   // Hard backstop independent of rss-parser's own `timeout` option (see
   // module-level comment on the Parser config) -- confirmed necessary after
@@ -783,7 +991,8 @@ async function fetchFeedOnce(feedUrl) {
     timer = setTimeout(() => reject(new Error(`Hard timeout after ${HARD_TIMEOUT_MS}ms (rss-parser's own timeout did not fire)`)), HARD_TIMEOUT_MS);
   });
   try {
-    const feed = await Promise.race([parser.parseURL(feedUrl), timeout]);
+    const rawXml = await Promise.race([fetchRawXml(feedUrl), timeout]);
+    const feed = await parser.parseString(sanitizeXml(rawXml));
     return feed.items || [];
   } finally {
     // Clear the timer regardless of which side of the race won -- left
@@ -821,6 +1030,18 @@ async function fetchFeed(feedUrl) {
   }
 }
 
+// CRASH FIX (2026-08-02): a real run died with "RangeError: Invalid time
+// value" thrown from Date.toISOString() inside buildRow -- some feed's
+// isoDate/pubDate field was a string Date() couldn't parse into anything
+// valid. Because this was unhandled inside the per-item loop, it didn't
+// just drop that one item or one feed -- it killed the *entire remaining
+// run*, silently losing every country still queued after whichever feed
+// triggered it (confirmed: the log shows normal processing straight
+// through Ireland, then nothing at all after the crash). A single bad date
+// field from one feed should never be able to take out ~40 other
+// countries' worth of coverage. This never throws: tries isoDate, falls
+// back to pubDate if that's bad too, and returns null (not a crash) if
+// neither parses.
 function buildRow(item, country, source, isStateMedia) {
   // item.title is assumed to always be a plain string by both this function
   // and mapTopic, but isn't always -- confirmed via two separate crashes in
@@ -837,7 +1058,7 @@ function buildRow(item, country, source, isStateMedia) {
     title: safeTitle,
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
     url: item.link,
-    published_at: item.isoDate ? new Date(item.isoDate).toISOString() : (item.pubDate ? new Date(item.pubDate).toISOString() : null),
+    published_at: safeParseDate(item.isoDate) || safeParseDate(item.pubDate),
     is_state_media: !!isStateMedia,
     _rawCategory: item.categories,
   };
