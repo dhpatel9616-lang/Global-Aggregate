@@ -852,7 +852,21 @@ function isNonEnglish(text) {
   // of the covered-country list found 10 more major scripts with the same
   // gap (Bangladesh, Sri Lanka, Thailand, Ethiopia, Georgia, Armenia, Laos,
   // Cambodia, Myanmar all have real coverage now and could hit this).
-  if (/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9\u0900-\u097F\u0980-\u09FF\u0E00-\u0E7F\u0D80-\u0DFF\u1000-\u109F\u1780-\u17FF\u0E80-\u0EFF\u10A0-\u10FF\u0530-\u058F\u1200-\u137F\u0F00-\u0FFF]/.test(text)) return true;
+  // CJK, Arabic, Cyrillic, Hangul, Vietnamese, Devanagari (Hindi/Nepali),
+  // Bengali, Thai, Sinhala, Myanmar, Khmer, Lao, Georgian, Armenian,
+  // Amharic/Ethiopic, Tibetan. Proportion-based, not a single-character
+  // trigger -- confirmed via live data (2026-08-02) that a single-match
+  // trigger here collapsed Nepal from 328 articles to 1: genuine
+  // English-language Nepal content apparently includes occasional
+  // Devanagari (bylines, names, short quotes), and every single article
+  // containing even one such character was being discarded whole. Same
+  // class of mistake already caught and fixed for the diacritic check
+  // below, just missed here when these ranges were added. Tested: genuine
+  // English articles with an embedded native-script name or quote sit at
+  // 11-13% non-Latin characters; genuine mixed-language content hits 30%+;
+  // pure non-English text is 80%+. 25% cleanly separates these.
+  const scriptMatches = text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9\u0900-\u097F\u0980-\u09FF\u0E00-\u0E7F\u0D80-\u0DFF\u1000-\u109F\u1780-\u17FF\u0E80-\u0EFF\u10A0-\u10FF\u0530-\u058F\u1200-\u137F\u0F00-\u0FFF]/g);
+  if (scriptMatches && scriptMatches.length / text.length >= 0.25) return true;
   // Diacritics/punctuation common in Spanish/Portuguese/French. A low
   // threshold isn't enough -- confirmed via a real run (2026-07-29) that a
   // threshold of 1 punished Buenos Aires Times (Argentina's only
