@@ -199,16 +199,7 @@ const FEED_URLS_BY_COUNTRY = {
   // BOTH the API pipeline (empty/error results in ingest.js logs) and RSS
   // (never had a feed at all until now).
   NP: [
-    // FIXED (2026-08-02): bare onlinekhabar.com is confirmed to be the
-    // Nepali-language edition ("Nepal's #1 news portal in Nepali" per
-    // their own description) -- this is WHY the language-detection fix
-    // correctly filtered 55/55 items as non-English, not a threshold bug.
-    // Swapped to their real English subdomain, confirmed via live current
-    // content (english.onlinekhabar.com). Added The Himalayan Times as a
-    // second genuine English source ("Nepal's No.1 English Daily
-    // Newspaper", exact RSS URL confirmed). Both paths partially unverified.
-    { source: 'english.onlinekhabar.com', feedUrl: 'https://english.onlinekhabar.com/feed' },
-    { source: 'thehimalayantimes.com', feedUrl: 'https://www.thehimalayantimes.com/feed' },
+    { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
   ],
   // greekreporter.com/greece/feed 403'd (likely IP-reputation blocking,
   // same category as Kenya/Morocco/Sri Lanka/Uganda -- a UA header alone
@@ -893,7 +884,41 @@ async function main() {
   // GitHub Actions cancellation mid-request loses the whole run's progress,
   // while stopping early here still commits everything fetched so far.
   const TIME_BUDGET_MS = 13 * 60 * 1000; // raised from 12 (2026-08-01) -- the inter-feed sleep reduction above recovered ~2 min of headroom; using about half of it for more coverage, banking the rest as safety margin. Deliberately NOT raising the job's timeout-minutes (still 15) to match -- this runs every 15 min via the external scheduler, so a longer ceiling risks two runs overlapping rather than fixing anything.
-  const allCountryCodes = Object.keys(FEED_URLS_BY_COUNTRY);
+
+  // SHARDING (2026-08-02): the feed list grew from 144 to 202 feeds this
+  // session (+40%), and no amount of per-feed delay tuning kept up --
+  // confirmed via a real run losing 36 of 176 country groups to the time
+  // budget, with several previously-healthy countries among the casualties.
+  // Rather than keep shrinking margins, the workload is now split across
+  // two separate scheduled triggers (SHARD=A and SHARD=B, both calling this
+  // same script via workflow_dispatch, ~7 min apart), each handling roughly
+  // half the feeds. The split is computed fresh every run (greedy
+  // bin-packing by feed count, not just country count) rather than a
+  // hardcoded list, so it self-rebalances automatically as countries get
+  // added or removed -- no manual list-splitting maintenance required.
+  // SHARD=both (the default, e.g. for manual workflow_dispatch runs with no
+  // input) processes everyone, same as before sharding existed.
+  const SHARD = (process.env.SHARD || 'both').toUpperCase();
+  const allCountryCodesUnsharded = Object.keys(FEED_URLS_BY_COUNTRY);
+  let allCountryCodes = allCountryCodesUnsharded;
+  if (SHARD === 'A' || SHARD === 'B') {
+    // Deterministic greedy split: sort countries by feed count descending,
+    // then assign each one to whichever shard currently has fewer total
+    // feeds. This keeps both shards close to balanced even though
+    // individual countries have 1-3 feeds each, not a uniform amount.
+    const sorted = [...allCountryCodesUnsharded].sort(
+      (a, b) => FEED_URLS_BY_COUNTRY[b].length - FEED_URLS_BY_COUNTRY[a].length || a.localeCompare(b)
+    );
+    const shardFeedCounts = { A: 0, B: 0 };
+    const shardAssignment = {};
+    for (const code of sorted) {
+      const target = shardFeedCounts.A <= shardFeedCounts.B ? 'A' : 'B';
+      shardAssignment[code] = target;
+      shardFeedCounts[target] += FEED_URLS_BY_COUNTRY[code].length;
+    }
+    allCountryCodes = allCountryCodesUnsharded.filter((code) => shardAssignment[code] === SHARD);
+  }
+
   const totalFeeds = allCountryCodes.reduce((sum, c) => sum + FEED_URLS_BY_COUNTRY[c].length, 0);
   // Rotate the starting point each run so a time-budget cutoff doesn't
   // always sacrifice the same tail of countries. Confirmed via a real run
@@ -906,7 +931,7 @@ async function main() {
   // meaningfully different points without needing any persisted state.
   const rotationOffset = Math.floor(Date.now() / (15 * 60 * 1000)) % allCountryCodes.length;
   const countryCodes = [...allCountryCodes.slice(rotationOffset), ...allCountryCodes.slice(0, rotationOffset)];
-  console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s) (rotation offset ${rotationOffset})...\n`);
+  console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s) (shard ${SHARD}, rotation offset ${rotationOffset})...\n`);
 
   const seenTitles = await loadExistingTitles();
   const { data: existingUrls } = await supabase.from('articles').select('url');
