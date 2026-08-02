@@ -522,7 +522,7 @@ const ALLOWLIST_BY_COUNTRY = {
   FJ: ['fbcnews.com.fj'],
   UG: ['monitor.co.ug'],
   PG: ['postcourier.com.pg'],
-  NP: ['onlinekhabar.com'],
+  NP: ['onlinekhabar.com', 'thehimalayantimes.com'],
   GR: ['thenationalherald.com', 'ekathimerini.com', 'greekreporter.com'],
   ZW: ['herald.co.zw', 'newsday.co.zw', 'zimlive.com', 'fingaz.co.zw', 'zwnews.com'],
   JM: ['jamaica-star.com', 'jamaica-gleaner.com'],
