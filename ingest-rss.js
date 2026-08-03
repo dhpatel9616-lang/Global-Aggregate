@@ -102,9 +102,15 @@ const FEED_URLS_BY_COUNTRY = {
   // expansion pass -- these are bigger gaps than any single-source country
   // (98M, 65M, and 34M people respectively with no feed at all). All three
   // URLs confirmed via public RSS feed directories, not guesses.
-  VN: [{ source: 'vnexpress.net', feedUrl: 'https://e.vnexpress.net/rss/news.rss' }],
-  TZ: [{ source: 'thecitizen.co.tz', feedUrl: 'https://www.thecitizen.co.tz/service/rss/tanzania/2486554/feed.rss' }],
-  PE: [{ source: 'perureports.com', feedUrl: 'https://perureports.com/feed' }],
+  VN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/east-asia/vietnam/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'vnexpress.net', feedUrl: 'https://e.vnexpress.net/rss/news.rss' }],
+  TZ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/tanzania/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thecitizen.co.tz', feedUrl: 'https://www.thecitizen.co.tz/service/rss/tanzania/2486554/feed.rss' }],
+  PE: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/peru/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'perureports.com', feedUrl: 'https://perureports.com/feed' }],
   // Wires -- fetch-verified this session, genuinely real and live
   WORLD: [
     { source: 'bbc.com', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
@@ -182,6 +188,12 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   GH: [
     { source: 'myjoyonline.com', feedUrl: 'https://www.myjoyonline.com/feed/' },
+    // NEW (2026-08-03): Citinewsroom -- established independent Ghanaian
+    // outlet, genuinely different ownership from MyJoyOnline. Confirmed
+    // real (has its own dedicated RSS service page); exact feed path not
+    // independently verified this round (standard WordPress /feed
+    // pattern), so treat as a hypothesis for the next log to confirm.
+    { source: 'citinewsroom.com', feedUrl: 'https://citinewsroom.com/feed/' },
   ],
   // NEW: added for the 7 countries confirmed to throw real Currents API
   // errors (not just empty results) -- Currents documents covering ~70
@@ -189,6 +201,7 @@ const FEED_URLS_BY_COUNTRY = {
   // set, not a fixable allowlist problem. RSS has no such coverage ceiling.
   // Fetch-verified this session (live content confirmed directly):
   MA: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/morocco/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'en.hespress.com', feedUrl: 'https://en.hespress.com/feed' },
     // ^ Replaced moroccoworldnews.com -- confirmed persistently 403-blocked.
     // Hespress is Morocco's most-read news site, genuinely different domain.
@@ -207,10 +220,12 @@ const FEED_URLS_BY_COUNTRY = {
   // Senegal's major domestic outlets (Seneweb, Le Soleil, APS) are all
   // French-only and would likely be caught by the non-English filter.
   SN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/senegal/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'allafrica.com', feedUrl: 'http://allafrica.com/tools/headlines/rdf/senegal/headlines.rdf' },
   ],
   FJ: [
     { source: 'fbcnews.com.fj', feedUrl: 'https://www.fbcnews.com.fj/feed/' },
+    { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }, // NEW (2026-08-03): RNZ Pacific -- regional wire covering all Pacific island nations, exact URL confirmed directly from RNZ's own feed directory
   ],
   // NOT fetch-tested and NOT verified via a feed listing -- pattern-matched
   // from the same Nation Media Group platform as Kenya's nation.africa
@@ -220,23 +235,43 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'independent.co.ug', feedUrl: 'https://www.independent.co.ug/feed/' },
     // ^ Replaced monitor.co.ug -- confirmed persistently 403-blocked (same
     // Nation Media Group platform as Kenya's original blocked entry).
+    // NEW (2026-08-03): Nile Post -- Uganda's #2 most-visited independent
+    // outlet by traffic, genuinely different ownership. Confirmed real and
+    // exact path via a public curated RSS directory. Worth noting: Daily
+    // Monitor (the outlet already excluded above) is currently facing
+    // government/military shutdown pressure, which makes real redundancy
+    // on independent Ugandan sources more valuable than usual right now.
+    { source: 'nilepost.co.ug', feedUrl: 'https://nilepost.co.ug/feed/' },
   ],
   // NOT fetch-tested -- standard WordPress /feed/ convention guessed from
   // the domain, no feed listing found to confirm. Same caveat as above.
   PG: [
     { source: 'postcourier.com.pg', feedUrl: 'https://postcourier.com.pg/feed/' },
+    { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }, // NEW (2026-08-03): RNZ Pacific -- same regional wire as FJ/TO/VU/WS/KI/NR/MH/PW/FM
   ],
   // NEW: added for the 5 countries still confirmed at zero articles across
   // BOTH the API pipeline (empty/error results in ingest.js logs) and RSS
   // (never had a feed at all until now).
   NP: [
     { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
+    // NEW (2026-08-03): The Kathmandu Post -- Nepal's largest English-
+    // language newspaper, genuinely different outlet from Online Khabar.
+    // Confirmed real; exact feed path not independently verified this
+    // round (standard WordPress-adjacent /rss.xml pattern), so treat as a
+    // hypothesis for the next log to confirm.
+    { source: 'kathmandupost.com', feedUrl: 'https://kathmandupost.com/rss.xml' },
   ],
   // greekreporter.com/greece/feed 403'd (likely IP-reputation blocking,
   // same category as Kenya/Morocco/Sri Lanka/Uganda -- a UA header alone
   // doesn't fix this class of block). Switched to a different outlet.
   GR: [
     { source: 'thenationalherald.com', feedUrl: 'https://www.thenationalherald.com/feed/' },
+    // NEW (2026-08-03): Kathimerini English Edition -- Greece's newspaper
+    // of record, distributed with the NYT International Edition in
+    // Greece and Cyprus, genuinely different from The National Herald
+    // (a Greek-American diaspora paper). Confirmed real via feedburner
+    // directory listing.
+    { source: 'ekathimerini.com', feedUrl: 'https://feeds.feedburner.com/ekathimerini' },
   ],
   // herald.co.zw 403'd (same IP-reputation pattern as Kenya/Morocco/Sri
   // Lanka/Uganda). Switched to zimlive.com -- confirmed live current
@@ -265,6 +300,11 @@ const FEED_URLS_BY_COUNTRY = {
   // English RSS path not independently fetch-verified, moderate confidence.
   JO: [
     { source: 'ammonnews.net', feedUrl: 'https://en.ammonnews.net/rss.php' },
+    // NEW (2026-08-03): The Jordan Times -- self-described "Jordan's sole
+    // English political daily", established 1975, genuinely different
+    // outlet/publisher from Ammon News. Confirmed real; exact feed path
+    // not independently verified this round, treat as a hypothesis.
+    { source: 'jordantimes.com', feedUrl: 'https://www.jordantimes.com/rss.xml' },
   ],
   // dohanews.co 403'd. Switched to thepeninsulaqatar.com -- already proven
   // as a real, active outlet (it appeared as a legitimate Currents-sourced
@@ -275,6 +315,11 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'thepeninsulaqatar.com', feedUrl: 'https://thepeninsulaqatar.com/feed' }, // "Attribute without value" persisted even after the sanitizer shipped -- consistent with this now serving a non-RSS HTML page (bot-block/challenge page) rather than malformed-but-real RSS, which no XML sanitizer can fix
     // NEW (2026-08-02): Google News fallback so Qatar isn't a hard zero.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Qatar&hl=en&gl=QA&ceid=QA:en' },
+    // NEW (2026-08-03): Gulf Times -- established English-language Qatar
+    // daily since 1978, genuinely different from The Peninsula Qatar.
+    // Confirmed real; exact feed path not independently verified this
+    // round, treat as a hypothesis.
+    { source: 'gulf-times.com', feedUrl: 'https://www.gulf-times.com/rss' },
   ],
 
   // --- Batch 3: countries with NO working API path at all (not on GNews's
@@ -287,7 +332,14 @@ const FEED_URLS_BY_COUNTRY = {
   // validates or corrects these, not pre-research. Expect a meaningfully
   // higher break rate here than batch 1/2 -- these are smaller, less
   // resourced outlets than BBC/Guardian/Times of India.
-  AL: [{ source: 'tiranatimes.com', feedUrl: 'https://www.tiranatimes.com/feed' }], // swapped from albaniandailynews.com (malformed XML) -- Tirana Times confirmed as Albania's English-language "newspaper of record", path unverified
+  AL: [
+    { source: 'tiranatimes.com', feedUrl: 'https://www.tiranatimes.com/feed' }, // swapped from albaniandailynews.com (malformed XML) -- Tirana Times confirmed as Albania's English-language "newspaper of record", path unverified
+    // NEW (2026-08-03): Balkan Insight (BIRN) -- professional
+    // investigative/analytical journalism, genuinely different from
+    // Tirana Times. Exact URL confirmed directly from Balkan Insight's
+    // own RSS feeds page (same resource used for Bosnia/Serbia).
+    { source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/category/bi/albania/feed/' },
+  ],
   BI: [
     { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf' },
     // NEW (2026-07-28): IWACU is a real, well-established independent
@@ -297,9 +349,25 @@ const FEED_URLS_BY_COUNTRY = {
     // directory listing ("iwacu-burundi.org/englishnew.."), unverified.
     { source: 'iwacu-burundi.org', feedUrl: 'https://www.iwacu-burundi.org/englishnews/feed' },
   ],
-  AM: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
-  AO: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
-  AZ: [{ source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' }],
+  AM: [
+    { source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }, // replaced armenpress.am -- confirmed 403-blocked. OC Media covers the Caucasus region independently (also used for Georgia below).
+    // NEW (2026-08-03): Panorama.am -- "one of the leading news outlets
+    // in Armenia", a dedicated domestic source rather than OC Media's
+    // regional Caucasus coverage. Deliberately not armenpress.am again --
+    // already confirmed 403-blocked above. Confirmed real; exact feed
+    // path not independently verified this round, treat as a hypothesis.
+    { source: 'panorama.am', feedUrl: 'https://www.panorama.am/en/rss/' },
+  ],
+  AO: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/angola/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/angola/headlines.rdf' }],
+  AZ: [
+    { source: 'trend.az', feedUrl: 'https://en.trend.az/rss/' },
+    // NEW (2026-08-03): AzerNews -- Azerbaijan's first English-language
+    // newspaper (since 1997), genuinely different outlet from Trend.az.
+    // Confirmed real and exact path via feed directory.
+    { source: 'azernews.az', feedUrl: 'https://www.azernews.az/feed.php' },
+  ],
   BG: [
     { source: 'novinite.com', feedUrl: 'https://www.novinite.com/services/news_rdf.php' }, // replaced sofiaglobe.com -- confirmed 403-blocked. Novinite is a genuinely different Bulgarian English-language outlet.
     // NEW (2026-08-01): RFE/RL's dedicated Bulgaria feed -- exact API
@@ -318,39 +386,114 @@ const FEED_URLS_BY_COUNTRY = {
   BH: [
     { source: 'bizbahrain.com', feedUrl: 'https://bizbahrain.com/feed' },
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bahrain&hl=en&gl=BH&ceid=BH:en' },
+    // NEW (2026-08-03): Gulf Daily News -- Bahrain's leading newspaper
+    // since 1978, genuinely different from Biz Bahrain (a business-
+    // focused outlet, currently 403-blocked anyway). Confirmed real;
+    // exact feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'gdnonline.com', feedUrl: 'https://www.gdnonline.com/rss' },
   ],
-  BJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
-  BN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
+  BJ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/benin/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/benin/headlines.rdf' }],
+  BN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/east-asia/brunei/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Brunei&hl=en&gl=BN&ceid=BN:en' }], // replaced borneobulletin.com.bn -- confirmed persistently blocked. Google News RSS as a universal fallback: no API key required, confirmed still working as of July 2026. This is an aggregation (many sources), not a single outlet -- expect more duplicates/off-topic hits than a dedicated feed, relies on the existing relevance/junk filters more heavily.
   // FIXED (2026-08-02): the previous URL's ENOTFOUND was specifically on
   // the `www.` subdomain -- search results confirm the bare domain (no www)
   // resolves and serves live, current-dated content directly
   // (thevoicebw.com/latest-news/, thevoicebw.com/category/latest_news/).
   // Dropping the www prefix rather than abandoning a real, established
   // outlet over what looks like a missing DNS record for that one label.
-  BW: [{ source: 'thevoicebw.com', feedUrl: 'https://thevoicebw.com/feed' }],
-  CI: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
-  CM: [{ source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
-  CR: [{ source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
-  CU: [{ source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' }],
+  BW: [
+    { source: 'thevoicebw.com', feedUrl: 'https://thevoicebw.com/feed' },
+    // NEW (2026-08-03): Mmegi -- Botswana's leading independent daily
+    // since 1984, genuinely different from The Voice. Exact URL confirmed
+    // directly from Mmegi's own RSS page, not a guess.
+    { source: 'mmegi.bw', feedUrl: 'https://www.mmegi.bw/rss' },
+  ],
+  CI: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/cote-divoire/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
+  CM: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/cameroon/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
+  CR: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/costa-rica/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
+  CU: [
+    { source: 'havanatimes.org', feedUrl: 'https://havanatimes.org/feed/' },
+    // NEW (2026-08-03): OnCuba News English -- Miami-based with a
+    // permanent news bureau in Havana, genuinely different outlet from
+    // Havana Times. Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'oncubanews.com', feedUrl: 'https://oncubanews.com/en/feed' },
+  ],
   CY: [
     { source: 'in-cyprus.philenews.com', feedUrl: 'https://in-cyprus.philenews.com/feed/' },
     { source: 'sigmalive.com', feedUrl: 'http://www.sigmalive.com/rss' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
-  DO: [{ source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' }],
-  DZ: [{ source: 'al24news.com', feedUrl: 'https://al24news.com/feed' }], // swapped from aps.dz (404 twice) -- AL24 News confirmed real, active, English-language Algerian state international broadcaster, path unverified
-  GE: [{ source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }], // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
-  GY: [{ source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
-  HR: [{ source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' }],
+  DO: [
+    { source: 'dominicantoday.com', feedUrl: 'https://dominicantoday.com/feed/' },
+    // NEW (2026-08-03): DR1 -- English-language DR news since 1997,
+    // genuinely different outlet from Dominican Today. Confirmed real
+    // via BBC's own media guide. Exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'dr1.com', feedUrl: 'https://dr1.com/feed' },
+  ],
+  DZ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/algeria/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'al24news.com', feedUrl: 'https://al24news.com/feed' }], // swapped from aps.dz (404 twice) -- AL24 News confirmed real, active, English-language Algerian state international broadcaster, path unverified
+  GE: [
+    { source: 'oc-media.org', feedUrl: 'https://oc-media.org/feed/' }, // replaced agenda.ge -- their TLS cert had genuinely expired. OC Media covers Georgia independently (also used for Armenia above -- same regional outlet, each entry independently checked for country relevance).
+    // NEW (2026-08-03): Civil.ge -- Georgia's dedicated English-language
+    // news outlet since 2001, genuinely different from OC Media's
+    // regional Caucasus coverage. Confirmed real; exact feed path not
+    // independently verified this round, treat as a hypothesis.
+    { source: 'civil.ge', feedUrl: 'https://civil.ge/feed' },
+  ],
+  GY: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/caribbean/guyana/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'kaieteurnewsonline.com', feedUrl: 'https://www.kaieteurnewsonline.com/feed' }], // replaced stabroeknews.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Kaieteur News is a real, established private Guyanese daily.
+  HR: [
+    { source: 'total-croatia-news.com', feedUrl: 'https://www.total-croatia-news.com/feed' },
+    // NEW (2026-08-03): Croatia Week -- confirmed real and currently
+    // active, genuinely different outlet from Total Croatia News.
+    // Exact feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'croatiaweek.com', feedUrl: 'https://www.croatiaweek.com/feed' },
+  ],
   HT: [
     { source: 'haitiantimes.com', feedUrl: 'https://haitiantimes.com/feed/' },
     // NEW (2026-07-30): Haiti Libre's English edition confirmed via exact
     // feed URL from directory listing, genuinely different outlet.
     { source: 'haitilibre.com', feedUrl: 'https://www.haitilibre.com/rss-flash-en.php' },
   ],
-  IS: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }], // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
-  KG: [{ source: '24.kg', feedUrl: 'https://24.kg/rss/' }],
-  KZ: [{ source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' }],
+  IS: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/iceland/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Iceland&hl=en&gl=IS&ceid=IS:en' }, // replaced icelandreview.com -- confirmed malformed XML on their end. Google News RSS fallback (see Brunei entry above for the general rationale/caveats).
+    // NEW (2026-08-03): re-adding Iceland Review as a real dedicated
+    // source. It was dropped for malformed XML before this session's
+    // sanitizer/CDATA-wrap fix (deployed several rounds ago) existed --
+    // worth re-testing now that the fix is live, since that fix targets
+    // exactly this class of error. If it still fails, no harm done --
+    // Google News fallback above still covers Iceland either way.
+    { source: 'icelandreview.com', feedUrl: 'https://www.icelandreview.com/feed/' },
+  ],
+  KG: [
+    { source: '24.kg', feedUrl: 'https://24.kg/rss/' },
+    { source: 'eurasianet.org', feedUrl: 'https://eurasianet.org/rss.xml' }, // NEW (2026-08-03): Eurasianet -- independent, Columbia-hosted regional outlet covering the Caucasus and Central Asia, genuinely different from 24.kg. Same regional wire as TJ/MN below. Exact feed path not independently verified this round, treat as a hypothesis.
+  ],
+  KZ: [
+    { source: 'astanatimes.com', feedUrl: 'https://astanatimes.com/feed/' },
+    // NEW (2026-08-03): The Times of Central Asia -- independent
+    // English-language outlet since 1999, genuinely different from
+    // Astana Times. Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'timesca.com', feedUrl: 'https://timesca.com/feed' },
+  ],
   LA: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/east-asia/laos/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'vientianetimes.org.la', feedUrl: 'https://www.vientianetimes.org.la/feed' }, // still 404ing -- their site runs on old custom .php pages (onlinesub.php, About_us.htm), not a standard CMS, so a real RSS feed may genuinely not exist here rather than this being a wrong path
     // NEW (2026-08-02): Google News fallback.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Laos&hl=en&gl=LA&ceid=LA:en' },
@@ -360,13 +503,22 @@ const FEED_URLS_BY_COUNTRY = {
   // trying that instead of guessing blind, plus a Google News fallback
   // since the exact current path is still not independently confirmed.
   LT: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/lithuania/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'baltictimes.com', feedUrl: 'https://www.baltictimes.com/rss.xml' },
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Lithuania&hl=en&gl=LT&ceid=LT:en' },
   ],
-  DJ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
-  LY: [{ source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
-  MD: [{ source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
-  MG: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
+  DJ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/djibouti/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/djibouti/headlines.rdf' }],
+  LY: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/libya/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'libyaherald.com', feedUrl: 'https://libyaherald.com/feed/' }], // replaced libyaobserver.ly -- confirmed persistently blocked. Libya Herald is a genuinely different domain.
+  MD: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/moldova/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'moldovalive.md', feedUrl: 'https://moldovalive.md/feed' }], // replaced agora.md -- confirmed 404 twice on that domain, abandoned rather than a third guess. MoldovaLive.md is confirmed genuinely active with current 2026 English-language content.
+  MG: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/madagascar/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/madagascar/headlines.rdf' }],
   MK: [
     { source: 'mia.mk', feedUrl: 'https://mia.mk/feed/' },
     // NEW (2026-07-28): mia.mk has returned 100% non_english across every
@@ -382,7 +534,9 @@ const FEED_URLS_BY_COUNTRY = {
     // process.
     { source: 'meta.mk', feedUrl: 'https://meta.mk/en/feed/' },
   ],
-  ML: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
+  ML: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/mali/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
   // Two confirmed dead ends across sessions now: /en/rss (404), then /en/feed
   // (also 404). Not chasing a third guess at Montsame's path -- adding a
   // Google News fallback instead so Mongolia isn't fully dependent on
@@ -390,21 +544,95 @@ const FEED_URLS_BY_COUNTRY = {
   MN: [
     { source: 'montsame.mn', feedUrl: 'https://montsame.mn/en/feed' },
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Mongolia&hl=en&gl=MN&ceid=MN:en' },
+    { source: 'eurasianet.org', feedUrl: 'https://eurasianet.org/rss.xml' }, // NEW (2026-08-03): Eurasianet -- same regional wire as KG/TJ, genuinely different from Montsame (state news agency)
   ],
-  MW: [{ source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' }],
-  MZ: [{ source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
-  NA: [{ source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' }],
-  OM: [{ source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' }],
-  RW: [{ source: 'taarifa.rw', feedUrl: 'https://taarifa.rw/feed' }], // replaced newtimes.co.rw -- failed differently on two different guessed paths (502, then 404), abandoned rather than a third guess. Taarifa is a real Rwandan English-language news platform with a documented RSS feed at this exact path.
-  SD: [{ source: 'dabangasudan.org', feedUrl: 'https://www.dabangasudan.org/en/feed' }], // replaced sudantribune.com -- confirmed persistently blocked. Radio Dabanga's English feed was externally verified live with current content (not just guessed).
-  SK: [{ source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
-  SO: [{ source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
-  SY: [{ source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
-  TN: [{ source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' }],
-  TT: [{ source: 'cnc3.co.tt', feedUrl: 'https://cnc3.co.tt/feed' }], // swapped from newsday.co.tt (cert expired, ongoing) -- CNC3 confirmed via directory listing with exact feed URL, real established Trinidad TV/news outlet
-  CV: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
-  UZ: [{ source: 'tashkenttimes.uz', feedUrl: 'https://tashkenttimes.uz/?format=feed' }], // swapped from daryo.uz (malformed XML) -- Tashkent Times confirmed via directory listing with the ?format=feed pattern, genuinely different outlet
-  ZM: [{ source: 'lusakatimes.com', feedUrl: 'https://www.lusakatimes.com/feed/' }],
+  MW: [
+    { source: 'nyasatimes.com', feedUrl: 'https://www.nyasatimes.com/feed/' },
+    // NEW (2026-08-03): Malawi24 -- Malawi's most-read independent news
+    // platform alongside Nyasa Times, genuinely different outlet.
+    // Confirmed real and exact path via feed directory.
+    { source: 'malawi24.com', feedUrl: 'https://malawi24.com/feed' },
+  ],
+  MZ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/mozambique/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'clubofmozambique.com', feedUrl: 'https://clubofmozambique.com/feed/' }],
+  NA: [
+    { source: 'namibian.com.na', feedUrl: 'https://www.namibian.com.na/feed/' },
+    // NEW (2026-08-03): Windhoek Observer -- Namibia's oldest and largest
+    // circulating weekly since 1978, genuinely different from The
+    // Namibian. Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'observer24.com.na', feedUrl: 'https://www.observer24.com.na/feed' },
+  ],
+  OM: [
+    { source: 'omanobserver.om', feedUrl: 'https://www.omanobserver.om/rss' },
+    { source: 'timesofoman.com', feedUrl: 'https://rssfeeds.timesofoman.com/rss' }, // NEW (2026-08-03): oldest English newspaper in Oman, has its own dedicated RSS subdomain, genuinely different outlet
+  ],
+  RW: [
+    { source: 'taarifa.rw', feedUrl: 'https://taarifa.rw/feed' }, // replaced newtimes.co.rw -- failed differently on two different guessed paths (502, then 404), abandoned rather than a third guess. Taarifa is a real Rwandan English-language news platform with a documented RSS feed at this exact path.
+    // NEW (2026-08-03): KT Press -- English-language Rwandan outlet,
+    // genuinely different from Taarifa. Deliberately not newtimes.co.rw
+    // again -- already confirmed failed twice above. Confirmed real;
+    // exact feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'ktpress.rw', feedUrl: 'https://ktpress.rw/feed' },
+  ],
+  SD: [
+    { source: 'dabangasudan.org', feedUrl: 'https://www.dabangasudan.org/en/feed' }, // replaced sudantribune.com -- confirmed persistently blocked. Radio Dabanga's English feed was externally verified live with current content (not just guessed).
+    // NEW (2026-08-03): Al Tagyheer -- independent Sudanese outlet with a
+    // dedicated English section, genuinely different from Radio Dabanga.
+    // Deliberately not sudantribune.com again -- already confirmed blocked
+    // above. Confirmed real and exact path via feed directory.
+    { source: 'altaghyeer.info', feedUrl: 'https://www.altaghyeer.info/en/feed' },
+  ],
+  SK: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/slovakia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'spectator.sme.sk', feedUrl: 'https://spectator.sme.sk/rss' }],
+  SO: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/somalia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thesomalidigest.com', feedUrl: 'https://thesomalidigest.com/feed' }], // replaced garoweonline.com -- confirmed broken (500 then 404) on two different guessed paths, abandoned rather than a third guess. The Somali Digest is a confirmed real English-language outlet with a documented RSS feed at this exact path.
+  SY: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/syria/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'syrianobserver.com', feedUrl: 'https://syrianobserver.com/feed' }],
+  TN: [
+    { source: 'africanmanager.com', feedUrl: 'https://africanmanager.com/feed/' },
+    // NEW (2026-08-03): Tunisia Live -- self-described "first Tunisian
+    // News Website in English", genuinely different outlet from African
+    // Manager (a business-focused publication). Confirmed real; exact
+    // feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'tunisia-live.net', feedUrl: 'https://www.tunisia-live.net/feed' },
+  ],
+  TT: [
+    { source: 'cnc3.co.tt', feedUrl: 'https://cnc3.co.tt/feed' }, // swapped from newsday.co.tt (cert expired, ongoing) -- CNC3 confirmed via directory listing with exact feed URL, real established Trinidad TV/news outlet
+    // NEW (2026-08-03): Trinidad Express -- self-described "National
+    // Newspaper of Trinidad and Tobago" since 1967, genuinely different
+    // from CNC3 (TV-focused). Also confirms the earlier newsday.co.tt
+    // swap was the right call -- Newsday ceased publication entirely in
+    // January 2026, explaining that persistent cert issue. Confirmed
+    // real; exact feed path not independently verified this round, treat
+    // as a hypothesis.
+    { source: 'trinidadexpress.com', feedUrl: 'https://trinidadexpress.com/feed' },
+  ],
+  CV: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/cape-verde/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/capeverde/headlines.rdf' }],
+  UZ: [
+    { source: 'tashkenttimes.uz', feedUrl: 'https://tashkenttimes.uz/?format=feed' }, // swapped from daryo.uz (malformed XML) -- Tashkent Times confirmed via directory listing with the ?format=feed pattern, genuinely different outlet
+    // NEW (2026-08-03): Kun.uz -- one of Uzbekistan's most active online
+    // publications, genuinely different outlet from Tashkent Times.
+    // Confirmed real; exact feed path not independently verified this
+    // round, treat as a hypothesis for the next log to confirm.
+    { source: 'kun.uz', feedUrl: 'https://kun.uz/en/rss' },
+  ],
+  ZM: [
+    { source: 'lusakatimes.com', feedUrl: 'https://www.lusakatimes.com/feed/' },
+    // NEW (2026-08-03): News Diggers! -- Zambia's first multimedia
+    // investigative-journalism publication, genuinely different outlet
+    // from Lusaka Times. Confirmed real; exact feed path not
+    // independently verified this round, treat as a hypothesis.
+    { source: 'diggers.news', feedUrl: 'https://diggers.news/feed' },
+  ],
   // NOT YET FOUND -- no plausible, reliably-updated English-language outlet
   // located for these in this pass. Real research needed, not a guess:
   // BF (Burkina Faso), GT (Guatemala), NI (Nicaragua), SV (El Salvador),
@@ -418,13 +646,16 @@ const FEED_URLS_BY_COUNTRY = {
   // Confidence varies a lot more here than earlier batches: several of
   // these countries have genuinely thin or state-controlled press, so
   // expect a higher break/skip rate than usual on the first real run.
-  AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }],
+  AG: [{ source: 'antiguaobserver.com', feedUrl: 'https://antiguaobserver.com/feed/' }, { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }], // NEW (2026-08-03): WIC News -- regional Caribbean wire covering Antigua/Barbuda/Grenada/Dominica/St Lucia/St Kitts, confirmed real, exact path unverified
   BS: [
     { source: 'ewnews.com', feedUrl: 'https://ewnews.com/feed' }, // replaced tribune242.com -- confirmed 404 twice on that domain, abandoned rather than a third guess. Eye Witness News is the Bahamas' #1 local outlet, with a dedicated RSS feed page on their site ("/rss-feed-2/") confirming a feed exists -- using the standard /feed path first since the exact confirmed URL was on a landing page, not necessarily the raw feed itself.
     { source: 'bahamaspress.com', feedUrl: 'http://bahamaspress.com/feed/' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
-  BB: [{ source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
+  BB: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/caribbean/barbados/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'barbadostoday.bb', feedUrl: 'https://barbadostoday.bb/feed/' }],
   BZ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/caribbean/belize/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Belize&hl=en&gl=BZ&ceid=BZ:en' }, // replaced breakingbelizenews.com -- confirmed persistently blocked. Google News RSS fallback.
     { source: 'amandala.com.bz', feedUrl: 'http://amandala.com.bz/news/feed/' }, // NEW (2026-08-02): confirmed valid via community RSS directory, genuine dedicated Belize outlet
   ],
@@ -436,19 +667,51 @@ const FEED_URLS_BY_COUNTRY = {
     // unverified.
     { source: 'businessbhutan.bt', feedUrl: 'https://www.businessbhutan.bt/feed' },
   ],
-  CG: [{ source: 'africanews.com', feedUrl: 'https://www.africanews.com/feed/rss' }], // replaced the allafrica.com/congo_brazzaville RDF feed -- confirmed reachable (right slug) but returning zero items every run, a volume problem not a config one. Africanews is a pan-African feed externally verified live with July 2026 content; relies on the existing country-mention relevance check to filter for Congo-Brazzaville specifically, same as any WORLD-tier wire source.
-  DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }],
-  EE: [{ source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' }],
-  GQ: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/equatorialguinea/headlines.rdf' }],
-  SZ: [{ source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
-  GA: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
-  GM: [{ source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/posts/rss/xml' }], // confirmed real feed URL from page source (rel=alternate link tag) -- not a guess
-  GD: [{ source: 'nowgrenada.com', feedUrl: 'https://nowgrenada.com/feed/' }],
-  GN: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
-  VA: [{ source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
-  LV: [{ source: 'eng.lsm.lv', feedUrl: 'https://eng.lsm.lv/rss/' }],
-  LR: [{ source: 'fpa.news', feedUrl: 'https://fpa.news/feed/' }], // confirmed real feed URL from page source -- FrontPage Africa actually serves its feed from a completely different domain (fpa.news), not frontpageafricaonline.com
-  LU: [{ source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' }],
+  CG: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/republic-of-congo/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'africanews.com', feedUrl: 'https://www.africanews.com/feed/rss' }], // replaced the allafrica.com/congo_brazzaville RDF feed -- confirmed reachable (right slug) but returning zero items every run, a volume problem not a config one. Africanews is a pan-African feed externally verified live with July 2026 content; relies on the existing country-mention relevance check to filter for Congo-Brazzaville specifically, same as any WORLD-tier wire source.
+  DM: [{ source: 'dominicanewsonline.com', feedUrl: 'https://dominicanewsonline.com/news/feed/' }, { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }], // NEW (2026-08-03): WIC News -- same regional Caribbean wire as AG/GD/LC/KN, confirmed real, exact path unverified
+  EE: [
+    { source: 'news.err.ee', feedUrl: 'https://news.err.ee/rss' },
+    // NEW (2026-08-03): Estonian World -- independent English-language
+    // online magazine since 2012, genuinely different from ERR (state
+    // broadcaster). Confirmed real and exact path via feed directory.
+    { source: 'estonianworld.com', feedUrl: 'https://estonianworld.com/feed' },
+  ],
+  GQ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/equatorial-guinea/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/equatorialguinea/headlines.rdf' }],
+  SZ: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/swaziland/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'times.co.sz', feedUrl: 'https://times.co.sz/feed/' }],
+  GA: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/gabon/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/gabon/headlines.rdf' }],
+  GM: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/gambia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thepoint.gm', feedUrl: 'https://thepoint.gm/posts/rss/xml' }], // confirmed real feed URL from page source (rel=alternate link tag) -- not a guess
+  GD: [{ source: 'nowgrenada.com', feedUrl: 'https://nowgrenada.com/feed/' }, { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }], // NEW (2026-08-03): WIC News -- same regional Caribbean wire as AG/DM/LC/KN, confirmed real, exact path unverified
+  GN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/guinea/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guinea/headlines.rdf' }],
+  VA: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/vatican-city/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'vaticannews.va', feedUrl: 'https://www.vaticannews.va/en.rss.xml' }],
+  LV: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/latvia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'eng.lsm.lv', feedUrl: 'https://eng.lsm.lv/rss/' }],
+  LR: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/liberia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'fpa.news', feedUrl: 'https://fpa.news/feed/' }], // confirmed real feed URL from page source -- FrontPage Africa actually serves its feed from a completely different domain (fpa.news), not frontpageafricaonline.com
+  LU: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/luxembourg/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'luxtimes.lu', feedUrl: 'https://www.luxtimes.lu/rss' },
+    // NEW (2026-08-03): RTL Today -- self-described "Luxembourg's leading
+    // English language news source", genuinely different outlet from
+    // Luxembourg Times. Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'today.rtl.lu', feedUrl: 'https://today.rtl.lu/rss' },
+  ],
   // MV (Maldives) confirmed NO RSS feed exists at all -- checked page source directly, no rel=alternate rss+xml tag anywhere (Nuxt SPA site). Not a path problem, genuinely not offered.
   MT: [
     { source: 'timesofmalta.com', feedUrl: 'https://timesofmalta.com/rss.xml' }, // now resolves but returns 403 -- same IP-reputation/bot-blocking pattern as Kenya/Uganda/Morocco, not a path problem, no further URL guessing will help
@@ -467,24 +730,46 @@ const FEED_URLS_BY_COUNTRY = {
     // fallback so Malta isn't fully dependent on any of them.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Malta&hl=en&gl=MT&ceid=MT:en' },
   ],
-  MR: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
-  MU: [{ source: 'mauritiustimes.com', feedUrl: 'https://www.mauritiustimes.com/feed' }], // swapped from defimedia.info (malformed XML) -- Mauritius Times confirmed via Wikipedia's newspaper directory as a real, established English/French outlet, path unverified
-  MC: [{ source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }], // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
+  MR: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/mauritania/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mauritania/headlines.rdf' }],
+  MU: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/mauritius/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'mauritiustimes.com', feedUrl: 'https://www.mauritiustimes.com/feed' }], // swapped from defimedia.info (malformed XML) -- Mauritius Times confirmed via Wikipedia's newspaper directory as a real, established English/French outlet, path unverified
+  MC: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/monaco/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'monacotribune.com', feedUrl: 'https://www.monacotribune.com/feed/' }, // cert mismatch is a real misconfiguration on their shared host (cert covers a different domain entirely) -- not fixable by changing the URL path, leaving as-is; will keep failing harmlessly until they fix their TLS setup
+    // NEW (2026-08-03): Google News fallback -- Monaco Tribune is
+    // confirmed permanently broken on their end, so Monaco was at risk of
+    // a hard zero with no backup at all.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Monaco&hl=en&gl=MC&ceid=MC:en' },
+  ],
   ME: [
     { source: 'total-montenegro-news.com', feedUrl: 'https://total-montenegro-news.com/feed/' },
     // NEW (2026-08-01): RFE/RL's dedicated Montenegro feed, same real
     // exact-URL find as Bulgaria above.
     { source: 'rferl.org', feedUrl: 'https://www.rferl.org/api/zbiiol-vomx-tpeqjmo' },
   ],
-  NE: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
+  NE: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/niger/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/niger/headlines.rdf' }],
   // PS (Palestine/WAFA) confirmed NO real RSS feed -- an RSS icon exists on the site but its href is just "#" (a dead placeholder), not an actual feed link. Not a path problem, genuinely not offered.
   // KN (St Kitts/sknvibes.com) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
-  LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }],
-  VC: [{ source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' }],
+  LC: [{ source: 'stluciatimes.com', feedUrl: 'https://stluciatimes.com/feed' }, { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }], // NEW (2026-08-03): WIC News -- same regional Caribbean wire as AG/DM/GD/KN, confirmed real, exact path unverified
+  VC: [
+    { source: 'iwnsvg.com', feedUrl: 'https://www.iwnsvg.com/feed/' },
+    { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }, // NEW (2026-08-03): same regional Caribbean wire as AG/DM/GD/LC/KN
+  ],
   // WS (Samoa Observer) confirmed NO RSS feed exists at all -- checked page source directly, no rss+xml link tag anywhere. Not a path problem, genuinely not offered.
-  SC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Seychelles&hl=en&gl=SC&ceid=SC:en' }], // replaced seychellesnewsagency.com -- confirmed persistently blocked. Google News RSS fallback.
-  SL: [{ source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
-  SI: [{ source: 'total-slovenia-news.com', feedUrl: 'https://www.total-slovenia-news.com/feed' }], // replaced sloveniatimes.com -- confirmed persistently blocked. Total Slovenia News is a genuinely different domain.
+  SC: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/seychelles/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Seychelles&hl=en&gl=SC&ceid=SC:en' }], // replaced seychellesnewsagency.com -- confirmed persistently blocked. Google News RSS fallback.
+  SL: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/sierra-leone/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thesierraleonetelegraph.com', feedUrl: 'https://www.thesierraleonetelegraph.com/feed/' }],
+  SI: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/slovenia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'total-slovenia-news.com', feedUrl: 'https://www.total-slovenia-news.com/feed' }], // replaced sloveniatimes.com -- confirmed persistently blocked. Total Slovenia News is a genuinely different domain.
   SB: [
     { source: 'solomonstarnews.com', feedUrl: 'https://www.solomonstarnews.com/feed/' },
     // NEW (2026-07-28): Island Sun confirmed real, established, privately
@@ -495,9 +780,15 @@ const FEED_URLS_BY_COUNTRY = {
     // Google News fallback.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Solomon+Islands&hl=en&gl=SB&ceid=SB:en' },
   ],
-  SS: [{ source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
-  GW: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
-  TL: [{ source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
+  SS: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/south-sudan/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'radiotamazuj.org', feedUrl: 'https://radiotamazuj.org/en/feed' }], // /en/rss.xml 404'd -- retrying /en/feed
+  GW: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/guinea-bissau/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/guineabissau/headlines.rdf' }],
+  TL: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/east-asia/east-timor/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'en.tatoli.tl', feedUrl: 'https://en.tatoli.tl/feed/' }],
   TG: [
     { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/togo/headlines.rdf' },
     // NEW (2026-07-28): AllAfrica's Togo feed has returned "zero items"
@@ -510,15 +801,15 @@ const FEED_URLS_BY_COUNTRY = {
     // sandbox -- confirm via next run's log.
     { source: 'togofirst.com', feedUrl: 'https://www.togofirst.com/en/rss-en' },
   ],
-  TO: [{ source: 'kanivatonga.co.nz', feedUrl: 'https://kanivatonga.co.nz/feed' }], // swapped from matangitonga.to (404 x3, abandoned) -- Kaniva Tonga confirmed real, active, with live current content seen directly, path unverified
-  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }], // status has flip-flopped across runs (403, then 429, now 404) -- looks like a genuinely unstable small site rather than one fixable path issue
+  TO: [{ source: 'kanivatonga.co.nz', feedUrl: 'https://kanivatonga.co.nz/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // swapped from matangitonga.to (404 x3) -- Kaniva Tonga confirmed real. NEW: RNZ Pacific regional wire added as second source.
+  VU: [{ source: 'dailypost.vu', feedUrl: 'https://dailypost.vu/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // Daily Post's status flip-flops across runs (403/429/404) -- genuinely unstable. NEW: RNZ Pacific regional wire added as a more reliable second source.
   // NEW (2026-07-28): WS (Samoa) previously had no RSS entry at all. Samoa
   // Observer is Samoa's real, independent, award-winning national daily
   // (RSF profile confirms it's the country's flagship free press outlet).
   // Feed path is a standard-convention guess -- unverified, confirm via
   // next run's log. Uses Cloudflare per its own tech stack, so a 403 here
   // wouldn't be surprising.
-  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/index.php?option=com_content&view=featured&format=feed&type=rss' }], // swapped from /feed (404) -- their archived URL structure uses Joomla CMS conventions (index.php?option=com_content), not WordPress, which explains the earlier 404; trying Joomla's standard feed path instead
+  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/index.php?option=com_content&view=featured&format=feed&type=rss' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // Samoa Observer's Joomla feed path still unconfirmed. NEW: RNZ Pacific regional wire added as second source.
   // NOT FOUND -- no plausible independent English-language outlet located
   // in this pass, or these are genuinely tiny states with no discoverable
   // English-language press at all:
@@ -536,6 +827,7 @@ const FEED_URLS_BY_COUNTRY = {
   // independent national outlet" isn't a coherent research task -- the
   // outlet itself IS the government.
   KP: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/east-asia/north-korea/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     // kcnawatch.org DROPPED (2026-08-02): confirmed chronically malformed
     // across three separate runs, identical error position each time
     // (Line 5, Column 39 -- "Unquoted attribute value") -- that's their feed
@@ -552,7 +844,15 @@ const FEED_URLS_BY_COUNTRY = {
     // NOT flagged stateMedia -- this is independent journalism, not
     // government output.
   ],
-  BY: [{ source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true }],
+  BY: [
+    { source: 'eng.belta.by', feedUrl: 'https://eng.belta.by/rss', stateMedia: true },
+    // NEW (2026-08-03): Belsat -- independent Belarusian outlet, Poland-
+    // based (broadcasts from exile after being banned as "extremist" by
+    // Belarusian authorities in 2021). Genuine editorial contrast to the
+    // state media source above. Confirmed real and active; exact feed
+    // path not independently verified this round, treat as a hypothesis.
+    { source: 'belsat.eu', feedUrl: 'https://en.belsat.eu/feed' },
+  ],
   // ^ Confirmed working -- saw live, current-dated content at this URL directly.
   ER: [
     { source: 'shabait.com', feedUrl: 'https://shabait.com/feed/', stateMedia: true },
@@ -597,22 +897,51 @@ const FEED_URLS_BY_COUNTRY = {
   // confirmed "English-language news providers solely in or about
   // Guatemala are relatively sparse," and the only candidate found was a
   // monthly print magazine, not a live news feed.
-  HN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Honduras&hl=en&gl=HN&ceid=HN:en' }], // replaced hondurasdaily.com -- confirmed broken feed generator (500 on two different paths). Google News RSS fallback.
-  SV: [{ source: 'elsalvadorinenglish.com', feedUrl: 'https://elsalvadorinenglish.com/feed' }],
+  HN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/honduras/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Honduras&hl=en&gl=HN&ceid=HN:en' }, // replaced hondurasdaily.com -- confirmed broken feed generator (500 on two different paths). Google News RSS fallback.
+    // NEW (2026-08-03): Tico Times -- Costa Rica's English paper runs a
+    // dedicated Honduras category page as part of its Central America
+    // coverage. Exact feed path not independently verified this round,
+    // treat as a hypothesis.
+    { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/categories/news/latin-america-news/central-america-latin-america-news/honduras-central-america-latin-america-news/feed' },
+  ],
+  SV: [
+    { source: 'elsalvadorinenglish.com', feedUrl: 'https://elsalvadorinenglish.com/feed' },
+    // NEW (2026-08-03): Tico Times -- dedicated El Salvador category page
+    // as part of its Central America coverage, genuinely different from
+    // El Salvador in English. Exact feed path not independently verified
+    // this round, treat as a hypothesis.
+    { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/categories/news/latin-america-news/central-america-latin-america-news/el-salvador-central-america-latin-america-news/feed' },
+  ],
   // ^ Replaced elsalvadordaily.com -- confirmed persistent malformed XML
   // across two runs, abandoned rather than a third guess. This is a real,
   // actively-updated (through July 2026) dedicated English-language site.
   // Worth knowing: its editorial tone leans favorable toward the Bukele
   // government in sample content -- not officially state-owned, but not
   // neutral either.
-  NI: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Nicaragua&hl=en&gl=NI&ceid=NI:en' }], // replaced nicaraguadailytimes.com -- confirmed broken format on two different paths. Google News RSS fallback.
-  KM: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/comoros/headlines.rdf' }],
+  NI: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/nicaragua/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Nicaragua&hl=en&gl=NI&ceid=NI:en' }, // replaced nicaraguadailytimes.com -- confirmed broken format on two different paths. Google News RSS fallback.
+    // NEW (2026-08-03): Tico Times -- dedicated Nicaragua category page,
+    // confirmed real and active with current 2026 content seen directly.
+    // Exact feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/categories/news/latin-america-news/central-america-latin-america-news/nicaragua-central-america-latin-america-news/feed' },
+  ],
+  KM: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/comoros/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/comoros/headlines.rdf' }],
   // ^ HN/SV/NI appear to be the same templated network of AI-summarized
   // English news briefings (same subscription-alert pattern across all
   // three) -- confirmed to exist via search, feed paths NOT yet verified.
-  SR: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Suriname&hl=en&gl=SR&ceid=SR:en' }], // replaced surinametimes.com -- confirmed 404 on two different paths, and their real content skews Dutch anyway. Google News RSS fallback (English-only via hl=en).
+  SR: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/caribbean/suriname/feed/' },
+    { source: 'srherald.com', feedUrl: 'https://www.srherald.com/news-in-english/feed/' }, // NEW (2026-08-03): Suriname Herald's dedicated English-language section, confirmed live with current English content directly. Exact feed path not independently verified this round, treat as a hypothesis. // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Suriname&hl=en&gl=SR&ceid=SR:en' }], // replaced surinametimes.com -- confirmed 404 on two different paths, and their real content skews Dutch anyway. Google News RSS fallback (English-only via hl=en).
   // ^ Times of Suriname -- genuinely bilingual Dutch/English daily, not a guess.
   YE: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/yemen/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'almasdaronline.com', feedUrl: 'https://almasdaronline.com/en/feed' }, // confirmed 403 -- same bot-blocking pattern as others, not a path problem
     // NEW (2026-08-02): Google News fallback.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Yemen&hl=en&gl=YE&ceid=YE:en' },
@@ -637,8 +966,12 @@ const FEED_URLS_BY_COUNTRY = {
   // instead these 10 are spread out among unrelated-domain entries below,
   // each several entries away from the next AllAfrica call.
 
-  TV: [{ source: 'tuvalutimes.com', feedUrl: 'https://www.tuvalutimes.com/feed' }],
-  ST: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/saotomeandprincipe/headlines.rdf' }],
+  TV: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/oceania/tuvalu/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'tuvalutimes.com', feedUrl: 'https://www.tuvalutimes.com/feed' }],
+  ST: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/sao-tome-and-principe/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/saotomeandprincipe/headlines.rdf' }],
   // ^ Right URL (no 404), but the feed itself has malformed XML (unexpected
   // close tag) -- source-side bug, same class as Lesotho/Asia-Plus/KCNA
   // Watch, not fixable by changing the URL.
@@ -650,31 +983,74 @@ const FEED_URLS_BY_COUNTRY = {
   // dedicated English outlets found; Bolivia, Ecuador, and Paraguay did not
   // turn up a clear candidate in this pass and are left for a future one
   // rather than guessed.
-  BA: [{ source: 'sarajevotimes.com', feedUrl: 'https://sarajevotimes.com/feed' }],
+  BA: [
+    { source: 'sarajevotimes.com', feedUrl: 'https://sarajevotimes.com/feed' },
+    // NEW (2026-08-03): Balkan Insight (BIRN) -- professional
+    // investigative/analytical journalism from the Balkan Investigative
+    // Reporting Network, genuinely different from Sarajevo Times. Using
+    // their Bosnia-specific category feed rather than the generic
+    // regional one. Exact URL confirmed directly from Balkan Insight's
+    // own RSS feeds page, not a guess.
+    { source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/category/bi/bosnia-and-herzegovina/feed/' },
+  ],
   // ^ Confirmed "the only Bosnian portal that gives news in English."
-  BD: [{ source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }], // right URL, but every item's title comes through unusable after sanitization (missing_title: 10/10) -- a source-side feed structure issue, not a path problem
-  CF: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
+  BD: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/south-asia/bangladesh/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }], // right URL, but every item's title comes through unusable after sanitization (missing_title: 10/10) -- a source-side feed structure issue, not a path problem
+  CF: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/central-african-republic/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
   // ^ The Daily Star -- Bangladesh's largest circulating English-language
   // newspaper, feed URL confirmed via a curated OPML feed list, not guessed.
-  BE: [{ source: 'thebulletin.be', feedUrl: 'https://www.thebulletin.be/rss.xml' }], // swapped from brusselstimes.com (malformed XML) -- The Bulletin confirmed via directory with exact feed URL, genuinely different outlet
+  BE: [
+    { source: 'thebulletin.be', feedUrl: 'https://www.thebulletin.be/rss.xml' }, // swapped from brusselstimes.com (malformed XML) -- The Bulletin confirmed via directory with exact feed URL, genuinely different outlet
+    // NEW (2026-08-03): Flanders Today -- English-language coverage of
+    // Brussels and the Flemish region, genuinely different outlet from
+    // The Bulletin. Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'flanderstoday.eu', feedUrl: 'https://www.flanderstoday.eu/feed' },
+  ],
   // ^ The Brussels Times -- Belgium's largest English-language news outlet.
   KH: [
     { source: 'phnompenhpost.com', feedUrl: 'https://www.phnompenhpost.com/feed' }, // confirmed 403 -- same bot-blocking pattern as Malta/Kenya, not a path problem
     // NEW (2026-08-02): Google News fallback.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Cambodia&hl=en&gl=KH&ceid=KH:en' },
+    // NEW (2026-08-03): Khmer Times -- established since 2014, self-
+    // described "the region's fastest growing newspaper", genuinely
+    // different outlet from the bot-blocked Phnom Penh Post. Confirmed
+    // real; exact feed path not independently verified this round, treat
+    // as a hypothesis.
+    { source: 'khmertimeskh.com', feedUrl: 'https://www.khmertimeskh.com/feed' },
   ],
   // ^ Phnom Penh Post -- Cambodia's oldest English-language newspaper, confirmed active with current 2026 content.
-  CZ: [{ source: 'praguemonitor.com', feedUrl: 'https://praguemonitor.com/feed' }],
+  CZ: [
+    { source: 'praguemonitor.com', feedUrl: 'https://praguemonitor.com/feed' },
+    // NEW (2026-08-03): Prague Morning -- self-described "Czechia's
+    // biggest media outlet in English", confirmed active and genuinely
+    // different outlet from Prague Monitor. Confirmed real and exact path
+    // via feed directory.
+    { source: 'praguemorning.cz', feedUrl: 'https://praguemorning.cz/feed' },
+  ],
   // ^ Prague Monitor -- confirmed active English-language Czech Republic news site since 2003.
   MM: [
     { source: 'irrawaddy.com', feedUrl: 'https://www.irrawaddy.com/feed' }, // intermittent 403 (same IP-reputation pattern as Kenya/Uganda/Morocco) -- has succeeded at least once before, not a path problem
     { source: 'myanmar-now.org', feedUrl: 'https://myanmar-now.org/en/feed' }, // added as a second, genuinely different source rather than a replacement, since Irrawaddy does succeed sometimes
   ],
   // ^ The Irrawaddy -- genuinely independent (exile-founded, press-freedom-award-winning), confirmed active.
-  KW: [{ source: 'arabtimesonline.com', feedUrl: 'https://www.arabtimesonline.com/rssFeed/47/' }], // swapped from kuwaittimes.com (malformed XML) -- exact feed URL confirmed directly on Arab Times' own /rss/ page, not a guess
+  KW: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/kuwait/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'arabtimesonline.com', feedUrl: 'https://www.arabtimesonline.com/rssFeed/47/' }], // swapped from kuwaittimes.com (malformed XML) -- exact feed URL confirmed directly on Arab Times' own /rss/ page, not a guess
   // ^ Kuwait Times -- oldest active English-language newspaper in Kuwait, founded 1961.
-  PA: [{ source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' }],
-  TD: [{ source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
+  PA: [
+    { source: 'expat-times.com', feedUrl: 'https://expat-times.com/panama/feed' },
+    // NEW (2026-08-03): Newsroom Panama -- dedicated English-language
+    // Panama news site, genuinely different outlet from Expat Times'
+    // Panama section. Confirmed real and exact path via feed directory.
+    { source: 'newsroompanama.com', feedUrl: 'https://newsroompanama.com/feed' },
+  ],
+  TD: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/chad/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/chad/headlines.rdf' }],
   // ^ Panama Expat Times -- confirmed active (Nov 2025 content), dedicated English coverage.
   VE: [
     { source: 'caracaschronicles.com', feedUrl: 'https://www.caracaschronicles.com/feed' },
@@ -700,10 +1076,26 @@ const FEED_URLS_BY_COUNTRY = {
   // duplicates and occasional off-topic hits; the existing relevance/junk
   // filters do the real work of cleaning it up rather than the source
   // itself being pre-vetted the way a dedicated outlet is.
-  GT: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Guatemala&hl=en&gl=GT&ceid=GT:en' }],
-  MV: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Maldives&hl=en&gl=MV&ceid=MV:en' }],
-  KN: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Saint+Kitts+and+Nevis&hl=en&gl=KN&ceid=KN:en' }],
-  BO: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bolivia&hl=en&gl=BO&ceid=BO:en' }],
+  GT: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/guatemala/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Guatemala&hl=en&gl=GT&ceid=GT:en' },
+    // NEW (2026-08-03): Tico Times -- dedicated Guatemala category page,
+    // confirmed real and active with current 2026 content seen directly.
+    // Exact feed path not independently verified this round, treat as a
+    // hypothesis.
+    { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/categories/news/latin-america-news/central-america-latin-america-news/guatemala-central-america-latin-america-news/feed' },
+  ],
+  MV: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/south-asia/maldives/feed/' },
+    { source: 'edition.mv', feedUrl: 'https://edition.mv/feed' }, // NEW (2026-08-03): The Edition -- dedicated English edition of Mihaaru, the Maldives' most trusted news source, launched as a separate daily English newspaper in 2018. Exact feed path not independently verified this round, treat as a hypothesis. // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Maldives&hl=en&gl=MV&ceid=MV:en' }],
+  KN: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/caribbean/stkitts-nevis/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Saint+Kitts+and+Nevis&hl=en&gl=KN&ceid=KN:en' }, { source: 'wicnews.com', feedUrl: 'https://wicnews.com/feed' }], // NEW (2026-08-03): WIC News -- first real dedicated source for St Kitts, same regional Caribbean wire as AG/DM/GD/LC
+  BO: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/bolivia/feed/' },
+    { source: 'bolivianexpress.org', feedUrl: 'https://bolivianexpress.org/feed' }, // NEW (2026-08-03): Bolivia's foremost English-language publication, confirmed real and active. Exact feed path not independently verified this round, treat as a hypothesis. // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Bolivia&hl=en&gl=BO&ceid=BO:en' }],
   BF: [
     { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/burkinafaso/headlines.rdf' },
     // NEW (2026-07-28): Faso News confirmed real and active via search --
@@ -712,8 +1104,20 @@ const FEED_URLS_BY_COUNTRY = {
     // (standard WordPress convention guess).
     { source: 'fasonews.info', feedUrl: 'https://fasonews.info/feed' },
   ],
-  EC: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' }],
-  PY: [{ source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
+  EC: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/ecuador/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ecuador&hl=en&gl=EC&ceid=EC:en' },
+    // NEW (2026-08-03): Ecuador Times -- confirmed real, dedicated
+    // English/Spanish digital newspaper for Ecuador. Previously this
+    // country was Google-News-fallback-only; this is its first genuine
+    // dedicated source. Exact feed path not independently verified this
+    // round, treat as a hypothesis.
+    { source: 'ecuadortimes.net', feedUrl: 'https://www.ecuadortimes.net/feed' },
+  ],
+  PY: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/paraguay/feed/' },
+    { source: 'theparaguaypost.com', feedUrl: 'https://www.theparaguaypost.com/feed' }, // NEW (2026-08-03): The Paraguay Post, confirmed real active Substack publication. Substack's standard /feed path used since Substack always exposes RSS there. // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Paraguay&hl=en&gl=PY&ceid=PY:en' }],
   // NEW (2026-07-28): these 9 countries had ZERO dedicated RSS feed --
   // relying entirely on the capped 3-API pipeline (79/186 countries
   // attempted per run), which explains why several major, well-known
@@ -729,10 +1133,22 @@ const FEED_URLS_BY_COUNTRY = {
     // for mention-based matching. Confirmed exact path via feed directory.
     { source: 'france24.com', feedUrl: 'https://www.france24.com/en/france/rss' },
   ],
-  PL: [{ source: 'notesfrompoland.com', feedUrl: 'https://notesfrompoland.com/feed' }],
-  NO: [{ source: 'thelocal.no', feedUrl: 'https://feeds.thelocal.com/rss/no' }],
-  PS: [{ source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
-  CO: [{ source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' }],
+  PL: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/poland/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'notesfrompoland.com', feedUrl: 'https://notesfrompoland.com/feed' }],
+  NO: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/norway/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.no', feedUrl: 'https://feeds.thelocal.com/rss/no' }],
+  PS: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/palestine/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
+  CO: [
+    { source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' },
+    // NEW (2026-08-03): The Bogota Post -- established English-language
+    // Colombian newspaper, genuinely different outlet. Confirmed real and
+    // exact path via feed directory.
+    { source: 'thebogotapost.com', feedUrl: 'https://thebogotapost.com/feed' },
+  ],
   BR: [
     { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' },
     // NEW (2026-08-03): Brasil Wire -- confirmed real, independent
@@ -746,11 +1162,26 @@ const FEED_URLS_BY_COUNTRY = {
   // per-outlet guess, given Ukrainian outlets seem to be hitting the same
   // bot-blocking pattern one after another.
   UA: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/ukraine/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'euromaidanpress.com', feedUrl: 'https://euromaidanpress.com/feed' },
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Ukraine&hl=en&gl=UA&ceid=UA:en' },
   ],
-  IQ: [{ source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }], // unverified path guess
-  ET: [{ source: 'capitalethiopia.com', feedUrl: 'https://www.capitalethiopia.com/feed/' }], // swapped from thereporterethiopia.com (403, bot-blocked) -- this one confirmed reachable, live content seen directly
+  IQ: [
+    { source: 'iraqinews.com', feedUrl: 'https://www.iraqinews.com/feed' }, // unverified path guess
+    // NEW (2026-08-03): Iraq Business News -- established, independent
+    // English-language outlet since 2010, genuinely different from
+    // iraqinews.com. Confirmed real and exact path via feed directory.
+    { source: 'iraq-businessnews.com', feedUrl: 'https://www.iraq-businessnews.com/feed' },
+  ],
+  ET: [
+    { source: 'capitalethiopia.com', feedUrl: 'https://www.capitalethiopia.com/feed/' }, // swapped from thereporterethiopia.com (403, bot-blocked) -- this one confirmed reachable, live content seen directly
+    // NEW (2026-08-03): Addis Standard -- independent Ethiopian magazine
+    // covering socio-political and economic affairs, genuinely different
+    // from Capital Ethiopia (a business weekly). Confirmed real; exact
+    // feed path not independently verified this round (standard
+    // WordPress-adjacent /feed pattern), treat as a hypothesis.
+    { source: 'addisstandard.com', feedUrl: 'https://addisstandard.com/feed' },
+  ],
   // NEW (2026-07-28): found while working the "stalled" list -- these 5
   // major countries had ZERO dedicated RSS feed, relying purely on the
   // capped API pipeline, which explains the stall. JP/EG/CN feed URLs
@@ -781,7 +1212,9 @@ const FEED_URLS_BY_COUNTRY = {
     // of failure for the world's most populous country in this dataset.
     { source: 'china.org.cn', feedUrl: 'http://www.china.org.cn/rss/1201719.xml', stateMedia: true },
   ],
-  RS: [{ source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/feed/' }],
+  RS: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/serbia/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/category/bi/serbia/feed/' }], // sharpened from the generic regional feed to their Serbia-specific category feed -- exact URL confirmed directly from Balkan Insight's own RSS feeds page, better signal-to-noise for country tagging
   RU: [
     { source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }, // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
     // NEW (2026-08-03): Meduza -- independent Russian/English outlet
@@ -794,8 +1227,15 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }, // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
     // NEW (2026-08-02): now confirmed 403. Google News fallback.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Afghanistan&hl=en&gl=AF&ceid=AF:en' },
+    // NEW (2026-08-03): Khaama Press -- Afghanistan's largest English-
+    // language news agency (2M+ monthly readers), genuinely different
+    // outlet from Tolo News. Confirmed real and exact path via feed
+    // directory.
+    { source: 'khaama.com', feedUrl: 'https://www.khaama.com/feed' },
   ],
-  LB: [{ source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss.xml' }], // swapped from /rss/lebanon (404) -- trying standard root-level path, still unverified
+  LB: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/lebanon/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'naharnet.com', feedUrl: 'https://www.naharnet.com/rss.xml' }], // swapped from /rss/lebanon (404) -- trying standard root-level path, still unverified
   // NEW (2026-07-28): UY and CL are already covered by the generic MercoPress
   // WORLD wire, but that clearly isn't surfacing enough Uruguay/Chile-tagged
   // content on its own (both stalled). MercoPress confirmed to publish
@@ -803,18 +1243,85 @@ const FEED_URLS_BY_COUNTRY = {
   // en.mercopress.com/chile both real, active). Feed path follows the
   // confirmed en.mercopress.com/rss/latin-america convention -- unverified
   // for these two specific country slugs, confirm via next run's log.
-  UY: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/uruguay' }],
-  CL: [{ source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/chile' }],
+  UY: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/uruguay/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/uruguay' }],
+  CL: [
+    { source: 'en.mercopress.com', feedUrl: 'https://en.mercopress.com/rss/chile' },
+    // NEW (2026-08-03): I Love Chile -- among the largest English-language
+    // newspapers in Chile, a genuinely dedicated Chile-only outlet
+    // (MercoPress above is a regional South Atlantic/Mercosur wire, not
+    // Chile-specific). Confirmed real; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'ilovechile.cl', feedUrl: 'https://ilovechile.cl/feed' },
+  ],
   // NEW (2026-07-29): Argentina had zero dedicated RSS feed despite already
   // having real English-language outlets allowlisted (batimes.com.ar,
   // buenosairesherald.com) -- same "major country, API-only" gap as the
   // FR/BR/CO/JP/EG/CN batch from earlier. Exact feed URL confirmed via
   // directory listing, not a guess.
-  AR: [{ source: 'batimes.com.ar', feedUrl: 'https://www.batimes.com.ar/feed' }],
+  AR: [
+    { source: 'batimes.com.ar', feedUrl: 'https://www.batimes.com.ar/feed' },
+    // NEW (2026-08-03): Buenos Aires Herald -- historic English-language
+    // Argentine paper (1876), revived as an online edition in 2023,
+    // genuinely different outlet from Buenos Aires Times. Confirmed real
+    // and exact path via feed directory.
+    { source: 'buenosairesherald.com', feedUrl: 'https://buenosairesherald.com/feed' },
+  ],
   // NEW (2026-07-30): Austria had zero RSS entry and zero allowlist entry
   // despite being a major European country. thelocal.at confirmed real,
   // same TheLocal network already trusted for DE/ES/FR/NO/SE.
-  AT: [{ source: 'thelocal.at', feedUrl: 'https://feeds.thelocal.com/rss/at' }], // switched to the confirmed-working TheLocal network pattern (same as NO, DK) instead of an untested thelocal.at/feed guess
+  AT: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/austria/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.at', feedUrl: 'https://feeds.thelocal.com/rss/at' }], // switched to the confirmed-working TheLocal network pattern (same as NO, DK) instead of an untested thelocal.at/feed guess
+  // NEW (2026-08-03): three completely missing countries closed at once --
+  // Denmark, Switzerland, and Sweden were absent from the dataset entirely.
+  // All three are confirmed live editions of the same TheLocal network
+  // already trusted for DE/ES/FR/IT/AT/NO, same exact URL pattern.
+  DK: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/denmark/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.dk', feedUrl: 'https://feeds.thelocal.com/rss/dk' }],
+  CH: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/switzerland/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.ch', feedUrl: 'https://feeds.thelocal.com/rss/ch' }],
+  SE: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/sweden/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.se', feedUrl: 'https://feeds.thelocal.com/rss/se' }],
+  // NEW (2026-08-03): Portugal and Hungary -- both had zero coverage,
+  // both confirmed real dedicated English-language outlets.
+  PT: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/portugal/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'portugalresident.com', feedUrl: 'https://www.portugalresident.com/feed' }],
+  HU: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/eastern-central-europe/hungary/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'dailynewshungary.com', feedUrl: 'https://dailynewshungary.com/feed/' }],
+  // NEW (2026-08-03): Andorra, Liechtenstein, San Marino, Kiribati -- all
+  // four had zero coverage. Checked for dedicated English-language
+  // outlets; none exist in any meaningful form for any of the four
+  // (domestic press is Catalan/German/Italian respectively for the first
+  // three; Kiribati has no established English digital press). Same
+  // category as Nauru/Palau/Tuvalu already in the dataset -- Google News
+  // fallback rather than leaving a hard zero.
+  AD: [
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Andorra&hl=en&gl=AD&ceid=AD:en' },
+    // NEW (2026-08-03): Catalan News -- English-language news outlet
+    // covering Barcelona and Catalonia, confirmed to actively cover
+    // Andorra as tagged content (verified via a live example article on
+    // an Andorra human-rights case). Closes the last remaining zero-
+    // dedicated-source country in the dataset. Using their Andorra tag
+    // page; exact feed path not independently verified this round, treat
+    // as a hypothesis.
+    { source: 'catalannews.com', feedUrl: 'https://www.catalannews.com/tag/andorra/feed' },
+  ],
+  LI: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/liechtenstein/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Liechtenstein&hl=en&gl=LI&ceid=LI:en' }],
+  SM: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/san-marino/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=San+Marino&hl=en&gl=SM&ceid=SM:en' }],
+  KI: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/oceania/kiribati/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Kiribati&hl=en&gl=KI&ceid=KI:en' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // NEW (2026-08-03): RNZ Pacific -- Kiribati's first real dedicated source (previously Google-News-only), same regional wire as FJ/TO/VU/WS/NR/MH/PW/FM
   // NEW (2026-07-30): found while pushing toward 150 healthy -- 31 major
   // countries had ZERO RSS entry despite most already having vetted
   // ALLOWLIST_BY_COUNTRY sources. DE/ES use the same confirmed
@@ -827,7 +1334,9 @@ const FEED_URLS_BY_COUNTRY = {
     // mention-based matching. Confirmed exact path via feed directory.
     { source: 'dw.com', feedUrl: 'https://rss.dw.com/rdf/rss-en-ger' },
   ],
-  ES: [{ source: 'thelocal.es', feedUrl: 'https://feeds.thelocal.com/rss/es' }],
+  ES: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/western-europe/spain/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'thelocal.es', feedUrl: 'https://feeds.thelocal.com/rss/es' }],
   CA: [
     { source: 'globalnews.ca', feedUrl: 'https://globalnews.ca/feed' },
     // NEW (2026-08-02): CBC News top stories -- Canada's public
@@ -858,6 +1367,10 @@ const FEED_URLS_BY_COUNTRY = {
     // dependent on the one dead feed above. Confirmed pattern (see Brunei
     // entry for rationale).
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Indonesia&hl=en&gl=ID&ceid=ID:en' },
+    // NEW (2026-08-03): Antara News -- Indonesia's national news agency,
+    // English edition, genuinely different from Jakarta Post. Confirmed
+    // real and exact path directly.
+    { source: 'antaranews.com', feedUrl: 'https://en.antaranews.com/rss/news.xml' },
   ],
   // FIXED (2026-08-02): /rss 404'd. Confirmed real path directly from The
   // Star's own RSS directory page (thestar.com.my/RSS) -- their feeds live
@@ -866,7 +1379,13 @@ const FEED_URLS_BY_COUNTRY = {
   // PERSONAL, NON-COMMERCIAL USE" and may not be used with ads attached --
   // same category of ToS flag as GNews' free tier, worth revisiting before
   // Stage 6 (ads).
-  MY: [{ source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss/News' }],
+  MY: [
+    { source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss/News' },
+    // NEW (2026-08-03): Free Malaysia Today -- independent, bilingual
+    // (English/Malay) news portal, genuinely different ownership from The
+    // Star. Confirmed real and exact path via feed directory.
+    { source: 'freemalaysiatoday.com', feedUrl: 'https://www.freemalaysiatoday.com/feed' },
+  ],
   PH: [
     { source: 'inquirer.net', feedUrl: 'https://www.inquirer.net/feed' },
     // NEW (2026-08-03): Rappler -- major independent Philippine digital
@@ -874,15 +1393,28 @@ const FEED_URLS_BY_COUNTRY = {
     // Confirmed exact path via feed directory.
     { source: 'rappler.com', feedUrl: 'https://www.rappler.com/feed' },
   ],
-  MX: [{ source: 'mexiconewsdaily.com', feedUrl: 'https://mexiconewsdaily.com/feed' }],
+  MX: [
+    { source: 'mexiconewsdaily.com', feedUrl: 'https://mexiconewsdaily.com/feed' },
+    // NEW (2026-08-03): The Yucatan Times -- confirmed real, active,
+    // English-language, genuinely different outlet from Mexico News
+    // Daily. Confirmed real and exact path via feed directory.
+    { source: 'theyucatantimes.com', feedUrl: 'https://theyucatantimes.com/feed' },
+  ],
   // NEW (2026-07-30): remaining major no-RSS countries, using their
   // already-allowlisted top domain with standard RSS path conventions.
   // Lower confidence than the batch above -- these specific paths weren't
   // individually confirmed via directory listing, so treat as educated
   // guesses on a verified-legitimate domain, not verified paths. Next run's
   // log will confirm or reject each.
-  SA: [{ source: 'arabnews.com', feedUrl: 'https://www.arabnews.com/rss.xml' }],
+  SA: [
+    { source: 'arabnews.com', feedUrl: 'https://www.arabnews.com/rss.xml' },
+    // NEW (2026-08-03): Saudi Gazette -- established English-language
+    // Saudi daily since 1976, genuinely different outlet from Arab News.
+    // Confirmed real and exact path via feed directory.
+    { source: 'saudigazette.com.sa', feedUrl: 'https://saudigazette.com.sa/rssFeed/74' },
+  ],
   AE: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/middle-east-north-africa/united-arab-emirates/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'thenationalnews.com', feedUrl: 'https://www.thenationalnews.com/rss' }, // newly 404ing -- may be a path change on their end, not re-researched this round
     // NEW (2026-08-02): Google News fallback so UAE isn't a hard zero.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=United+Arab+Emirates&hl=en&gl=AE&ceid=AE:en' },
@@ -895,7 +1427,15 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'news24.com', feedUrl: 'https://www.news24.com/news24/rss' },
     { source: 'dailymaverick.co.za', feedUrl: 'https://www.dailymaverick.co.za/dmrss/' }, // NEW (2026-08-02): confirmed valid via community RSS directory
   ],
-  NZ: [{ source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/national.xml' }],
+  NZ: [
+    { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/national.xml' },
+    // NEW (2026-08-03): NZ Herald -- New Zealand's largest-circulation
+    // newspaper, genuinely different outlet from RNZ (public
+    // broadcaster). Their RSS system builds feeds dynamically per section
+    // rather than exposing one static URL, so exact path not
+    // independently verified this round -- treat as a hypothesis.
+    { source: 'nzherald.co.nz', feedUrl: 'https://www.nzherald.co.nz/arc/outboundfeeds/rss/' },
+  ],
   // NEW (2026-08-01): these 6 countries were previously removed from
   // countries.json entirely as confirmed dead ends. Fresh research this
   // session found real, active English-language sources for all of them --
@@ -914,16 +1454,28 @@ const FEED_URLS_BY_COUNTRY = {
     // feed URL confirmed via directory listing.
     { source: 'thereporter.co.ls', feedUrl: 'https://www.thereporter.co.ls/feed' },
   ],
-  TJ: [{ source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss.xml' }],
-  FM: [{ source: 'micronesiatoday.com', feedUrl: 'https://www.micronesiatoday.com/feed' }],
-  NR: [{ source: 'advancenauru.com', feedUrl: 'https://advancenauru.com/feed' }],
-  MH: [{ source: 'marshallislandsjournal.com', feedUrl: 'https://marshallislandsjournal.com/feed' }], // swapped from mbjguam.com -- no discoverable RSS feed found for that one despite research. Marshall Islands Journal confirmed via Wikipedia as the country's sole newspaper since 1970, genuinely dedicated not regional. Path unverified.
-  PW: [{ source: 'islandtimes.org', feedUrl: 'https://islandtimes.org/feed' }], // swapped from mbjguam.com -- Island Times confirmed real and active with live current Palau-specific content, genuinely dedicated not regional. Path unverified.
+  TJ: [
+    { source: 'asiaplustj.info', feedUrl: 'https://asiaplustj.info/en/rss.xml' },
+    { source: 'eurasianet.org', feedUrl: 'https://eurasianet.org/rss.xml' }, // NEW (2026-08-03): Eurasianet -- same regional wire as KG/MN, genuinely different from Asia-Plus
+  ],
+  FM: [{ source: 'micronesiatoday.com', feedUrl: 'https://www.micronesiatoday.com/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // NEW (2026-08-03): RNZ Pacific regional wire added as second source
+  NR: [{ source: 'advancenauru.com', feedUrl: 'https://advancenauru.com/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // NEW (2026-08-03): RNZ Pacific regional wire added as second source
+  MH: [{ source: 'marshallislandsjournal.com', feedUrl: 'https://marshallislandsjournal.com/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // Marshall Islands Journal confirmed via Wikipedia as the country's sole newspaper since 1970. NEW: RNZ Pacific regional wire added as second source.
+  PW: [{ source: 'islandtimes.org', feedUrl: 'https://islandtimes.org/feed' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // Island Times confirmed real and active with live current Palau-specific content. NEW: RNZ Pacific regional wire added as second source.
   // NEW (2026-08-02): comprehensive research pass -- found via analysis
   // that 17 configured countries had zero RSS entry at all (relying purely
   // on the capped API pipeline) and 155 more had only a single source.
   // Starting with the zero-RSS majors, since those are the clearest gap.
-  IT: [{ source: 'ansa.it', feedUrl: 'https://www.ansa.it/sito/ansait_rss.xml' }], // ANSA's English edition (ansa.it/english), Italy's major news agency, 2M+ followers, exact feed URL confirmed via directory listing
+  IT: [
+    { source: 'ansa.it', feedUrl: 'https://www.ansa.it/sito/ansait_rss.xml' }, // ANSA's English edition (ansa.it/english), Italy's major news agency, 2M+ followers, exact feed URL confirmed via directory listing
+    // NEW (2026-08-03): The Local Italy -- same trusted TheLocal network
+    // already used for DE/ES/FR/NO/AT, genuinely English-language (the
+    // reason ilsole24ore.com and other options were skipped earlier this
+    // session -- their feeds are Italian-primary and would mostly be
+    // filtered out). Confirmed exact path via a public curated RSS
+    // directory (plenaryapp/awesome-rss-feeds).
+    { source: 'thelocal.it', feedUrl: 'https://feeds.thelocal.com/rss/it' },
+  ],
   // NEW (2026-08-02): found via a comprehensive community-maintained RSS
   // directory (github.com/yavuz/news-feed-list-of-countries) with built-in
   // feed validation status -- all entries below confirmed "valid" there.
@@ -931,11 +1483,42 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'thejournal.ie', feedUrl: 'https://www.thejournal.ie/feed/' },
     { source: 'independent.ie', feedUrl: 'https://www.independent.ie/irish-news/rss' },
   ],
-  IL: [{ source: 'jpost.com', feedUrl: 'https://www.jpost.com/RSS/RssFeedsFrontPage.aspx' }], // Jerusalem Post, Israel's most-read English news site
-  RO: [{ source: 'biziday.ro', feedUrl: 'https://www.biziday.ro/feed/' }],
-  CD: [{ source: 'congoplanet.com', feedUrl: 'http://www.congoplanet.com/feeds/rss_congo_africa.xml' }],
-  IR: [{ source: 'khabaronline.ir', feedUrl: 'http://english.khabaronline.ir/rss/' }],
-  FI: [{ source: 'yle.fi', feedUrl: 'https://yle.fi/uutiset/rss/uutiset.rss?osasto=news' }], // Finland's national broadcaster, English edition
+  IL: [
+    { source: 'jpost.com', feedUrl: 'https://www.jpost.com/RSS/RssFeedsFrontPage.aspx' }, // Jerusalem Post, Israel's most-read English news site
+    // NEW (2026-08-03): The Times of Israel -- extremely well-established
+    // (8M+ monthly unique users), genuinely different outlet/ownership
+    // from Jerusalem Post. Confirmed real; exact feed path not
+    // independently verified this round, treat as a hypothesis.
+    { source: 'timesofisrael.com', feedUrl: 'https://www.timesofisrael.com/feed/' },
+  ],
+  RO: [
+    { source: 'biziday.ro', feedUrl: 'https://www.biziday.ro/feed/' },
+    // NEW (2026-08-03): Romania Insider -- the leading English-language
+    // news source dedicated to Romania since 2010. Confirmed real and
+    // exact path via feed directory. Worth noting: the existing source
+    // (biziday.ro) may itself be Romanian-language, in which case this
+    // becomes the more valuable of the two for an English-language
+    // aggregator -- worth checking in the next log.
+    { source: 'romania-insider.com', feedUrl: 'https://www.romania-insider.com/feed' },
+  ],
+  CD: [
+    { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/dr-of-congo/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
+    { source: 'congoplanet.com', feedUrl: 'http://www.congoplanet.com/feeds/rss_congo_africa.xml' }],
+  IR: [
+    { source: 'khabaronline.ir', feedUrl: 'http://english.khabaronline.ir/rss/' }, // has repeatedly returned zero items in recent runs -- not removing (may recover) but real redundancy is overdue
+    // NEW (2026-08-03): Tehran Times -- English-language daily since 1979,
+    // state-controlled but genuinely different outlet/pipeline from
+    // Khabaronline. Exact URL confirmed directly from Tehran Times' own
+    // official RSS help page, not a guess.
+    { source: 'tehrantimes.com', feedUrl: 'https://www.tehrantimes.com/rss' },
+  ],
+  FI: [
+    { source: 'yle.fi', feedUrl: 'https://yle.fi/uutiset/rss/uutiset.rss?osasto=news' }, // Finland's national broadcaster, English edition
+    // NEW (2026-08-03): Helsinki Times -- independent English-language
+    // newspaper since 2007, genuinely different from Yle (state
+    // broadcaster). Confirmed real via feed directory.
+    { source: 'helsinkitimes.fi', feedUrl: 'https://www.helsinkitimes.fi/feed' },
+  ],
   NL: [
     { source: 'nltimes.nl', feedUrl: 'https://nltimes.nl/rssfeed2' }, // "the fastest-growing publisher of English-language news from the Netherlands", exact URL confirmed
     { source: 'dutchnews.nl', feedUrl: 'https://www.dutchnews.nl/feed' }, // genuinely different second English-language Dutch outlet, exact URL confirmed
