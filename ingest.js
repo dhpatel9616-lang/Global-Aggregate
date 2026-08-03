@@ -296,7 +296,29 @@ const JUNK_PATTERNS = [
   // NEW: dev-blog / tutorial content mis-tagged as Tech news
   /\b(deprecated|WP-CLI|npm install|git commit|stack trace)\b/i,
 
-  // NEW: human-interest clickbait framing
+  // NEW: travel-guide / content-farm articles, mostly surfaced via the
+  // Google News fallback (search-result items carry no clean category
+  // tag the way native RSS feeds do, so EXCLUDED_CATEGORIES can't catch
+  // this the normal way). Found via live spot-check: "Iceland Travel
+  // Guide: Volcanoes, Glaciers, Hot Springs and More - thezebra.org".
+  // Deliberately narrow -- targets guide/listicle framing specifically,
+  // not the word "travel" alone, so genuine travel-policy/advisory/ban
+  // news isn't caught.
+  /\btravel guide\b/i,
+  /\bthings to (do|see) in\b/i,
+  /\bbest time to visit\b/i,
+  /\bwhere to (stay|eat) in\b/i,
+  /\b\d+ (best|top) (places|things) (to|in)\b/i,
+
+  // NEW: LinkedIn-repost articles where a full lead paragraph gets
+  // dumped into the title field with a "Read more: ... - LinkedIn"
+  // suffix, instead of a real headline (found via live spot-check on a
+  // Google News search result). Narrow -- targets this specific suffix
+  // shape, not long titles generally, since legitimately long real
+  // headlines exist.
+  /read more:.{0,80}-\s*linkedin\s*$/i,
+
+  // Human-interest clickbait framing
   /\bfinally achiev\w+/i,
   /heartbreaking (setback|journey)/i,
   /against all odds/i,
@@ -877,7 +899,11 @@ function isNonEnglish(text) {
   // English articles with an embedded native-script name or quote sit at
   // 11-13% non-Latin characters; genuine mixed-language content hits 30%+;
   // pure non-English text is 80%+. 25% cleanly separates these.
-  const scriptMatches = text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9\u0900-\u097F\u0980-\u09FF\u0E00-\u0E7F\u0D80-\u0DFF\u1000-\u109F\u1780-\u17FF\u0E80-\u0EFF\u10A0-\u10FF\u0530-\u058F\u1200-\u137F\u0F00-\u0FFF]/g);
+  // Greek added (2026-08-03) after a live spot-check found a fully
+  // Greek-language article (sigmalive.com, Cyprus) passing through
+  // completely undetected -- same class of gap as the Nepali/Devanagari
+  // miss above, the script was simply never added to this list.
+  const scriptMatches = text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF\u1EA0-\u1EF9\u0900-\u097F\u0980-\u09FF\u0E00-\u0E7F\u0D80-\u0DFF\u1000-\u109F\u1780-\u17FF\u0E80-\u0EFF\u10A0-\u10FF\u0530-\u058F\u1200-\u137F\u0F00-\u0FFF\u0370-\u03FF\u1F00-\u1FFF]/g);
   if (scriptMatches && scriptMatches.length / text.length >= 0.25) return true;
   // Diacritics/punctuation common in Spanish/Portuguese/French. A low
   // threshold isn't enough -- confirmed via a real run (2026-07-29) that a
