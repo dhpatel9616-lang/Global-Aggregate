@@ -1420,14 +1420,23 @@ async function main() {
   // the real ceiling -- confirmed directly: a manual 3000-item test call
   // failed with a Postgres statement-timeout error).
   const CLUSTER_HARD_TIMEOUT_MS = 15000; // reduced from 60000 (2026-07-29) -- same reasoning as ingest-rss.js, no reason to allow a 6min worst case when 15s per call is already ~2x the real 8s server-side ceiling
-  const CLUSTER_CALLS_PER_RUN = 6;
+  // max_batch_size reduced from 40 to 6, calls raised from 6 to 20
+  // (2026-08-03): same root cause and fix as ingest-rss.js -- the table
+  // has grown to ~53K articles, and direct EXPLAIN ANALYZE against
+  // production data confirms each trigram lookup now costs ~300-530ms
+  // (GIN index bitmap scan cost at this table size, not bloat). At 40
+  // rows x up to 2 lookups x ~400ms, that's 32-42s per call against the
+  // real ~8s ceiling -- matches the "canceling statement due to statement
+  // timeout" seen in this run's logs. 6 rows x 2 x ~530ms worst case =
+  // ~6.4s, safely under 8s.
+  const CLUSTER_CALLS_PER_RUN = 20;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     const clusterTimeout = new Promise((resolve) =>
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { max_batch_size: 40 }),
+      supabase.rpc('cluster_related_articles', { max_batch_size: 6 }),
       clusterTimeout,
     ]);
     if (clusterError) {
