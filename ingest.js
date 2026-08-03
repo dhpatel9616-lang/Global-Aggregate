@@ -1,14 +1,22 @@
 // The Global Aggregate — ingestion script (Phase 2: multi-source)
 //
-// Splits the 30 pilot countries evenly across three free news APIs so no
-// single provider's daily cap becomes the bottleneck:
-//   - NewsData.io   (~200 req/day free)  -> 10 countries
-//   - GNews         (~100 req/day free)  -> 10 countries
-//   - Currents API  (~600-1000 req/day free) -> 10 countries
+// GNews removed (2026-08-04): its free tier is explicitly "non-commercial
+// only" per GNews's own ToS -- going public means this is now a real
+// compliance issue, not a cost one, regardless of whether the site has
+// any monetization yet. Checked actual coverage impact before removing:
+// every country GNews used to serve already has substantial redundant
+// coverage from RSS (e.g. India: 26 distinct sources / 584 articles in
+// 48h, Indonesia: 18 sources / 384 articles) -- removing it costs close
+// to nothing in practice. Countries it used to fill now fall through to
+// NewsData.io then Currents via the existing cap-based allocation below,
+// unchanged otherwise.
 //
-// At 10 requests per source per run, running every 3 hours (8 runs/day)
-// uses ~80 requests/day per source — safely under every provider's cap,
-// with margin left for manual test runs.
+// Two remaining free APIs:
+//   - NewsData.io   (~200 req/day free)  -> 20 countries
+//   - Currents API  (~1,000 req/day free) -> absorbs everything else
+//
+// At current caps, running every 3 hours (8 runs/day) stays safely under
+// both providers' limits with real margin.
 
 const { createClient } = require('@supabase/supabase-js');
 const countries = require('./countries.json');
@@ -16,19 +24,17 @@ const countries = require('./countries.json');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const NEWSDATA_API_KEY = process.env.NEWSDATA_API_KEY;
-const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const CURRENTS_API_KEY = process.env.CURRENTS_API_KEY;
 
 const required = {
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY,
   NEWSDATA_API_KEY,
-  GNEWS_API_KEY,
   CURRENTS_API_KEY,
 };
 // Only enforced when this file is run directly (node ingest.js), which needs
-// all 5. ingest-rss.js requires this file just to reuse the filtering
-// functions below -- it doesn't touch NewsData/GNews/Currents at all, so it
+// all 4. ingest-rss.js requires this file just to reuse the filtering
+// functions below -- it doesn't touch NewsData/Currents at all, so it
 // shouldn't be blocked by their secrets being absent. This check used to run
 // unconditionally at module load time, which meant simply requiring this
 // file from ingest-rss.js killed the whole process immediately, before
@@ -72,8 +78,7 @@ function safeStringify(value) {
 }
 
 // Keyword fallback for when a source provides no useful category data at
-// all -- GNews's top-headlines endpoint never returns categories (see
-// fetchGNews below), and NewsData/Currents sometimes omit them too. Without
+// all -- NewsData/Currents sometimes omit categories entirely. Without
 // this, every one of those articles silently defaulted to "World"
 // regardless of actual content -- confirmed via a live data audit showing
 // 89% of all 25,000+ stored articles tagged "World", an implausible real
@@ -1075,10 +1080,10 @@ async function upsertRows(countryName, rows, seenTitles) {
 }
 
 // Extracts a readable domain from a URL to use as the source label.
-// All three APIs return source info in a different format (NewsData: a slug
-// like "aa_tr", GNews: a display name, Currents: nothing usable at all), so
+// Both remaining APIs return source info in a different format (NewsData: a
+// slug like "aa_tr", Currents: nothing usable at all), so
 // deriving the domain from the article's own URL is the one thing that's
-// consistent across all three — needed so blocklist/allowlist matching
+// consistent across both — needed so blocklist/allowlist matching
 // actually works uniformly instead of silently missing entries whose slug
 // happened not to match (this is why openpr/bignewsnetwork/chinanationalnews
 // were still leaking through the existing blocklist despite being listed).
@@ -1114,7 +1119,7 @@ function decodeHtmlEntities(text) {
 // item, it killed the *entire remaining run*, silently losing every
 // country still queued behind it. This same unguarded new Date(x)
 // .toISOString() pattern existed in three places in this file's own
-// fetchers too (just not yet triggered here -- NewsData/GNews/Currents
+// fetchers too (just not yet triggered here -- NewsData/Currents
 // tend to return cleaner date formats than arbitrary RSS feeds, but
 // there's no guarantee that holds forever). Centralizing the safe version
 // here, shared by both ingestion paths, so neither can regress back to the
@@ -1162,32 +1167,6 @@ async function fetchNewsData(country) {
       url: item.link,
       published_at: safeParseDate(item.pubDate),
       _rawCategory: item.category,
-    }));
-  return rows;
-}
-
-async function fetchGNews(country) {
-  const url = `https://gnews.io/api/v4/top-headlines?country=${country.code.toLowerCase()}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.articles) throw new Error(data.errors ? JSON.stringify(data.errors) : 'GNews error');
-
-  // GNews top-headlines never returns a per-article category (confirmed via
-  // their API response shape) -- previously this hardcoded every single
-  // GNews article to "World" regardless of actual content, a real
-  // contributor to the 89% "World" skew found in a live data audit.
-  // mapTopic's title-keyword fallback (rawCategory=null here) now does real
-  // categorization work instead of a blanket default.
-  const rows = data.articles
-    .filter((item) => item.title && item.url)
-    .map((item) => ({
-      source: domainFromUrl(item.url),
-      country: country.code,
-      topic: mapTopic(null, item.title),
-      title: item.title,
-      description: capDescription(item.description) || null,
-      url: item.url,
-      published_at: safeParseDate(item.publishedAt),
     }));
   return rows;
 }
@@ -1257,30 +1236,21 @@ async function fetchCurrents(country) {
   return rows;
 }
 
-// Weighted allocation instead of even thirds. The three providers do NOT
-// have equal capacity: GNews caps around 100 req/day, NewsData around
-// 200/day, Currents 600-1,000/day. An even three-way split already put
-// GNews at 80% of its cap at just 30 countries -- growing further with even
-// thirds would break GNews first, long before NewsData or Currents felt any
-// pressure. These caps keep GNews frozen near its current load and let
-// NewsData/Currents absorb growth, each with a ~20% safety margin below
-// their real ceiling (matching the margin the original design already used).
-// Currents has no listed cap since even 60 countries (480 req/day) stays
-// comfortably under its 600-1,000/day range -- revisit if that changes.
+// Weighted allocation across the two remaining providers. NewsData caps
+// around 200 req/day, Currents 1,000/day -- NewsData gets a hard cap with
+// real margin below its ceiling, Currents absorbs everything else since
+// it has by far the most headroom.
 const SOURCE_CAPS = {
-  'GNews': 10,        // ~80 req/day at 8 runs/day -- already near its 100/day cap, do not grow
   'NewsData.io': 20,  // ~160 req/day -- safe margin under its 200/day cap
-  // Currents: uncapped here, absorbs everything beyond the two caps above.
+  // Currents: uncapped here, absorbs everything beyond the cap above.
   // Verified via Currents' own official pricing page (2026-07-16): free
-  // tier is 1,000 req/day, not the vaguer "600-1,000" range this was
-  // working from before. ~20% safety margin below that puts a soft target
+  // tier is 1,000 req/day. ~20% safety margin below that puts a soft target
   // around 800 req/day (100 countries at 8 runs/day) -- revisit allocation
   // if growth approaches that.
 };
 
 const SOURCES = [
   { name: 'NewsData.io', fetcher: fetchNewsData },
-  { name: 'GNews', fetcher: fetchGNews },
   { name: 'Currents', fetcher: fetchCurrents },
 ];
 
@@ -1305,22 +1275,7 @@ const SOURCE_OVERRIDES = {
   UA: 'NewsData.io',
 };
 
-// GNews's own technical docs (docs.gnews.io/endpoints/search-endpoint,
-// checked 2026-07-23) list exactly 37 supported country codes for the
-// `country` parameter -- notably NOT the "71 countries" figure GNews's
-// marketing page claims elsewhere. Confirmed via real run evidence: Vietnam
-// and Iran were being assigned to GNews despite not appearing on this list
-// at all, and both showed genuinely-empty results repeatedly. Same fix
-// pattern as CURRENTS_SUPPORTED_REGIONS_FALLBACK above -- don't burn a
-// request on a country the API was never going to serve.
-const GNEWS_SUPPORTED_COUNTRIES = new Set([
-  'AR', 'AU', 'BD', 'BR', 'CA', 'CN', 'CO', 'EG', 'FR', 'DE', 'GR', 'HK',
-  'IN', 'ID', 'IE', 'IL', 'IT', 'JP', 'MY', 'MX', 'NL', 'NO', 'PK', 'PE',
-  'PH', 'PT', 'RO', 'RU', 'SG', 'ES', 'SE', 'CH', 'TW', 'TR', 'UA', 'GB', 'US',
-]);
-
-// Assigns each country a source by filling GNews and NewsData up to their
-// caps first (in countries.json order), then routing everything else to
+// Assigns each country a source by filling NewsData up to its cap first (in countries.json order), then routing everything else to
 // Currents -- EXCEPT countries Currents doesn't actually support (see
 // fetchCurrentsSupportedRegions above), which get null instead of a
 // guaranteed-400 Currents call every single run. Deterministic and easy to
@@ -1329,7 +1284,7 @@ const GNEWS_SUPPORTED_COUNTRIES = new Set([
 // are what matter, not stability of which specific country landed on which
 // source.
 function assignSources(countryList, currentsSupportedRegions) {
-  const counts = { 'GNews': 0, 'NewsData.io': 0, 'Currents': 0 };
+  const counts = { 'NewsData.io': 0, 'Currents': 0 };
   return countryList.map((country) => {
     // Overrides are handled first and returned immediately -- they must NOT
     // touch the fill counters below, or they silently consume cap slots
@@ -1339,9 +1294,7 @@ function assignSources(countryList, currentsSupportedRegions) {
       return SOURCES.find((s) => s.name === SOURCE_OVERRIDES[country.code]);
     }
     let sourceName;
-    if (counts['GNews'] < SOURCE_CAPS['GNews'] && GNEWS_SUPPORTED_COUNTRIES.has(country.code)) {
-      sourceName = 'GNews';
-    } else if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
+    if (counts['NewsData.io'] < SOURCE_CAPS['NewsData.io']) {
       sourceName = 'NewsData.io';
     } else if (currentsSupportedRegions.has(country.code)) {
       sourceName = 'Currents';
@@ -1476,7 +1429,7 @@ async function main() {
 
 // Only auto-run when executed directly (node ingest.js), not when required
 // as a module -- ingest-rss.js imports the filtering functions below without
-// wanting to trigger a full NewsData/GNews/Currents run as a side effect.
+// wanting to trigger a full NewsData/Currents run as a side effect.
 if (require.main === module) {
   main()
     .then(() => {
@@ -1495,7 +1448,7 @@ if (require.main === module) {
 }
 
 // Shared with ingest-rss.js -- one filtering brain, two ingestion paths.
-// Deliberately NOT re-exporting the API fetchers (fetchNewsData/fetchGNews/
+// Deliberately NOT re-exporting the API fetchers (fetchNewsData/
 // fetchCurrents) or main() itself -- RSS has its own fetch/parse logic, it
 // only needs the junk-detection and text-processing functions.
 module.exports = {
