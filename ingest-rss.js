@@ -2013,8 +2013,7 @@ async function main() {
   // clustered, with a 6,900+ article backlog -- the vast majority of
   // articles were simply never reaching the clustering function at all
   // before aging out of the 1h window forever. Fix: call the RPC multiple
-  // times per run instead of once, each call still safely bounded to 30
-  // items / under 8s.
+  // times per run instead of once, each call still safely bounded / under 8s.
   //
   // Hard timeout reduced from 60s to 15s and iterations from 8 to 5
   // (2026-07-29): the original 60s x 8 was a worst case of ~8 minutes if
@@ -2022,8 +2021,28 @@ async function main() {
   // contributor to some runs timing out at the 15-minute job ceiling while
   // others didn't, alongside feed count growing from 144 to 169 this same
   // session. 15s is still ~2x the real ~8s server-side ceiling.
+  //
+  // max_batch_size reduced from 30 to 6, calls raised from 5 to 15
+  // (2026-08-03): the table has grown to ~53K articles (from a much
+  // smaller base when 30-items-under-8s was tuned), and this session's
+  // source expansion (330->425 feeds) accelerated that growth further.
+  // Confirmed directly via EXPLAIN ANALYZE against production data: each
+  // trigram similarity lookup (the `title % ...` condition, one of up to
+  // 2 per row) now costs ~300-530ms on its own, driven by the GIN index
+  // bitmap scan cost at this table size -- not bloat (recently vacuumed,
+  // only 230 dead tuples) and not fixable by narrowing the time window
+  // (73h->25h only cut cost ~2x, since the planner scans the trigram
+  // index before applying the time filter). At 30 rows x up to 2 lookups
+  // x ~400ms, that's 24-32s per call against the real ~8s ceiling --
+  // confirmed as the cause of "canceling statement due to statement
+  // timeout" in both ingest.js and ingest-rss.js logs from the same run
+  // window. 6 rows x 2 lookups x ~530ms (worst case) = ~6.4s, safely
+  // under 8s with real margin. Calls raised 5->15 to keep similar total
+  // per-run throughput (90 vs the old 150-row ceiling) while each
+  // individual call is now safe. The existing TIME_BUDGET_MS check below
+  // still caps total clustering time regardless.
   const CLUSTER_HARD_TIMEOUT_MS = 15000;
-  const CLUSTER_CALLS_PER_RUN = 5;
+  const CLUSTER_CALLS_PER_RUN = 15;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
@@ -2034,7 +2053,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 30 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 6 }),
       clusterTimeout,
     ]);
     if (clusterError) {
