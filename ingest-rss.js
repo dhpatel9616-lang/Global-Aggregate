@@ -97,6 +97,14 @@ function getJunkReasonForRss(row) {
 // these get tagged per-country later based on which countries' runs they're
 // checked against, same as ingest.js's wire-relevance logic.
 const FEED_URLS_BY_COUNTRY = {
+  // NEW (2026-08-03): three major countries with ZERO prior coverage,
+  // discovered while auditing single-source countries for the broader
+  // expansion pass -- these are bigger gaps than any single-source country
+  // (98M, 65M, and 34M people respectively with no feed at all). All three
+  // URLs confirmed via public RSS feed directories, not guesses.
+  VN: [{ source: 'vnexpress.net', feedUrl: 'https://e.vnexpress.net/rss/news.rss' }],
+  TZ: [{ source: 'thecitizen.co.tz', feedUrl: 'https://www.thecitizen.co.tz/service/rss/tanzania/2486554/feed.rss' }],
+  PE: [{ source: 'perureports.com', feedUrl: 'https://perureports.com/feed' }],
   // Wires -- fetch-verified this session, genuinely real and live
   WORLD: [
     { source: 'bbc.com', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
@@ -144,6 +152,9 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   TR: [
     { source: 'dailysabah.com', feedUrl: 'https://www.dailysabah.com/rssFeed/10000' },
+    // NEW (2026-08-03): Duvar English -- Turkey's independent gazette,
+    // confirmed exact path via a public RSS feed directory.
+    { source: 'duvarenglish.com', feedUrl: 'https://www.duvarenglish.com/export/rss' },
   ],
   NG: [
     { source: 'punchng.com', feedUrl: 'https://punchng.com/feed/' },
@@ -163,6 +174,11 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   TH: [
     { source: 'bangkokpost.com', feedUrl: 'https://www.bangkokpost.com/rss/data/topstories.xml' },
+    // NEW (2026-08-03): Khaosod English -- owned by the Khaosod newspaper,
+    // editorially distinct from Bangkok Post. Exact feed URL confirmed
+    // directly (a syndication mirror explicitly lists this as the live RSS
+    // URL).
+    { source: 'khaosodenglish.com', feedUrl: 'http://www.khaosodenglish.com/feed' },
   ],
   GH: [
     { source: 'myjoyonline.com', feedUrl: 'https://www.myjoyonline.com/feed/' },
@@ -706,12 +722,24 @@ const FEED_URLS_BY_COUNTRY = {
   // (FeedSpot), not guessed. UA/IQ/ET use the standard /feed/ convention on
   // an already-allowlisted domain -- unverified by test fetch, confirm via
   // next run's log.
-  FR: [{ source: 'lemonde.fr', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' }], // Le Monde's English digital edition (launched April 2022)
+  FR: [
+    { source: 'lemonde.fr', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' }, // Le Monde's English digital edition (launched April 2022)
+    // NEW (2026-08-03): France24's dedicated France-section feed --
+    // distinct from the general France24 wire already used cross-country
+    // for mention-based matching. Confirmed exact path via feed directory.
+    { source: 'france24.com', feedUrl: 'https://www.france24.com/en/france/rss' },
+  ],
   PL: [{ source: 'notesfrompoland.com', feedUrl: 'https://notesfrompoland.com/feed' }],
   NO: [{ source: 'thelocal.no', feedUrl: 'https://feeds.thelocal.com/rss/no' }],
   PS: [{ source: 'palestinechronicle.com', feedUrl: 'https://www.palestinechronicle.com/feed' }],
   CO: [{ source: 'colombiareports.com', feedUrl: 'https://colombiareports.com/feed' }],
-  BR: [{ source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' }],
+  BR: [
+    { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' },
+    // NEW (2026-08-03): Brasil Wire -- confirmed real, independent
+    // English-language Brazil outlet via a public curated RSS-feed
+    // directory (not a guess).
+    { source: 'brasilwire.com', feedUrl: 'https://www.brasilwire.com/feed/' },
+  ],
   // NEW (2026-08-02): euromaidanpress.com (added last session as the fix
   // for a dead kyivindependent.com path) is now also confirmed 403 in the
   // most recent run. Adding a Google News fallback rather than a third
@@ -738,10 +766,30 @@ const FEED_URLS_BY_COUNTRY = {
     // fetch-verified this session.
     { source: 'nhk.or.jp', feedUrl: 'https://www3.nhk.or.jp/nhkworld/en/news/feeds/' },
   ],
-  EG: [{ source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' }],
-  CN: [{ source: 'scmp.com', feedUrl: 'https://www.scmp.com/rss/91/feed' }],
+  EG: [
+    { source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' },
+    // NEW (2026-08-03): Mada Masr -- independent Egyptian outlet known for
+    // investigative reporting, genuinely different editorial line from
+    // Egypt Independent. Confirmed real and exact path via feed directory.
+    { source: 'madamasr.com', feedUrl: 'https://www.madamasr.com/en/feed' },
+  ],
+  CN: [
+    { source: 'scmp.com', feedUrl: 'https://www.scmp.com/rss/91/feed' },
+    // NEW (2026-08-03): china.org.cn -- state-run, flagged accordingly.
+    // Confirmed exact path via a public RSS feed directory. Adding for
+    // redundancy on China specifically since SCMP alone is a single point
+    // of failure for the world's most populous country in this dataset.
+    { source: 'china.org.cn', feedUrl: 'http://www.china.org.cn/rss/1201719.xml', stateMedia: true },
+  ],
   RS: [{ source: 'balkaninsight.com', feedUrl: 'https://balkaninsight.com/feed/' }],
-  RU: [{ source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }], // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
+  RU: [
+    { source: 'themoscowtimes.com', feedUrl: 'https://www.themoscowtimes.com/rss/news' }, // swapped from /rss (404) -- confirmed their RSS hub lives at /page/rss with category sub-feeds; /rss/news is the most likely News feed path, still unverified
+    // NEW (2026-08-03): Meduza -- independent Russian/English outlet
+    // headquartered in Riga after being forced out of Russia, genuinely
+    // different ownership/editorial line from Moscow Times. Confirmed
+    // exact path via feed directory.
+    { source: 'meduza.io', feedUrl: 'https://meduza.io/rss/all' },
+  ],
   AF: [
     { source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }, // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
     // NEW (2026-08-02): now confirmed 403. Google News fallback.
@@ -772,7 +820,13 @@ const FEED_URLS_BY_COUNTRY = {
   // ALLOWLIST_BY_COUNTRY sources. DE/ES use the same confirmed
   // feeds.thelocal.com/rss/{cc} pattern already proven for NO/DK. CA and AU
   // use exact feed URLs confirmed via directory listing.
-  DE: [{ source: 'thelocal.de', feedUrl: 'https://feeds.thelocal.com/rss/de' }],
+  DE: [
+    { source: 'thelocal.de', feedUrl: 'https://feeds.thelocal.com/rss/de' },
+    // NEW (2026-08-03): DW's dedicated Germany-section feed -- distinct
+    // from the general dw.com wire already used cross-country for
+    // mention-based matching. Confirmed exact path via feed directory.
+    { source: 'dw.com', feedUrl: 'https://rss.dw.com/rdf/rss-en-ger' },
+  ],
   ES: [{ source: 'thelocal.es', feedUrl: 'https://feeds.thelocal.com/rss/es' }],
   CA: [
     { source: 'globalnews.ca', feedUrl: 'https://globalnews.ca/feed' },
@@ -788,7 +842,16 @@ const FEED_URLS_BY_COUNTRY = {
     // fetch-verified this session.
     { source: 'abc.net.au', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
   ],
-  KR: [{ source: 'koreaherald.com', feedUrl: 'https://www.koreaherald.com/rss' }],
+  KR: [
+    { source: 'koreaherald.com', feedUrl: 'https://www.koreaherald.com/rss' },
+    // NEW (2026-08-03): Korea JoongAng Daily -- published in partnership
+    // with the New York Times, genuinely different outlet/ownership from
+    // Korea Herald. Exact feed path confirmed via a detailed source
+    // explaining it's not auto-discoverable/linked from the homepage,
+    // which is exactly why it wasn't already in the allowlist -- not a
+    // guess.
+    { source: 'koreajoongangdaily.joins.com', feedUrl: 'https://koreajoongangdaily.joins.com/xmls/joins' },
+  ],
   ID: [
     { source: 'thejakartapost.com', feedUrl: 'https://www.thejakartapost.com/rss' }, // still 404ing -- couldn't confirm a working replacement path this round (their listing services obscure the real URL), left in place in case it's a temporary outage
     // NEW (2026-08-02): Google News fallback so Indonesia isn't fully
@@ -804,7 +867,13 @@ const FEED_URLS_BY_COUNTRY = {
   // same category of ToS flag as GNews' free tier, worth revisiting before
   // Stage 6 (ads).
   MY: [{ source: 'thestar.com.my', feedUrl: 'https://www.thestar.com.my/rss/News' }],
-  PH: [{ source: 'inquirer.net', feedUrl: 'https://www.inquirer.net/feed' }],
+  PH: [
+    { source: 'inquirer.net', feedUrl: 'https://www.inquirer.net/feed' },
+    // NEW (2026-08-03): Rappler -- major independent Philippine digital
+    // outlet, genuinely different ownership/editorial line from Inquirer.
+    // Confirmed exact path via feed directory.
+    { source: 'rappler.com', feedUrl: 'https://www.rappler.com/feed' },
+  ],
   MX: [{ source: 'mexiconewsdaily.com', feedUrl: 'https://mexiconewsdaily.com/feed' }],
   // NEW (2026-07-30): remaining major no-RSS countries, using their
   // already-allowlisted top domain with standard RSS path conventions.
