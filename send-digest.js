@@ -98,7 +98,17 @@ async function getArticlesFor(filter) {
 
   const seenClusters = new Set();
   const perCountryCount = {};
-  const MAX_PER_COUNTRY = 3;
+  const TARGET_TOTAL = 20;
+  // Scales the per-country cap inversely with filter breadth. Fixed at 3
+  // was the actual bug behind "CHIN only sends 6 stories" -- CHIN is a
+  // 2-country filter, so 3-per-country capped the whole digest at 6, far
+  // below the intended 20-story target. For broad/global filters (no
+  // country_list, or a long one), this naturally floors back to 3 --
+  // diversity protection still applies there, since 3 x many-countries
+  // already exceeds TARGET_TOTAL and the overall break below kicks in
+  // first regardless.
+  const numCountries = filter.country_list && filter.country_list.length > 0 ? filter.country_list.length : null;
+  const MAX_PER_COUNTRY = numCountries ? Math.max(3, Math.ceil(TARGET_TOTAL / numCountries)) : 3;
   const deduped = [];
   for (const article of data) {
     if (article.cluster_id) {
@@ -109,13 +119,27 @@ async function getArticlesFor(filter) {
     if (countryCount >= MAX_PER_COUNTRY) continue;
     perCountryCount[article.country] = countryCount + 1;
     deduped.push(article);
-    if (deduped.length >= 20) break;
+    if (deduped.length >= TARGET_TOTAL) break;
   }
   return deduped;
 }
 
-const BRAND_COLOR = '#0d9488'; // teal, matches the site's accent -- adjust here if it doesn't match exactly, this is the only place the color is defined
+const BRAND_COLOR = '#0d9488'; // teal, matches the site's accent -- adjust here if it doesn't match exactly, this is the only place the primary brand color is defined
 const SITE_URL = 'https://globalaggregate.org';
+
+// Per-topic accent colors -- [background tint, border/text accent] pairs.
+// Kept email-safe: solid hex colors only, no gradients/box-shadow (patchy
+// support across Gmail/Outlook/Apple Mail), just background-color + a
+// left border for the "card" look, which renders consistently everywhere.
+const TOPIC_COLORS = {
+  Politics: { bg: '#eef2ff', accent: '#4f46e5', text: '#3730a3' }, // indigo
+  Business: { bg: '#ecfdf5', accent: '#059669', text: '#065f46' }, // emerald
+  Tech: { bg: '#eff6ff', accent: '#2563eb', text: '#1e40af' }, // blue
+  Sports: { bg: '#fff7ed', accent: '#ea580c', text: '#9a3412' }, // orange
+  Health: { bg: '#fdf2f8', accent: '#db2777', text: '#9d174d' }, // pink
+  World: { bg: '#f0fdfa', accent: '#0d9488', text: '#0f766e' }, // teal, matches brand
+};
+const DEFAULT_TOPIC_COLOR = { bg: '#f8fafc', accent: '#64748b', text: '#475569' };
 
 function buildEmailHtml(filterName, articles, unsubscribeUrl) {
   const grouped = {};
@@ -129,38 +153,56 @@ function buildEmailHtml(filterName, articles, unsubscribeUrl) {
   const sections = Object.entries(grouped)
     .map(([topic, items]) => {
       const emoji = TOPIC_EMOJI[topic] || '';
+      const colors = TOPIC_COLORS[topic] || DEFAULT_TOPIC_COLOR;
       const rows = items
-        .map((a) => {
+        .map((a, i) => {
           const countryName = COUNTRY_NAME_BY_CODE[a.country] || a.country;
+          const isLast = i === items.length - 1;
           return `
-        <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #eee;">
-            <a href="${escapeHtml(a.url)}" style="color: #1a1a1a; text-decoration: none; font-weight: 600; font-size: 15px;">${escapeHtml(a.title)}</a>
-            <div style="color: #888; font-size: 12px; margin-top: 4px;">${escapeHtml(a.source)} &middot; ${escapeHtml(countryName)}</div>
-          </td>
-        </tr>`;
+          <tr>
+            <td style="padding: 14px 16px; ${isLast ? '' : `border-bottom: 1px solid ${colors.bg === '#f8fafc' ? '#e2e8f0' : colors.bg};`}">
+              <a href="${escapeHtml(a.url)}" style="color: #1a1a1a; text-decoration: none; font-weight: 600; font-size: 15px; line-height: 1.4;">${escapeHtml(a.title)}</a>
+              <div style="margin-top: 6px;">
+                <span style="display: inline-block; background: ${colors.bg}; color: ${colors.text}; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px;">${escapeHtml(countryName)}</span>
+                <span style="color: #999; font-size: 12px; margin-left: 6px;">${escapeHtml(a.source)}</span>
+              </div>
+            </td>
+          </tr>`;
         })
         .join('');
       return `
-      <tr><td style="padding: 20px 0 8px;"><h2 style="font-size: 16px; margin: 0; color: #1a1a1a;">${emoji} ${escapeHtml(topic)}</h2></td></tr>
-      ${rows}`;
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid ${colors.bg === '#f8fafc' ? '#e2e8f0' : colors.bg};">
+        <tr>
+          <td style="background: ${colors.bg}; padding: 10px 16px; border-left: 4px solid ${colors.accent};">
+            <span style="font-size: 14px; font-weight: 700; color: ${colors.text};">${emoji} ${escapeHtml(topic)}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 0; background: #ffffff; border-left: 4px solid ${colors.accent};">
+            <table style="width: 100%; border-collapse: collapse;">${rows}</table>
+          </td>
+        </tr>
+      </table>`;
     })
     .join('');
 
   return `<!DOCTYPE html><html><body style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 0; color: #1a1a1a; background: #fafafa;">
-    <div style="background: ${BRAND_COLOR}; padding: 24px 24px 20px; border-radius: 0 0 12px 12px;">
-      <div style="color: #ffffff; font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">GlobalAggregate</div>
-      <div style="color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 2px;">${dateStr}</div>
+    <div style="background: ${BRAND_COLOR}; background: linear-gradient(135deg, ${BRAND_COLOR}, #0f766e); padding: 28px 24px 22px; border-radius: 0 0 14px 14px;">
+      <div style="color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: -0.02em;">\u{1F30E} GlobalAggregate</div>
+      <div style="color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 3px;">${dateStr}</div>
     </div>
-    <div style="padding: 24px; background: #ffffff;">
-      <h1 style="font-size: 18px; margin: 0 0 2px; color: #1a1a1a;">${escapeHtml(filterName)}</h1>
-      <p style="color: #888; font-size: 13px; margin: 0 0 8px;">${articles.length} ${articles.length === 1 ? 'story' : 'stories'} from your saved filter</p>
-      <table style="width: 100%; border-collapse: collapse;">${sections}</table>
-      <p style="color: #aaa; font-size: 12px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
+    <div style="padding: 20px 24px 24px;">
+      <div style="background: #ffffff; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #eee;">
+        <h1 style="font-size: 19px; margin: 0 0 2px; color: #1a1a1a;">${escapeHtml(filterName)}</h1>
+        <p style="color: #888; font-size: 13px; margin: 0;">${articles.length} ${articles.length === 1 ? 'story' : 'stories'} from your saved filter</p>
+      </div>
+      ${sections}
+      <p style="color: #aaa; font-size: 12px; margin-top: 12px; border-top: 1px solid #eee; padding-top: 16px; text-align: center;">
         <a href="${SITE_URL}" style="color: ${BRAND_COLOR}; text-decoration: none; font-weight: 600;">Open GlobalAggregate</a>
         &middot;
         <a href="${unsubscribeUrl}" style="color: #aaa;">Stop emails for this filter</a>
-        &middot; you can still get digests for your other saved filters, and re-enable this one anytime
+        <br style="margin-top: 4px;">
+        <span style="display: inline-block; margin-top: 6px;">you can still get digests for your other saved filters, and re-enable this one anytime</span>
       </p>
     </div>
   </body></html>`;
