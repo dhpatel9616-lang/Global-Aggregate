@@ -328,6 +328,16 @@ const JUNK_PATTERNS = [
   /heartbreaking (setback|journey)/i,
   /against all odds/i,
 
+  // NEW: generic section-header / non-article titles found via a live
+  // data audit -- these are section labels or classified-ad categories
+  // that leaked through as if they were real headlines (e.g. "SPORTS
+  // BRIEFS", "Tender Notice", "Crime News"), plus numeric-only titles
+  // (e.g. "15389") that look like a leaked internal ID rather than a
+  // real headline. Anchored to the whole title (^...$) so this doesn't
+  // catch a real headline that merely contains one of these words.
+  /^(sports briefs?|tender notice|crime news|break time|taxi qu?otes|classifieds?|obituar(y|ies))$/i,
+  /^\d+$/,
+
   // NEW: raw wire-service slugs that never got formatted into a real headline
   // (e.g. "(SP)U.S.-HOUSTON-FOOTBALL-FIFA WORLD CUP-TRAINING-CANADA")
   /^\(SP\)/i,
