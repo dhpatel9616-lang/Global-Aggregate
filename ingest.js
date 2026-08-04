@@ -338,6 +338,18 @@ const JUNK_PATTERNS = [
   /^(sports briefs?|tender notice|crime news|break time|taxi qu?otes|classifieds?|obituar(y|ies))$/i,
   /^\d+$/,
 
+  // NEW (2026-08-04): wire photo captions and non-article page titles
+  // found via a live audit -- 100% arriving via the Google News fallback
+  // for thin/small countries, where a single generic AP wire photo
+  // caption (e.g. "APTOPIX Bolivia Lord of Great Power") gets reprinted
+  // verbatim by dozens of unrelated small US local papers, and each
+  // reprint surfaces as a separate "article" via search. All three
+  // patterns are explicit, safe signals with no realistic false-positive
+  // risk against genuine headlines.
+  /^aptopix\b/i,
+  /^press release\s*[-:]/i,
+  /\bplayer profile\b/i,
+
   // NEW: raw wire-service slugs that never got formatted into a real headline
   // (e.g. "(SP)U.S.-HOUSTON-FOOTBALL-FIFA WORLD CUP-TRAINING-CANADA")
   /^\(SP\)/i,
@@ -931,14 +943,24 @@ function isNonEnglish(text) {
   // realistic English test case while still catching genuine Spanish/
   // Portuguese text, which carries diacritics throughout, not just on 2-3
   // proper nouns.
-  const diacriticMatches = text.match(/[áéíóúñüãõçàâêîôû¿¡]/gi);
+  // Italian added (2026-08-04) after a live data audit found ansa.it alone
+  // had 55+ genuinely Italian articles slipping through completely
+  // undetected -- Italian was never added to either the diacritic or
+  // stopword check below, despite ansa.it and it.investing.com being
+  // real, substantial Italian-language sources. Diacritics: è ò ì added
+  // alongside the existing set (à and ù were already covered).
+  const diacriticMatches = text.match(/[áéíóúñüãõçàâêîôûèòì¿¡]/gi);
   if (diacriticMatches && diacriticMatches.length >= 4) return true;
-  // Frequency-based check: common Spanish/Portuguese/French function words as
-  // whole words. A single incidental match (e.g. "la Liga" in English sports
-  // writing) isn't enough to flag -- requires 2+ distinct-position matches,
-  // which genuine foreign-language sentences have in abundance and genuine
-  // English essentially never does by coincidence.
-  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas)\b/gi);
+  // Frequency-based check: common Spanish/Portuguese/French/Italian function
+  // words as whole words. A single incidental match (e.g. "la Liga" in
+  // English sports writing) isn't enough to flag -- requires 2+
+  // distinct-position matches, which genuine foreign-language sentences
+  // have in abundance and genuine English essentially never does by
+  // coincidence. Italian stopwords added 2026-08-04, tested against real
+  // Italian samples, real English wire content from the same mixed
+  // source (ansa.it), and English headlines mentioning Italy/Italian
+  // names/teams (Juventus, Meloni, Vatican) to confirm no false positives.
+  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono)\b/gi);
   if (stopwordMatches && stopwordMatches.length >= 2) return true;
   return false;
 }
@@ -1078,7 +1100,7 @@ async function upsertRows(countryName, rows, seenTitles) {
     .from('articles')
     .upsert(
       deduped.map(({ _rawCategory, ...cleanRow }) => cleanRow),
-      { onConflict: 'url', ignoreDuplicates: true }
+      { onConflict: 'url_key', ignoreDuplicates: true }
     );
 
   if (error) {
