@@ -1840,7 +1840,7 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
 
   const { error } = await supabase.from('articles').upsert(
     clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
-    { onConflict: 'url', ignoreDuplicates: true }
+    { onConflict: 'url_key', ignoreDuplicates: true }
   );
   if (error) {
     console.error(`[${label}] Supabase insert error: ${error.message}`);
@@ -1978,7 +1978,7 @@ async function main() {
           if (clean.length > 0) {
             const { error } = await supabase.from('articles').upsert(
     clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
-    { onConflict: 'url', ignoreDuplicates: true }
+    { onConflict: 'url_key', ignoreDuplicates: true }
   );
             if (!error) {
               console.log(`[${targetCountry} via RSS (${feedEntry.source})] Upserted ${clean.length} relevant article(s).`);
