@@ -253,7 +253,16 @@ const FEED_URLS_BY_COUNTRY = {
   // BOTH the API pipeline (empty/error results in ingest.js logs) and RSS
   // (never had a feed at all until now).
   NP: [
-    { source: 'onlinekhabar.com', feedUrl: 'https://www.onlinekhabar.com/feed' },
+    // FIXED (2026-08-04): was 'onlinekhabar.com' / onlinekhabar.com/feed --
+    // confirmed via a live data audit that this fed pure Nepali-language
+    // content into the database (2,003 non-English articles accumulated
+    // before this was caught, all retroactively deleted). Swapped to their
+    // dedicated English edition. Exact feed path not independently
+    // confirmed (no direct listing found), following the same standard
+    // WordPress /feed pattern used successfully elsewhere -- treat as a
+    // hypothesis for the next log to confirm, and if it 404s, this
+    // country still has Kathmandu Post + wire coverage as a safety net.
+    { source: 'english.onlinekhabar.com', feedUrl: 'https://english.onlinekhabar.com/feed' },
     // NEW (2026-08-03): The Kathmandu Post -- Nepal's largest English-
     // language newspaper, genuinely different outlet from Online Khabar.
     // Confirmed real; exact feed path not independently verified this
