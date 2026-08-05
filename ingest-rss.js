@@ -1018,6 +1018,13 @@ const FEED_URLS_BY_COUNTRY = {
     // The Bulletin. Confirmed real; exact feed path not independently
     // verified this round, treat as a hypothesis.
     { source: 'flanderstoday.eu', feedUrl: 'https://www.flanderstoday.eu/feed' },
+    // NEW (2026-08-05): VRT NWS -- Flemish public broadcaster's dedicated
+    // English news service, genuinely different (public broadcaster, not
+    // an expat magazine) from both sources above. Added after Belgium was
+    // found at zero articles in 48h despite two configured sources.
+    // Confirmed real and active; exact feed path not independently
+    // verified this round, treat as a hypothesis.
+    { source: 'vrt.be', feedUrl: 'https://www.vrt.be/vrtnws/en.rss.xml' },
   ],
   // ^ The Brussels Times -- Belgium's largest English-language news outlet.
   KH: [
