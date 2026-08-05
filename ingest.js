@@ -796,10 +796,39 @@ function mentionRegexFor(term) {
   return re;
 }
 
+// Country names that are also extremely common English personal
+// names/surnames -- a plain substring match on these is genuinely
+// ambiguous. Confirmed via live data: an Idaho shooting story ("...
+// identified as 24-year-old Chad Williams...") got tagged as relevant to
+// the country Chad purely because the shooter's first name matched.
+// For these specific names only, additionally require the match isn't
+// immediately followed by another capitalized word -- genuine country
+// mentions ("Chad's government", "in Chad,", "Chad has experienced...")
+// are essentially never directly followed by a second capitalized word,
+// while "FirstName LastName" person references always are.
+const AMBIGUOUS_PERSONAL_NAME_COUNTRIES = new Set(['Chad', 'Georgia', 'Jordan']);
+
 function mentionsCountry(text, countryCode) {
   if (!text) return false;
   const name = COUNTRY_NAME_BY_CODE[countryCode];
-  if (name && mentionRegexFor(name).test(text)) return true;
+  if (name && mentionRegexFor(name).test(text)) {
+    if (AMBIGUOUS_PERSONAL_NAME_COUNTRIES.has(name)) {
+      const asPersonName = new RegExp(`([A-Z][a-z]+\\s+)?${escapeRegex(name)}(\\s+[A-Z][a-z]+)?`).exec(text);
+      const looksLikePersonName = asPersonName && (asPersonName[1] || asPersonName[2]);
+      if (looksLikePersonName) {
+        // Looks like "FirstName LastName" (e.g. "Chad Williams") or
+        // "FirstName Surname" (e.g. "Michael Jordan") rather than a
+        // genuine country reference -- don't let the plain name match
+        // count on its own, but still fall through to check
+        // aliases/demonyms below (a real Chad story would still say
+        // "Chadian" or "N'Djamena" somewhere).
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
   const aliases = COUNTRY_MENTION_ALIASES[countryCode] || [];
   return aliases.some((alias) => mentionRegexFor(alias).test(text));
 }
