@@ -98,7 +98,7 @@ const TOPIC_KEYWORDS = [
   ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader|governor|mayor|lawmaker|legislation|bill passed|policy|diplomat|embassy|sanctions|treaty|summit|geopolit|military coup|martial law|protest|demonstrators|rally|strike action|human rights|constitution|judiciary|supreme court|verdict|lawsuit|corruption|scandal|resign(ed|ation)?|coalition|vote|ballot|campaign trail|foreign minister|un security council|nato|diplomatic)\b/i],
   ['Business', /\b(stock market|shares|earnings|ipo|merger|acquisition|gdp|inflation|interest rate|central bank|bankruptcy|ceo|revenue|quarterly (results|profit)|economy|economic|trade deal|tariff|export|import|investment|investor|startup funding|venture capital|market cap|currency|exchange rate|unemployment|jobs report|manufacturing|supply chain|oil price|commodity|banking sector|fiscal|budget deficit|subsidy|price hike|cost of living|retail sales|corporate|industry|factory)\b/i],
   ['Tech', /\b(smartphone|artificial intelligence|\bai\b|software|app store|cybersecurity|data breach|chip(maker)?|semiconductor|startup|silicon valley|social media platform|tech giant|app launch|digital platform|internet access|broadband|telecom|5g|satellite launch|space agency|electric vehicle|ev market|robot|automation|data center|cloud computing|crypto|blockchain|innovation hub)\b/i],
-  ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout|football|soccer|cricket|basketball|tennis|marathon|stadium|referee|squad|qualify(ing)?|semifinal|grand slam|premier league|fifa|uefa|striker|midfielder)\b/i],
+  ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout|football|soccer|cricket\w*|basketball|tennis|marathon|stadium|referee|squad|qualify(ing)?|semifinal\w*|quarterfinal\w*|quarter-final\w*|grand slam|premier league|fifa|uefa|striker|midfielder)\b/i],
   ['Health', /\b(vaccine|hospital|outbreak|virus|disease|pandemic|who\b|health ministry|clinical trial|surgeon|patient(s)?|healthcare|medical|doctors|nurses|epidemic|infection|mental health|malaria|cholera|maternal health|public health|drug approval|medicine shortage|life expectancy|malnutrition)\b/i],
 ];
 
@@ -312,6 +312,7 @@ const JUNK_PATTERNS = [
   /\btravel guide\b/i,
   /\bthings to (do|see) in\b/i,
   /\bbest time to visit\b/i,
+  /^i (went|traveled|travelled) to\b.*\b(experience|discover)\b/i,
   /\bwhere to (stay|eat) in\b/i,
   /\b\d+ (best|top) (places|things) (to|in)\b/i,
 
@@ -949,7 +950,11 @@ function isNonEnglish(text) {
   // stopword check below, despite ansa.it and it.investing.com being
   // real, substantial Italian-language sources. Diacritics: è ò ì added
   // alongside the existing set (à and ù were already covered).
-  const diacriticMatches = text.match(/[áéíóúñüãõçàâêîôûèòì¿¡]/gi);
+  // ù added (2026-08-04) after a live audit found a genuine Italian title
+  // ("...mai più senza...") slipping through with zero diacritic matches --
+  // this diacritic list only had ú (acute) and was missing ù (grave),
+  // which "più" and other common Italian words use.
+  const diacriticMatches = text.match(/[áéíóúùñüãõçàâêîôûèòì¿¡]/gi);
   if (diacriticMatches && diacriticMatches.length >= 4) return true;
   // Frequency-based check: common Spanish/Portuguese/French/Italian function
   // words as whole words. A single incidental match (e.g. "la Liga" in
@@ -960,7 +965,7 @@ function isNonEnglish(text) {
   // Italian samples, real English wire content from the same mixed
   // source (ansa.it), and English headlines mentioning Italy/Italian
   // names/teams (Juventus, Meloni, Vatican) to confirm no false positives.
-  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono)\b/gi);
+  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono|mai|già|senza|poi|quando|sempre|ancora|dopo|prima|tutto|molto|loro|dove)\b/gi);
   if (stopwordMatches && stopwordMatches.length >= 2) return true;
   return false;
 }
