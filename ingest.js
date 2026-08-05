@@ -350,6 +350,7 @@ const JUNK_PATTERNS = [
   /^aptopix\b/i,
   /^press release\s*[-:]/i,
   /\bplayer profile\b/i,
+  /\bfam trip\b/i,
 
   // NEW: raw wire-service slugs that never got formatted into a real headline
   // (e.g. "(SP)U.S.-HOUSTON-FOOTBALL-FIFA WORLD CUP-TRAINING-CANADA")
