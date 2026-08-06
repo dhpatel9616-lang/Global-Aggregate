@@ -1479,14 +1479,17 @@ async function main() {
   // (2026-08-06): same root cause and fix as ingest-rss.js -- table growth
   // eroded the safety margin again (per-lookup cost now ~697ms, up from
   // ~300-530ms when 6 was tuned).
-  const CLUSTER_CALLS_PER_RUN = 35;
+  // max_batch_size reduced again from 3 to 2, calls raised from 35 to 50
+  // (2026-08-06, same day) -- same reasoning as ingest-rss.js: the new
+  // same-country matching passes roughly doubled worst-case per-row cost.
+  const CLUSTER_CALLS_PER_RUN = 50;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     const clusterTimeout = new Promise((resolve) =>
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { max_batch_size: 3 }),
+      supabase.rpc('cluster_related_articles', { max_batch_size: 2 }),
       clusterTimeout,
     ]);
     if (clusterError) {
