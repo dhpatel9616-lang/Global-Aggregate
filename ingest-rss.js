@@ -1863,7 +1863,14 @@ async function main() {
   // safety margin for clustering + final logging/exit, since a hard
   // GitHub Actions cancellation mid-request loses the whole run's progress,
   // while stopping early here still commits everything fetched so far.
-  const TIME_BUDGET_MS = 13 * 60 * 1000; // raised from 12 (2026-08-01) -- the inter-feed sleep reduction above recovered ~2 min of headroom; using about half of it for more coverage, banking the rest as safety margin. Deliberately NOT raising the job's timeout-minutes (still 15) to match -- this runs every 15 min via the external scheduler, so a longer ceiling risks two runs overlapping rather than fixing anything.
+  const TIME_BUDGET_MS = 11 * 60 * 1000; // reduced from 13 (2026-08-06) --
+  // emergency reduction after multiple consecutive job failures
+  // (#994-1004, mostly ~15-16min durations matching the job's 15min
+  // timeout). Both feed-fetch load (33 new feeds added today) and
+  // clustering per-call cost (confirmed 4.5s for a single small batch,
+  // up from ~2s earlier today) grew simultaneously, compounding against
+  // the same fixed ceiling. More real margin until this is revisited
+  // with actual failure logs confirming root cause.
 
   // SHARDING (2026-08-02): the feed list grew from 144 to 202 feeds this
   // session (+40%), and no amount of per-feed delay tuning kept up --
@@ -2070,17 +2077,16 @@ async function main() {
   // recurring at each size threshold otherwise. A real fix (data
   // retention policy bounding how far the trigram index has to search)
   // is still the actual long-term answer; this is a stopgap.
-  // max_batch_size reduced again from 3 to 2, calls raised from 25 to 35
-  // (2026-08-06, same day): adding the same-country matching fallback
-  // passes (below, in cluster_related_articles itself) roughly doubled
-  // worst-case per-row cost -- rows with no match at all (the common
-  // case for purely local news) now try up to 4 trigram lookups before
-  // giving up, not 2, since same-country passes only get skipped when a
-  // cross-country match is already found. Confirmed the real risk this
-  // introduced via a manual test that hit a genuine statement timeout at
-  // a larger batch size. Restoring safety margin before this ships,
-  // ahead of a scheduled public launch.
-  const CLUSTER_CALLS_PER_RUN = 35;
+  // EMERGENCY CUT (2026-08-06, same day): 35 -> 10. Confirmed per-call
+  // cost has grown further still -- 4.5s for a single max_batch_size=2
+  // call (up from ~2s earlier today) -- meaning 35 sequential calls could
+  // alone consume several minutes, stacking on top of fetch time for the
+  // 459 feeds now configured (33 added today). Multiple consecutive job
+  // runs failed (#994-1004, ~15-16min durations matching the job's
+  // 15min timeout). Protective cut pending actual failure-log
+  // confirmation of root cause -- clustering throughput will be lower
+  // until this is revisited with real data.
+  const CLUSTER_CALLS_PER_RUN = 10;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
