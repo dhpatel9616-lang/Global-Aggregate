@@ -2058,7 +2058,19 @@ async function main() {
   // individual call is now safe. The existing TIME_BUDGET_MS check below
   // still caps total clustering time regardless.
   const CLUSTER_HARD_TIMEOUT_MS = 15000;
-  const CLUSTER_CALLS_PER_RUN = 15;
+  // max_batch_size reduced further from 6 to 3, calls raised from 15 to 25
+  // (2026-08-06): table has grown to 63,313 rows (from ~53K when 6 was
+  // tuned), and direct EXPLAIN ANALYZE confirms per-lookup cost has grown
+  // to ~697ms (from ~300-530ms) -- the old 6-row batch's worst case
+  // (6 x 2 x ~700ms ~= 8.4s) was landing right at or past the real ~8s
+  // ceiling again, confirmed via live hourly data showing recurring
+  // zero-clustered hours. This table will keep growing, so this time
+  // building in more real margin (3 x 2 x ~900ms buffer ~= 5.4s) rather
+  // than tuning right up to the edge -- the same problem will keep
+  // recurring at each size threshold otherwise. A real fix (data
+  // retention policy bounding how far the trigram index has to search)
+  // is still the actual long-term answer; this is a stopgap.
+  const CLUSTER_CALLS_PER_RUN = 25;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
@@ -2069,7 +2081,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 6 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 3 }),
       clusterTimeout,
     ]);
     if (clusterError) {
