@@ -2070,7 +2070,17 @@ async function main() {
   // recurring at each size threshold otherwise. A real fix (data
   // retention policy bounding how far the trigram index has to search)
   // is still the actual long-term answer; this is a stopgap.
-  const CLUSTER_CALLS_PER_RUN = 25;
+  // max_batch_size reduced again from 3 to 2, calls raised from 25 to 35
+  // (2026-08-06, same day): adding the same-country matching fallback
+  // passes (below, in cluster_related_articles itself) roughly doubled
+  // worst-case per-row cost -- rows with no match at all (the common
+  // case for purely local news) now try up to 4 trigram lookups before
+  // giving up, not 2, since same-country passes only get skipped when a
+  // cross-country match is already found. Confirmed the real risk this
+  // introduced via a manual test that hit a genuine statement timeout at
+  // a larger batch size. Restoring safety margin before this ships,
+  // ahead of a scheduled public launch.
+  const CLUSTER_CALLS_PER_RUN = 35;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
@@ -2081,7 +2091,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 3 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 2 }),
       clusterTimeout,
     ]);
     if (clusterError) {
