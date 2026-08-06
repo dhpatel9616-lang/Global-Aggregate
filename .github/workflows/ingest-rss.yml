@@ -24,8 +24,13 @@ on:
   # commented out, in case of a future rollback -- do not re-enable
   # alongside the external scheduler, or the job will run twice on
   # overlapping schedules.
+  # Interval doubled 15min -> 30min per shard on 2026-08-06 after a real
+  # overlap-induced pile-up caused a ~95min total ingestion outage -- see
+  # the SHARDING comment in ingest-rss.js for the full incident writeup.
+  # The actual live schedule lives in cron-job.org now, not here; this is
+  # historical/rollback reference only.
   # schedule:
-  #   - cron: '4,19,34,49 * * * *'
+  #   - cron: '4,34 * * * *'
 jobs:
   ingest-rss:
     runs-on: ubuntu-latest
