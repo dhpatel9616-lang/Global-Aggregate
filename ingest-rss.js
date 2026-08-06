@@ -5,8 +5,9 @@
 // existing 3-hour cadence via ingest.js -- they provide broad discovery and
 // clean structured data. This script polls RSS feeds directly from outlets
 // already confirmed real through the allowlist process, and is
-// designed to run far more often (e.g. every 15 minutes) since RSS feeds
-// have no per-request "credits" system, unlike the 3 APIs.
+// designed to run far more often since RSS feeds have no per-request
+// "credits" system, unlike the 3 APIs. Currently every 30 minutes per
+// shard (reduced from every 15 -- see the SHARDING comment below for why).
 //
 // PILOT BATCH: the FEED_URLS_BY_COUNTRY list below is a starting batch, not
 // an exhaustive one. Some entries were fetch-verified this session (BBC,
@@ -1883,6 +1884,21 @@ async function main() {
   // bin-packing by feed count, not just country count) rather than a
   // hardcoded list, so it self-rebalances automatically as countries get
   // added or removed -- no manual list-splitting maintenance required.
+  //
+  // INTERVAL DOUBLED to every 30 min per shard, still ~15 min apart from
+  // each other (2026-08-06): was every 15 min per shard with zero buffer
+  // against the job's 15-min timeout -- the moment any single run ran
+  // long (which started happening as the feed list and clustering cost
+  // both grew), the next scheduled trigger fired on top of the still-
+  // running previous one. Repeated manual retries during an incident
+  // compounded this into a real pile-up: multiple overlapping runs
+  // fighting over GitHub's concurrency slots and the same Supabase
+  // connection simultaneously, causing a ~95-minute total ingestion gap
+  // (confirmed via live data -- zero new articles for that whole window).
+  // 30 min per shard gives a full 2x buffer under the 15-min job ceiling
+  // instead of running right up against it. Real cost: freshness drops
+  // from ~15 min to ~30 min per shard. Worth revisiting once a run of
+  // clean, non-overlapping executions is confirmed -- not before.
   // SHARD=both (the default, e.g. for manual workflow_dispatch runs with no
   // input) processes everyone, same as before sharding existed.
   const SHARD = (process.env.SHARD || 'both').toUpperCase();
@@ -2012,9 +2028,9 @@ async function main() {
   console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s)${budgetExceeded ? ' (run cut short by time budget)' : ''}.`);
 
   console.log('\nClustering related stories across countries...');
-  // RSS runs every 15 minutes, not every 3 hours like the API pipeline --
-  // the function's default process_window_hours (6h) was sized for that
-  // slower cadence. At RSS's frequency, a 6h window means re-scanning the
+  // RSS runs every 30 minutes per shard (was 15, see the SHARDING comment
+  // above), not every 3 hours like the API pipeline -- the function's
+  // default process_window_hours (6h) was sized for that slower cadence. At RSS's frequency, a 6h window means re-scanning the
   // same growing backlog ~24 times within that window, which is what caused
   // a real timeout (confirmed: 478 of 483 articles in the last 6h were still
   // unclustered at the time it failed). 1 hour comfortably covers several
