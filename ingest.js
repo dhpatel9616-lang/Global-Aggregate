@@ -1475,14 +1475,18 @@ async function main() {
   // real ~8s ceiling -- matches the "canceling statement due to statement
   // timeout" seen in this run's logs. 6 rows x 2 x ~530ms worst case =
   // ~6.4s, safely under 8s.
-  const CLUSTER_CALLS_PER_RUN = 20;
+  // max_batch_size reduced further from 6 to 3, calls raised from 20 to 35
+  // (2026-08-06): same root cause and fix as ingest-rss.js -- table growth
+  // eroded the safety margin again (per-lookup cost now ~697ms, up from
+  // ~300-530ms when 6 was tuned).
+  const CLUSTER_CALLS_PER_RUN = 35;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     const clusterTimeout = new Promise((resolve) =>
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { max_batch_size: 6 }),
+      supabase.rpc('cluster_related_articles', { max_batch_size: 3 }),
       clusterTimeout,
     ]);
     if (clusterError) {
