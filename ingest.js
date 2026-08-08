@@ -995,7 +995,14 @@ function isNonEnglish(text) {
   // Italian samples, real English wire content from the same mixed
   // source (ansa.it), and English headlines mentioning Italy/Italian
   // names/teams (Juventus, Meloni, Vatican) to confirm no false positives.
-  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono|mai|già|senza|poi|quando|sempre|ancora|dopo|prima|tutto|molto|loro|dove)\b/gi);
+  // Malay added (2026-08-08) after a live audit found freemalaysiatoday.com
+  // had 64 genuinely Malay-language articles slipping through undetected
+  // -- Malay uses plain Latin script with no distinguishing diacritics,
+  // so only the stopword-frequency mechanism can catch it (the diacritic
+  // check above doesn't apply). Tested against the "dan" name-collision
+  // risk (also a common English first name) and a "Kata Beach" place-name
+  // edge case before shipping -- both correctly stay eligible.
+  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono|mai|già|senza|poi|quando|sempre|ancora|dopo|prima|tutto|molto|loro|dove|yang|dan|dengan|untuk|akan|telah|adalah|kepada|dari|kerana|tidak|juga|atau|boleh|sudah|mereka|beliau|menteri|kerajaan|negara|kata|kini|semua|hanya)\b/gi);
   if (stopwordMatches && stopwordMatches.length >= 2) return true;
   return false;
 }
