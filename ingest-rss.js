@@ -2278,16 +2278,21 @@ async function main() {
   // recurring at each size threshold otherwise. A real fix (data
   // retention policy bounding how far the trigram index has to search)
   // is still the actual long-term answer; this is a stopgap.
-  // EMERGENCY CUT (2026-08-06, same day): 35 -> 10. Confirmed per-call
-  // cost has grown further still -- 4.5s for a single max_batch_size=2
-  // call (up from ~2s earlier today) -- meaning 35 sequential calls could
-  // alone consume several minutes, stacking on top of fetch time for the
-  // 459 feeds now configured (33 added today). Multiple consecutive job
-  // runs failed (#994-1004, ~15-16min durations matching the job's
-  // 15min timeout). Protective cut pending actual failure-log
-  // confirmation of root cause -- clustering throughput will be lower
-  // until this is revisited with real data.
-  const CLUSTER_CALLS_PER_RUN = 10;
+  // EMERGENCY CUT (2026-08-06, same day): 35 -> 10, during a real job
+  // pile-up crisis (multiple consecutive run failures, #994-1004).
+  // RESTORED (2026-08-08): 10 -> 40. The crisis's actual root cause was
+  // the cron interval (15min/shard with zero margin against the 15min
+  // job timeout) -- fixed separately by doubling the interval to 30min/
+  // shard. Two days later this emergency cut was still active and had
+  // become the direct cause of a real trending regression (confirmed via
+  // live data: trending dropped to 12 stories, peak 2 countries, down
+  // from 53-183 stories / peak 5-7 countries in recent checks, since only
+  // 10 x 2 = 20 total rows were being attempted per run). Confirmed
+  // per-call cost is still ~4.1s, but that's no longer a timeout risk
+  // given the new 30-min cycle (40 calls x ~4s = ~160s, comfortable
+  // margin) -- max_batch_size itself (the actual per-call safety lever)
+  // is unchanged, only the call count is being restored.
+  const CLUSTER_CALLS_PER_RUN = 40;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
