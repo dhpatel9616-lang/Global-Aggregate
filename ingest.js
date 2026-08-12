@@ -351,6 +351,11 @@ const JUNK_PATTERNS = [
   /^press release\s*[-:]/i,
   /\bplayer profile\b/i,
   /\bfam trip\b/i,
+  // NEW: gossip/tabloid content found via live audit (legit.ng carrying
+  // "Adult film actress...shares new bedroom video" and "...sharing
+  // hugs...in trending video" style content). Tested against genuine
+  // entertainment news (award wins, movie deals) to avoid over-blocking.
+  /\b(bedroom video|adult film|stuns (fans|in)|flaunt(s|ing)?\s+(her|his)?\s*(curves|body)|shares?\s+(new\s+|sultry\s+|racy\s+)?(bedroom|nude|topless)|trending video)\b/i,
 
   // NEW: raw wire-service slugs that never got formatted into a real headline
   // (e.g. "(SP)U.S.-HOUSTON-FOOTBALL-FIFA WORLD CUP-TRAINING-CANADA")
@@ -809,6 +814,17 @@ function mentionRegexFor(term) {
 // while "FirstName LastName" person references always are.
 const AMBIGUOUS_PERSONAL_NAME_COUNTRIES = new Set(['Chad', 'Georgia', 'Jordan']);
 
+// Country names that also collide with small US place names (a
+// different collision type from the personal-name case above).
+// Confirmed via live audit: "Brunswick County planning board approves
+// 700+ homes near Bolivia - Cleveland 19 News" was tagged as the
+// country Bolivia purely because a small NC town shares the name.
+// "County" and "near [CapitalizedWord]" and US state abbreviations are
+// strong signals this is US local news, not international news --
+// genuine country mentions essentially never co-occur with these.
+const AMBIGUOUS_US_PLACE_NAME_COUNTRIES = new Set(['Bolivia']);
+const US_PLACE_SIGNAL = /\b(county|near\s+[A-Z]|,\s*(NC|SC|GA|NY|OH|PA|VA|WV|TN|KY|IN|IL|MI))\b/i;
+
 function mentionsCountry(text, countryCode) {
   if (!text) return false;
   const name = COUNTRY_NAME_BY_CODE[countryCode];
@@ -826,6 +842,10 @@ function mentionsCountry(text, countryCode) {
       } else {
         return true;
       }
+    } else if (AMBIGUOUS_US_PLACE_NAME_COUNTRIES.has(name) && US_PLACE_SIGNAL.test(text)) {
+      // Looks like US local news near a same-named small town rather
+      // than a genuine country reference -- same fall-through-to-alias
+      // pattern as above.
     } else {
       return true;
     }
@@ -1002,7 +1022,7 @@ function isNonEnglish(text) {
   // check above doesn't apply). Tested against the "dan" name-collision
   // risk (also a common English first name) and a "Kata Beach" place-name
   // edge case before shipping -- both correctly stay eligible.
-  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono|mai|già|senza|poi|quando|sempre|ancora|dopo|prima|tutto|molto|loro|dove|yang|dan|dengan|untuk|akan|telah|adalah|kepada|dari|kerana|tidak|juga|atau|boleh|sudah|mereka|beliau|menteri|kerajaan|negara|kata|kini|semua|hanya)\b/gi);
+  const stopwordMatches = text.match(/\b(de|la|el|en|que|los|las|una|uno|por|con|del|es|son|su|al|para|como|más|pero|sus|desde|hasta|sobre|entre|sin|muy|también|esta|este|fue|hay|da|do|não|uma|com|dos|das|se|são|où|les|des|une|dans|est|sont|pas|il|di|che|non|per|gli|dei|alla|questo|questa|della|nel|più|anche|delle|sono|mai|già|senza|poi|quando|sempre|ancora|dopo|prima|tutto|molto|loro|dove|yang|dan|dengan|untuk|akan|telah|adalah|kepada|dari|kerana|tidak|juga|atau|boleh|sudah|mereka|beliau|menteri|kerajaan|negara|kata|kini|semua|hanya|keluar|sertai|masih|bagi|jika|ketika|sebagai|seperti|antara|bahawa|selepas|sebelum|orang|maut|pemimpin|cabar|dibincang)\b/gi);
   if (stopwordMatches && stopwordMatches.length >= 2) return true;
   return false;
 }
