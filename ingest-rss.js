@@ -2292,7 +2292,28 @@ async function main() {
   // given the new 30-min cycle (40 calls x ~4s = ~160s, comfortable
   // margin) -- max_batch_size itself (the actual per-call safety lever)
   // is unchanged, only the call count is being restored.
-  const CLUSTER_CALLS_PER_RUN = 40;
+  // REGRESSION #2 (2026-08-15): identical symptom recurred -- trending
+  // capped at 12 stories / 2 articles per cluster again, confirmed via
+  // live data (774 unclustered articles piling up in a single 6h window,
+  // only 9 clustered in 24h). Root cause this time: max_batch_size was
+  // NEVER restored past the original emergency value of 2 (despite the
+  // note above implying it was untouched -- it wasn't; comment drift).
+  // A cluster literally cannot exceed max_batch_size*2 members per growth
+  // step, so batch_size=2 mathematically caps most clusters at pairs.
+  // Table has grown 63,313 -> 100,330 rows since the last real
+  // EXPLAIN ANALYZE (~697ms/lookup then); extrapolating from the current
+  // confirmed ~4.1s/call at batch=2, batch=3 projects to ~6.2s/call --
+  // real margin under the ~8s statement_timeout. Not raising batch_size
+  // further than that in one step: this loop breaks entirely on the
+  // first timed-out call (see below), so an oversized batch risks
+  // killing a run's clustering completely rather than just slowing it.
+  // CLUSTER_CALLS_PER_RUN raised instead as the primary throughput lever
+  // -- it self-limits cleanly against TIME_BUDGET_MS with no crash risk,
+  // unlike batch_size. VERIFY against the next run's log before raising
+  // batch_size again: watch for "Hard timeout" or "canceling statement
+  // due to statement timeout" errors, and confirm clusteredOk stays
+  // near CLUSTER_CALLS_PER_RUN (not truncated early by an error break).
+  const CLUSTER_CALLS_PER_RUN = 100;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
     if (Date.now() - runStart > TIME_BUDGET_MS) {
@@ -2303,7 +2324,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 2 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 3, max_batch_size: 3 }),
       clusterTimeout,
     ]);
     if (clusterError) {
