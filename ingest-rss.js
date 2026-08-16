@@ -2313,6 +2313,35 @@ async function main() {
   // batch_size again: watch for "Hard timeout" or "canceling statement
   // due to statement timeout" errors, and confirm clusteredOk stays
   // near CLUSTER_CALLS_PER_RUN (not truncated early by an error break).
+  // REGRESSION #3 (2026-08-16), same day as REGRESSION #2's fix: the fix
+  // above worked as designed (batch_size 2->3 alone is nearly free, ~6.1s
+  // vs ~6.6s measured directly), but process_window_hours 1->3 was ALSO
+  // raised in the same change to help work through the backlog -- and
+  // that one variable, combined with the batch bump, produced a real
+  // ~31s per call (confirmed via direct EXPLAIN ANALYZE isolation:
+  // window=1/batch=2 -> 6.6s, window=1/batch=3 -> 6.1s, window=3/batch=1
+  // -> 10.6s, window=3/batch=3 -> 31.3s -- a multiplicative interaction,
+  // not additive, almost certainly because a wider window inflates both
+  // the target-selection pool AND each target's candidate-matching scan).
+  // Every call in every run was blowing the ~8s PostgREST statement
+  // timeout and erroring immediately, and this loop breaks on the first
+  // error -- net result was ~zero successful clustering for 16+ straight
+  // hours despite normal ingestion continuing. Reverting
+  // process_window_hours to 1 and max_batch_size to 2, the only
+  // combination with real production + direct-timing evidence behind it.
+  // CLUSTER_CALLS_PER_RUN stays at 100 as the throughput lever, since call
+  // count is the one dimension proven safe to raise (self-limits cleanly
+  // against TIME_BUDGET_MS, no per-call timeout risk).
+  // IMPORTANT, confirmed via direct timing this session: even this
+  // "safe" window=1/batch=2 config now costs ~6.6s, up from ~4.1s
+  // confirmed in production logs earlier -- a 60% increase from organic
+  // table growth alone (100,330 -> 103,902 rows in ~24h), independent of
+  // any parameter choice. The real margin under the 8s ceiling keeps
+  // shrinking as the table grows, regardless of batch/window tuning.
+  // Batch/window tuning is hitting diminishing returns -- the actual
+  // fix is the retention/pruning policy already flagged above (bounding
+  // how far back the trigram index has to search), not another parameter
+  // nudge. Flagging for next session rather than solving here.
   const CLUSTER_CALLS_PER_RUN = 100;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
@@ -2324,7 +2353,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 3, max_batch_size: 3 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 2 }),
       clusterTimeout,
     ]);
     if (clusterError) {
