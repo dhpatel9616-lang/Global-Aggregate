@@ -152,7 +152,25 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'metro.co.uk', feedUrl: 'https://metro.co.uk/feed' },
   ],
   US: [
-    { source: 'nytimes.com', feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml' },
+    // CHANGED (2026-08-16): was HomePage.xml, which is NYT's full
+    // homepage mix -- confirmed via live audit that it leaks personal
+    // essays and lifestyle features into the feed alongside real news
+    // ("I'm Not Ashamed of My Face-Lift", "Friends Wanted Me to Cut Off
+    // My Father. They Were Wrong."). Swapped to the US section feed,
+    // which per NYT's public RSS documentation excludes Opinion/Style/
+    // Well/Real Estate/Arts sections by design -- same fix pattern as
+    // trusting a source's own editorial categorization elsewhere in this
+    // file, rather than trying to regex-match endlessly varied essay
+    // headline phrasing. Deliberately NOT World.xml, despite that being
+    // the more commonly-documented NYT section feed -- this source is
+    // tagged as the US country entry, so it needs US national news, not
+    // international news mislabeled as US. HYPOTHESIS-TIER: the
+    // rss.nytimes.com/services/xml/rss/nyt/<Section>.xml pattern is
+    // confirmed real via search (Health.xml, Science.xml, etc. all
+    // verified), but this exact US.xml filename wasn't directly
+    // fetch-verified. Check the next run's log for a 200 + valid XML
+    // result; revert to HomePage.xml if it 404s.
+    { source: 'nytimes.com', feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/US.xml' },
     // NEW (2026-08-02): NPR and CNN top-stories feeds -- both extremely
     // long-stable, widely-documented URLs (years-old, cited across
     // countless RSS directories unchanged), not individually
