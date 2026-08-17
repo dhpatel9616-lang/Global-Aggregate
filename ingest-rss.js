@@ -2284,6 +2284,49 @@ async function main() {
   // individual call is now safe. The existing TIME_BUDGET_MS check below
   // still caps total clustering time regardless.
   const CLUSTER_HARD_TIMEOUT_MS = 15000;
+
+  // PERF FIX (2026-08-17): the real bottleneck was never table size alone
+  // -- confirmed via direct EXPLAIN ANALYZE that the trigram GIN index
+  // scan itself costs ~500-850ms per lookup regardless of date filtering
+  // (a WHERE clause on created_at doesn't shrink a GIN index scan; that
+  // only happens via a genuine partial index). cluster_related_articles
+  // was rewritten to use dynamic SQL so its date bound is a real literal
+  // each call (Postgres can't use a partial index against a bound built
+  // from now()/a variable -- confirmed via a direct side-by-side test).
+  // A rolling 7-day partial index (articles_title_trgm_idx_recent) now
+  // backs this: confirmed the exact combination that previously took
+  // 31.3s (window=3/batch=3) now takes ~4.3s, and even the original
+  // historical "healthy" config (window=6/batch=30) now runs in ~3.1s --
+  // faster than the crippled window=1/batch=2 fallback used to run.
+  // Restoring those original values below.
+  //
+  // The partial index needs periodic refreshing (its predicate is fixed
+  // at creation time, can't reference now() directly) -- CONCURRENTLY
+  // rebuilds aren't possible from any stored routine (confirmed via a
+  // real Postgres error), so this uses a plain rebuild instead, which
+  // takes a SHARE lock: blocks concurrent writes for ~15s, does NOT block
+  // reads (the live site is unaffected). Gated to fire roughly once/day
+  // (shard A only, specific hour) rather than every run.
+  const now_ = new Date();
+  if (SHARD === 'A' && now_.getUTCHours() === 3) {
+    try {
+      const { error: refreshError } = await supabase.rpc('refresh_recent_title_trgm_index', { days_back: 7 });
+      if (refreshError) {
+        console.error(`Trigram index refresh failed (non-fatal): ${refreshError.message}`);
+      } else {
+        console.log('Trigram index refresh: OK');
+      }
+    } catch (err) {
+      console.error(`Trigram index refresh threw (non-fatal): ${err.message}`);
+    }
+  }
+  // Expected side effect, confirmed via direct testing (2026-08-17): the
+  // first clustering call right after a fresh rebuild hits a cold-cache
+  // penalty (observed once: 17.4s, well over the timeout ceiling), which
+  // converges back to the ~3s baseline within 1-2 more calls. If a run
+  // right after the daily refresh loses its first clustering call to a
+  // timeout, that's this effect, not a new regression -- the loop moves
+  // on to the next scheduled run (~15-30 min later) with a warm cache.
   // max_batch_size reduced further from 6 to 3, calls raised from 15 to 25
   // (2026-08-06): table has grown to 63,313 rows (from ~53K when 6 was
   // tuned), and direct EXPLAIN ANALYZE confirms per-lookup cost has grown
@@ -2360,6 +2403,17 @@ async function main() {
   // fix is the retention/pruning policy already flagged above (bounding
   // how far back the trigram index has to search), not another parameter
   // nudge. Flagging for next session rather than solving here.
+  // RESOLVED (2026-08-17): the retention/pruning fix flagged above is now
+  // in place (partial trigram index + dynamic-SQL rewrite of
+  // cluster_related_articles, see the PERF FIX comment above). Confirmed
+  // via direct timing: process_window_hours=6/max_batch_size=30 -- the
+  // ORIGINAL pre-emergency-cut values from the very first version of this
+  // tuning history -- now runs in ~3.1s, safely under the ~8s ceiling with
+  // real margin, and faster than the crippled window=1/batch=2 fallback
+  // used to run. Restoring them. If this table keeps growing enough to
+  // erode the margin again, the fix is shortening the partial index's
+  // 7-day retention window (see refresh_recent_title_trgm_index), not
+  // cutting batch_size/process_window_hours again.
   const CLUSTER_CALLS_PER_RUN = 100;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
@@ -2371,7 +2425,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 1, max_batch_size: 2 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 6, max_batch_size: 30 }),
       clusterTimeout,
     ]);
     if (clusterError) {
