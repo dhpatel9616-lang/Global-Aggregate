@@ -95,7 +95,16 @@ function safeStringify(value) {
 // that fallback was too narrow (5-6 words per topic) to catch normal news
 // phrasing. Expanded substantially below -- same structure, much wider net.
 const TOPIC_KEYWORDS = [
-  ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader|governor|mayor|lawmaker|legislation|bill passed|policy|diplomat|embassy|sanctions|treaty|summit|geopolit|military coup|martial law|protest|demonstrators|rally|strike action|human rights|constitution|judiciary|supreme court|verdict|lawsuit|corruption|scandal|resign(ed|ation)?|coalition|vote|ballot|campaign trail|foreign minister|un security council|nato|diplomatic)\b/i],
+  // NEW (2026-08-16): war/conflict terms added -- previously major conflict
+  // stories (e.g. "Israeli airstrikes killed 11 people in South Lebanon",
+  // "12 killed in overnight strikes in Ukraine and Russia") fell through
+  // to the World default because this list only had "military coup" and
+  // "martial law", not active-conflict language. Kept to compound/
+  // unambiguous terms (airstrike, missile strike, drone strike) rather
+  // than bare "war" or "strike" alone, which are too ambiguous (trade
+  // war, culture war, labor strike -- already separately covered by
+  // "strike action" above) and would over-match.
+  ['Politics', /\b(election|president|prime minister|parliament|senate|congress|minister|government shutdown|coup|referendum|impeach|cabinet reshuffle|ruling party|opposition leader|governor|mayor|lawmaker|legislation|bill passed|policy|diplomat|embassy|sanctions|treaty|summit|geopolit|military coup|martial law|protest|demonstrators|rally|strike action|human rights|constitution|judiciary|supreme court|verdict|lawsuit|corruption|scandal|resign(ed|ation)?|coalition|vote|ballot|campaign trail|foreign minister|un security council|nato|diplomatic|airstrikes?|air strikes?|missile strikes?|drone strikes?|rocket attacks?|invasion|invaded|ceasefire|shelling|artillery barrage|warplanes?|war crimes|battlefield|front ?line|ground offensive|troops advance|combat zone)\b/i],
   ['Business', /\b(stock market|shares|earnings|ipo|merger|acquisition|gdp|inflation|interest rate|central bank|bankruptcy|ceo|revenue|quarterly (results|profit)|economy|economic|trade deal|tariff|export|import|investment|investor|startup funding|venture capital|market cap|currency|exchange rate|unemployment|jobs report|manufacturing|supply chain|oil price|commodity|banking sector|fiscal|budget deficit|subsidy|price hike|cost of living|retail sales|corporate|industry|factory)\b/i],
   ['Tech', /\b(smartphone|artificial intelligence|\bai\b|software|app store|cybersecurity|data breach|chip(maker)?|semiconductor|startup|silicon valley|social media platform|tech giant|app launch|digital platform|internet access|broadband|telecom|5g|satellite launch|space agency|electric vehicle|ev market|robot|automation|data center|cloud computing|crypto|blockchain|innovation hub)\b/i],
   ['Sports', /\b(championship|tournament|world cup|olympics|match|goal|coach|athlete|league|medal|final score|clinch(ed)? the title|boxing|title fight|heavyweight|knockout|football|soccer|cricket\w*|basketball|tennis|marathon|stadium|referee|squad|qualify(ing)?|semifinal\w*|quarterfinal\w*|quarter-final\w*|grand slam|premier league|fifa|uefa|striker|midfielder)\b/i],
@@ -315,6 +324,13 @@ const JUNK_PATTERNS = [
   /^i (went|traveled|travelled) to\b.*\b(experience|discover)\b/i,
   /\bwhere to (stay|eat) in\b/i,
   /\b\d+ (best|top) (places|things) (to|in)\b/i,
+  // NEW (2026-08-15): "Skip X's Crowds and Do Y Instead" travel-listicle
+  // framing, found via live audit on the Google News country-fallback path
+  // (e.g. "Skip Iceland's Crowds and Hike This Otherworldly National Park
+  // Instead - backpacker.com", tagged IS/World). Also independently caught
+  // a US shopping listicle ("Skip the $120 lash extensions...") -- same
+  // "skip X, do/buy Y instead" clickbait shape regardless of topic.
+  /^skip .+ (crowds|and|instead)\b/i,
 
   // NEW: LinkedIn-repost articles where a full lead paragraph gets
   // dumped into the title field with a "Read more: ... - LinkedIn"
@@ -351,6 +367,15 @@ const JUNK_PATTERNS = [
   /^press release\s*[-:]/i,
   /\bplayer profile\b/i,
   /\bfam trip\b/i,
+  // NEW (2026-08-15): recurring newsletter photo-gallery format, found via
+  // live audit -- "I have a picture for you! 08 August-14 August 2026"
+  // (dailymaverick.co.za/ZA) is a weekly reader-photo digest, not a news
+  // story, and repeats verbatim (only the date range changes) every week.
+  // "Photo of the Day" is the same non-article shape from a different
+  // source (havanatimes.org/CU) -- a recurring caption slot, not a
+  // discrete headline.
+  /^i have a (picture|photo) for you\b/i,
+  /\bphoto of the (day|week)\s*$/i,
   // NEW: gossip/tabloid content found via live audit (legit.ng carrying
   // "Adult film actress...shares new bedroom video" and "...sharing
   // hugs...in trending video" style content). Tested against genuine
@@ -405,6 +430,23 @@ const JUNK_PATTERNS = [
   /^sign up for (the |our )?.{0,40}newsletter\b/i, // newsletter subscription CTA parsed as an article (e.g. "Sign up for the Feast newsletter: our free Guardian food email")
   /\bA roundup of the latest news on (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/i, // recurring daily-digest format
   /:\s*latest developments$/i, // rolling live-blog update title, not a discrete article
+
+  // NEW (2026-08-15): recurring "what's on" local-events listicles, found
+  // via live audit on the Google News country-fallback path (e.g. "What's
+  // On in Greater Recife This Weekend: Forró, Circus and Ciranda" -
+  // riotimesonline.com/BR; "What's on in Malta and Gozo this week: August
+  // 8 to 15, 2026" - timesofmalta.com/MT). Recurring weekly format, not a
+  // discrete news story -- same category as the Daily Catch-Up/Live
+  // Updates rolling-digest patterns above. Anchored to title start since
+  // this is specifically a headline-framing pattern, not a general phrase
+  // that could appear mid-sentence in real news.
+  /^what.s on in .{0,60}this (weekend|week)\b/i,
+  // NEW (2026-08-15): "Countries that share/celebrate/mark [holiday]"
+  // listicle framing, found via live audit (e.g. "Countries that share
+  // India's Independence Day: South Korea, Bahrain and more mark August
+  // 15 - CNBC TV18", tagged BH/World -- a generic holiday-trivia roundup,
+  // not news specific to Bahrain or any single country).
+  /^countries that (share|celebrate|mark)\b/i,
 ];
 
 // Specific domains known to be content farms, press-release wires, or
