@@ -2405,15 +2405,25 @@ async function main() {
   // nudge. Flagging for next session rather than solving here.
   // RESOLVED (2026-08-17): the retention/pruning fix flagged above is now
   // in place (partial trigram index + dynamic-SQL rewrite of
-  // cluster_related_articles, see the PERF FIX comment above). Confirmed
-  // via direct timing: process_window_hours=6/max_batch_size=30 -- the
-  // ORIGINAL pre-emergency-cut values from the very first version of this
-  // tuning history -- now runs in ~3.1s, safely under the ~8s ceiling with
-  // real margin, and faster than the crippled window=1/batch=2 fallback
-  // used to run. Restoring them. If this table keeps growing enough to
-  // erode the margin again, the fix is shortening the partial index's
-  // 7-day retention window (see refresh_recent_title_trgm_index), not
-  // cutting batch_size/process_window_hours again.
+  // cluster_related_articles, see the PERF FIX comment above).
+  // CORRECTION, same day: the window=6/batch=30 restore below was tested
+  // via direct execute_sql (MCP admin access), which does NOT go through
+  // PostgREST's authenticator role and its real statement_timeout=8s /
+  // lock_timeout=8s -- confirmed via pg_roles that authenticator (which
+  // PostgREST actually connects as, regardless of the JWT's claimed role)
+  // carries both those 8s limits, while service_role itself has no
+  // override, meaning the EFFECTIVE session limit for real RPC calls is
+  // still 8s. Retested with `set statement_timeout='8s'` explicitly to
+  // match production reality: window=6/batch=30 fails immediately (first
+  // internal query alone blows the 8s ceiling). This was a repeat of the
+  // exact same testing mistake flagged in this project's own key
+  // learnings ("Direct SQL != production RPC performance") -- caught only
+  // because production showed zero clustering for 19 straight hours after
+  // the "verified safe" push. window=6/batch=10 confirmed safe across 4
+  // repeated trials under the real 8s constraint (1.5s-4.7s, worst case
+  // 59% of budget) -- using that instead. batch=15 measured 6.9s on one
+  // trial, too close to the edge to trust given how single-sample
+  // measurements have already been wrong twice this project.
   const CLUSTER_CALLS_PER_RUN = 100;
   let clusteredOk = 0;
   for (let i = 0; i < CLUSTER_CALLS_PER_RUN; i++) {
@@ -2425,7 +2435,7 @@ async function main() {
       setTimeout(() => resolve({ error: { message: `Hard timeout after ${CLUSTER_HARD_TIMEOUT_MS}ms -- clustering RPC did not respond in time` } }), CLUSTER_HARD_TIMEOUT_MS)
     );
     const { error: clusterError } = await Promise.race([
-      supabase.rpc('cluster_related_articles', { process_window_hours: 6, max_batch_size: 30 }),
+      supabase.rpc('cluster_related_articles', { process_window_hours: 6, max_batch_size: 10 }),
       clusterTimeout,
     ]);
     if (clusterError) {
