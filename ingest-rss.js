@@ -2139,97 +2139,21 @@ async function main() {
   const countryCodes = [...allCountryCodes.slice(rotationOffset), ...allCountryCodes.slice(0, rotationOffset)];
   console.log(`Starting RSS ingestion: ${totalFeeds} feed(s) across ${countryCodes.length} country group(s) (shard ${SHARD}, rotation offset ${rotationOffset})...\n`);
 
-  const seenTitles = await loadExistingTitles();
-  const { data: existingUrls } = await supabase.from('articles').select('url');
-  const seenUrls = new Set((existingUrls || []).map((r) => r.url));
-  console.log(`Loaded ${seenTitles.size} existing titles / ${seenUrls.size} existing URLs for dedup.\n`);
-
-  const results = [];
-  let lastSource = null;
-  let budgetExceeded = false;
-  for (const [countryIndex, country] of countryCodes.entries()) {
-    if (Date.now() - runStart > TIME_BUDGET_MS) {
-      const skipped = countryCodes.slice(countryIndex);
-      console.warn(`\nTime budget (${TIME_BUDGET_MS / 60000}min) reached -- skipping remaining ${skipped.length} country group(s) this run: ${skipped.join(', ')}`);
-      budgetExceeded = true;
-      break;
-    }
-
-    // WORLD (wire) feeds get checked against every real country, since their
-    // relevance depends on content (does it mention Kenya, Poland, etc.),
-    // not which feed group they were fetched under -- same principle as the
-    // wire-relevance check in ingest.js.
-    const targetCountries = country === 'WORLD' ? countryCodes.filter((c) => c !== 'WORLD') : [country];
-
-    for (const feedEntry of FEED_URLS_BY_COUNTRY[country]) {
-      // Same-domain requests need more breathing room than the standard 1s
-      // inter-feed delay. Confirmed via a real run: AllAfrica is hit 16
-      // times across this project's country batches (each addition looked
-      // fine in isolation at the time), and the first ~3 back-to-back calls
-      // succeeded while all 13 subsequent ones in the same run timed out --
-      // a rate-limit/throttle pattern, not AllAfrica being down. This is a
-      // structural risk for ANY domain reused across many countries, not
-      // just AllAfrica, so the check is generic rather than AllAfrica-specific.
-      if (feedEntry.source === lastSource) {
-        await sleep(4000);
-        // ^ Reverted from 8000ms -- confirmed via a real run that 8s
-        // performed WORSE than 4s (failures started at the 8th consecutive
-        // same-domain call instead of the 16th), so more pre-emptive delay
-        // isn't the right lever. The real fix is the retry-on-timeout logic
-        // in fetchFeed() above; this delay is now just a light first line
-        // of defense, not the primary mechanism.
-      }
-      lastSource = feedEntry.source;
-
-      if (country === 'WORLD') {
-        // Fetch once, but the row's country needs to be a real tag for
-        // filtering/display purposes. Wire items get evaluated against each
-        // real target country in turn; a story only gets inserted for a
-        // country it's actually relevant to.
-        let items;
-        try {
-          items = await fetchFeed(feedEntry.feedUrl);
-        } catch (err) {
-          console.error(`[WORLD via RSS (${feedEntry.source})] Feed fetch failed: ${err.message}`);
-          await sleep(1000);
-          continue;
-        }
-        for (const targetCountry of targetCountries) {
-          const rows = items
-            .filter((item) => item.title && item.link)
-            .map((item) => buildRow(item, targetCountry, feedEntry.source, feedEntry.stateMedia));
-          const clean = rows.filter((row) => {
-            if (seenUrls.has(row.url)) return false;
-            const reason = getJunkReasonForRss(row);
-            if (reason !== null) return false;
-            const key = normalizeTitle(row.title);
-            if (seenTitles.has(key)) return false;
-            seenTitles.add(key);
-            seenUrls.add(row.url);
-            return true;
-          });
-          if (clean.length > 0) {
-            const { error } = await supabase.from('articles').upsert(
-    clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
-    { onConflict: 'url_key', ignoreDuplicates: true }
-  );
-            if (!error) {
-              console.log(`[${targetCountry} via RSS (${feedEntry.source})] Upserted ${clean.length} relevant article(s).`);
-              results.push({ label: `${targetCountry} via ${feedEntry.source}`, inserted: clean.length });
-            }
-          }
-        }
-      } else {
-        const result = await processFeed(country, feedEntry, seenTitles, seenUrls);
-        results.push(result);
-      }
-      await sleep(400); // reduced from 1000ms (2026-08-01) -- confirmed via direct calculation that at 202 feeds, the old 1s delay alone cost 3.4 min out of the 12-min time budget, the real driver behind recurring time-budget skips as the feed count grew 40% this session (144->202). Still a genuine politeness delay, not zero; the separate 4s same-domain delay elsewhere still protects against bursting any single server.
-    }
-  }
-
-  const totalInserted = results.reduce((sum, r) => sum + r.inserted, 0);
-  console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s)${budgetExceeded ? ' (run cut short by time budget)' : ''}.`);
-
+  // REORDERED (2026-08-20): clustering used to run at the very END of
+  // this script, after the full RSS fetch loop. Confirmed via real
+  // production data that this starved it completely -- the real
+  // cluster_related_articles RPC call count was frozen for hours
+  // straight (pg_stat_statements showed zero new calls) while article
+  // ingestion continued normally the whole time, meaning every single
+  // run was either running out of its GitHub Actions time budget or
+  // otherwise never reaching the clustering section, despite RSS
+  // fetching itself completing fine. Moving clustering to run FIRST,
+  // before the fetch loop, guarantees it always gets a full, dedicated
+  // time budget regardless of how long feed-fetching takes or whether
+  // it gets cut short -- clustering doesn't depend on this run's own
+  // newly-fetched articles anyway (it matches against the existing
+  // recent backlog via its own process_window_hours), so there's no
+  // correctness reason it needs to run after fetching.
   console.log('\nClustering related stories across countries...');
   // RSS runs every 30 minutes per shard (was 15, see the SHARDING comment
   // above), not every 3 hours like the API pipeline -- the function's
@@ -2445,6 +2369,98 @@ async function main() {
     clusteredOk++;
   }
   console.log(`Clustering complete (${clusteredOk}/${CLUSTER_CALLS_PER_RUN} calls succeeded).`);
+
+  const seenTitles = await loadExistingTitles();
+  const { data: existingUrls } = await supabase.from('articles').select('url');
+  const seenUrls = new Set((existingUrls || []).map((r) => r.url));
+  console.log(`Loaded ${seenTitles.size} existing titles / ${seenUrls.size} existing URLs for dedup.\n`);
+
+  const results = [];
+  let lastSource = null;
+  let budgetExceeded = false;
+  for (const [countryIndex, country] of countryCodes.entries()) {
+    if (Date.now() - runStart > TIME_BUDGET_MS) {
+      const skipped = countryCodes.slice(countryIndex);
+      console.warn(`\nTime budget (${TIME_BUDGET_MS / 60000}min) reached -- skipping remaining ${skipped.length} country group(s) this run: ${skipped.join(', ')}`);
+      budgetExceeded = true;
+      break;
+    }
+
+    // WORLD (wire) feeds get checked against every real country, since their
+    // relevance depends on content (does it mention Kenya, Poland, etc.),
+    // not which feed group they were fetched under -- same principle as the
+    // wire-relevance check in ingest.js.
+    const targetCountries = country === 'WORLD' ? countryCodes.filter((c) => c !== 'WORLD') : [country];
+
+    for (const feedEntry of FEED_URLS_BY_COUNTRY[country]) {
+      // Same-domain requests need more breathing room than the standard 1s
+      // inter-feed delay. Confirmed via a real run: AllAfrica is hit 16
+      // times across this project's country batches (each addition looked
+      // fine in isolation at the time), and the first ~3 back-to-back calls
+      // succeeded while all 13 subsequent ones in the same run timed out --
+      // a rate-limit/throttle pattern, not AllAfrica being down. This is a
+      // structural risk for ANY domain reused across many countries, not
+      // just AllAfrica, so the check is generic rather than AllAfrica-specific.
+      if (feedEntry.source === lastSource) {
+        await sleep(4000);
+        // ^ Reverted from 8000ms -- confirmed via a real run that 8s
+        // performed WORSE than 4s (failures started at the 8th consecutive
+        // same-domain call instead of the 16th), so more pre-emptive delay
+        // isn't the right lever. The real fix is the retry-on-timeout logic
+        // in fetchFeed() above; this delay is now just a light first line
+        // of defense, not the primary mechanism.
+      }
+      lastSource = feedEntry.source;
+
+      if (country === 'WORLD') {
+        // Fetch once, but the row's country needs to be a real tag for
+        // filtering/display purposes. Wire items get evaluated against each
+        // real target country in turn; a story only gets inserted for a
+        // country it's actually relevant to.
+        let items;
+        try {
+          items = await fetchFeed(feedEntry.feedUrl);
+        } catch (err) {
+          console.error(`[WORLD via RSS (${feedEntry.source})] Feed fetch failed: ${err.message}`);
+          await sleep(1000);
+          continue;
+        }
+        for (const targetCountry of targetCountries) {
+          const rows = items
+            .filter((item) => item.title && item.link)
+            .map((item) => buildRow(item, targetCountry, feedEntry.source, feedEntry.stateMedia));
+          const clean = rows.filter((row) => {
+            if (seenUrls.has(row.url)) return false;
+            const reason = getJunkReasonForRss(row);
+            if (reason !== null) return false;
+            const key = normalizeTitle(row.title);
+            if (seenTitles.has(key)) return false;
+            seenTitles.add(key);
+            seenUrls.add(row.url);
+            return true;
+          });
+          if (clean.length > 0) {
+            const { error } = await supabase.from('articles').upsert(
+    clean.map(({ _rawCategory, ...cleanRow }) => cleanRow),
+    { onConflict: 'url_key', ignoreDuplicates: true }
+  );
+            if (!error) {
+              console.log(`[${targetCountry} via RSS (${feedEntry.source})] Upserted ${clean.length} relevant article(s).`);
+              results.push({ label: `${targetCountry} via ${feedEntry.source}`, inserted: clean.length });
+            }
+          }
+        }
+      } else {
+        const result = await processFeed(country, feedEntry, seenTitles, seenUrls);
+        results.push(result);
+      }
+      await sleep(400); // reduced from 1000ms (2026-08-01) -- confirmed via direct calculation that at 202 feeds, the old 1s delay alone cost 3.4 min out of the 12-min time budget, the real driver behind recurring time-budget skips as the feed count grew 40% this session (144->202). Still a genuine politeness delay, not zero; the separate 4s same-domain delay elsewhere still protects against bursting any single server.
+    }
+  }
+
+  const totalInserted = results.reduce((sum, r) => sum + r.inserted, 0);
+  console.log(`\nDone. ${totalInserted} articles processed across ${totalFeeds} feed(s)${budgetExceeded ? ' (run cut short by time budget)' : ''}.`);
+
 }
 
 main()
