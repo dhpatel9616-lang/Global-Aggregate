@@ -1745,6 +1745,52 @@ const FEED_URLS_BY_COUNTRY = {
   ],
 };
 
+// --- New-source merge step (added for the Aug 2026 source-research pass) ---
+//
+// New candidate feeds are NEVER hand-merged into FEED_URLS_BY_COUNTRY above.
+// They live in validated-feeds.json, which is only produced by running
+// `node validate-rss-feeds.js` -- a live HTTP+XML check against every
+// candidate in candidate-feeds.json. This keeps the "no untested changes
+// shipped" rule enforced structurally: if validation hasn't been run (or a
+// specific country's candidate failed it), that entry simply isn't present
+// in validated-feeds.json and never reaches this merge.
+//
+// Safe to run with or without validated-feeds.json present -- if it's
+// missing (validator hasn't been run yet), this is a no-op and the script
+// behaves exactly as before.
+(function mergeValidatedFeeds() {
+  const path = require('path');
+  const fs = require('fs');
+  const validatedPath = path.join(__dirname, 'validated-feeds.json');
+  if (!fs.existsSync(validatedPath)) {
+    console.log('[merge] No validated-feeds.json found -- skipping new-source merge (run validate-rss-feeds.js first to enable).');
+    return;
+  }
+
+  let validated;
+  try {
+    validated = JSON.parse(fs.readFileSync(validatedPath, 'utf8'));
+  } catch (err) {
+    console.error(`[merge] Failed to parse validated-feeds.json: ${err.message} -- skipping merge.`);
+    return;
+  }
+
+  let added = 0;
+  let skippedDuplicate = 0;
+  for (const entry of validated) {
+    const { country, feedUrl, sourceName, stateMedia } = entry;
+    if (!FEED_URLS_BY_COUNTRY[country]) FEED_URLS_BY_COUNTRY[country] = [];
+    const domain = (() => { try { return new URL(feedUrl).hostname.replace(/^www\./, ''); } catch { return feedUrl; } })();
+    const alreadyPresent = FEED_URLS_BY_COUNTRY[country].some((e) => e.feedUrl === feedUrl || e.source === domain);
+    if (alreadyPresent) { skippedDuplicate++; continue; }
+    const newEntry = { source: domain, feedUrl };
+    if (stateMedia) newEntry.stateMedia = true;
+    FEED_URLS_BY_COUNTRY[country].push(newEntry);
+    added++;
+  }
+  console.log(`[merge] Added ${added} validated new feeds across ${new Set(validated.map(v => v.country)).size} countries (${skippedDuplicate} skipped as already present).`);
+})();
+
 async function loadExistingTitles() {
   const { data, error } = await supabase.from('articles').select('title');
   if (error) {
