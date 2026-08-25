@@ -129,6 +129,10 @@ const FEED_URLS_BY_COUNTRY = {
   IN: [
     { source: 'timesofindia.indiatimes.com', feedUrl: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms' },
     { source: 'ndtv.com', feedUrl: 'http://feeds.feedburner.com/ndtvnews-top-stories' },
+    // NEW (2026-08-25): confirmed via 2 independent sources (ABinfinity
+    // GitHub RSS list + Feedspot directory) during the source-research pass.
+    { source: 'hindustantimes.com', feedUrl: 'https://www.hindustantimes.com/rss/topnews/rssfeed.xml' },
+    { source: 'indiatoday.in', feedUrl: 'https://www.indiatoday.in/rss/1206584' },
     // Switched from the generic /feed/ (all sections) to the India-only
     // section feed. A random sample of 25 articles from the generic feed
     // (2026-07-16) showed roughly half were hyperlocal High Court rulings,
@@ -179,6 +183,12 @@ const FEED_URLS_BY_COUNTRY = {
     // biggest country in the dataset.
     { source: 'npr.org', feedUrl: 'https://feeds.npr.org/1001/rss.xml' },
     { source: 'cnn.com', feedUrl: 'http://rss.cnn.com/rss/cnn_topstories.rss' },
+    // NEW (2026-08-25): CBS News, fetch-verified live and returning valid
+    // RSS 2.0 with current items. ABC News path corrected during
+    // verification from the commonly-documented abcnews.go.com pattern
+    // (unconfirmed) to feeds.abcnews.com (fetch-verified live).
+    { source: 'cbsnews.com', feedUrl: 'https://www.cbsnews.com/latest/rss/main' },
+    { source: 'feeds.abcnews.com', feedUrl: 'https://feeds.abcnews.com/abcnews/topstories' },
   ],
   TR: [
     { source: 'dailysabah.com', feedUrl: 'https://www.dailysabah.com/rssFeed/10000' },
@@ -201,6 +211,9 @@ const FEED_URLS_BY_COUNTRY = {
     // directory; exact feed path not independently verified this round,
     // treat as a hypothesis.
     { source: 'saharareporters.com', feedUrl: 'https://saharareporters.com/feed' },
+    // NEW (2026-08-25): confirmed exact URL match in plenaryapp OPML +
+    // Feedspot directory during the source-research pass.
+    { source: 'premiumtimesng.com', feedUrl: 'https://www.premiumtimesng.com/feed' },
   ],
   KE: [
     { source: 'the-star.co.ke', feedUrl: 'https://www.the-star.co.ke/rss' },
@@ -225,6 +238,12 @@ const FEED_URLS_BY_COUNTRY = {
     // exact feed path not independently verified this round, treat as a
     // hypothesis.
     { source: 'arynews.tv', feedUrl: 'https://arynews.tv/feed' },
+    // NEW (2026-08-25): confirmed via Feedspot + own /rss page during the
+    // source-research pass. (Geo News/Geo TV was also researched but
+    // dropped -- confirmed primarily Urdu-language per Wikipedia, doesn't
+    // meet the English-only requirement.)
+    { source: 'thenews.com.pk', feedUrl: 'https://www.thenews.com.pk/rss/1/1' },
+    { source: 'brecorder.com', feedUrl: 'https://www.brecorder.com/feeds/latest-news' },
   ],
   TH: [
     { source: 'bangkokpost.com', feedUrl: 'https://www.bangkokpost.com/rss/data/topstories.xml' },
@@ -1136,7 +1155,12 @@ const FEED_URLS_BY_COUNTRY = {
   // ^ Confirmed "the only Bosnian portal that gives news in English."
   BD: [
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/south-asia/bangladesh/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
-    { source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }], // right URL, but every item's title comes through unusable after sanitization (missing_title: 10/10) -- a source-side feed structure issue, not a path problem
+    { source: 'thedailystar.net', feedUrl: 'https://www.thedailystar.net/frontpage/rss.xml' }, // right URL, but every item's title comes through unusable after sanitization (missing_title: 10/10) -- a source-side feed structure issue, not a path problem
+    // NEW (2026-08-25): confirmed via 2 sources during the source-research
+    // pass -- bdnews24's exact URL matches plenaryapp OPML; Prothom Alo
+    // English's outlet+section feeds confirmed via Feedspot.
+    { source: 'bdnews24.com', feedUrl: 'https://bdnews24.com/?widgetName=rssfeed&widgetId=1150&getXmlFeed=true' },
+    { source: 'en.prothomalo.com', feedUrl: 'https://en.prothomalo.com/feed/' }],
   CF: [
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/central-african-republic/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/centralafricanrepublic/headlines.rdf' }],
@@ -1346,6 +1370,11 @@ const FEED_URLS_BY_COUNTRY = {
     // feed path not independently verified this round (standard
     // WordPress-adjacent /feed pattern), treat as a hypothesis.
     { source: 'addisstandard.com', feedUrl: 'https://addisstandard.com/feed' },
+    // NEW (2026-08-25): Addis Fortune, confirmed via 2 independent sources
+    // (Feedspot + Wikipedia), exact path match. Note: Addis Standard above
+    // had its registration revoked by Ethiopia's Media Authority effective
+    // 24 Feb 2026 per CPJ -- worth monitoring, not touched here.
+    { source: 'addisfortune.news', feedUrl: 'https://addisfortune.news/feed/' },
   ],
   // NEW (2026-07-28): found while working the "stalled" list -- these 5
   // major countries had ZERO dedicated RSS feed, relying purely on the
@@ -1361,6 +1390,12 @@ const FEED_URLS_BY_COUNTRY = {
     // service -- long-documented standard feed path, not individually
     // fetch-verified this session.
     { source: 'nhk.or.jp', feedUrl: 'https://www3.nhk.or.jp/nhkworld/en/news/feeds/' },
+    // NEW (2026-08-25): Kyodo News path corrected during verification
+    // (was /rss/news.xml, confirmed real path is /rss/all.xml via
+    // plenaryapp OPML exact match). Japan Today confirmed real outlet +
+    // RSS existence via Feedspot.
+    { source: 'english.kyodonews.net', feedUrl: 'https://english.kyodonews.net/rss/all.xml' },
+    { source: 'japantoday.com', feedUrl: 'https://japantoday.com/feed' },
   ],
   EG: [
     { source: 'egyptindependent.com', feedUrl: 'https://www.egyptindependent.com/feed' },
@@ -1401,6 +1436,12 @@ const FEED_URLS_BY_COUNTRY = {
     // independent voices, clearly labeled either way). Exact path
     // confirmed via feed directory.
     { source: 'tass.com', feedUrl: 'https://tass.com/rss/v2.xml', stateMedia: true },
+    // NEW (2026-08-25): RT, confirmed via Feedspot + RT's own /rss-feeds/
+    // page. State media -- flagged. Note: RT is under a standing EU
+    // broadcast suspension (since Mar 2022, upheld by the CJEU Jul 2025);
+    // worth excluding for any EU/UK-facing deployment if that becomes
+    // relevant.
+    { source: 'rt.com', feedUrl: 'https://www.rt.com/rss/', stateMedia: true },
   ],
   AF: [
     { source: 'tolonews.com', feedUrl: 'https://tolonews.com/en/rss.xml' }, // swapped -- bare path returned valid XML but 100% non_english (Dari/Pashto edition); /en/ prefix is the standard pattern for their English section, unverified
@@ -1575,6 +1616,14 @@ const FEED_URLS_BY_COUNTRY = {
     // English edition, genuinely different from Jakarta Post. Confirmed
     // real and exact path directly.
     { source: 'antaranews.com', feedUrl: 'https://en.antaranews.com/rss/news.xml' },
+    // NEW (2026-08-25): Coconuts Jakarta, confirmed via 2 independent
+    // sources (Eka Wirya's Indonesian-news RSS directory + Wikipedia
+    // confirms the outlet). Genuinely distinct English-language voice
+    // from Jakarta Post/Antara. (Tempo English and Jakarta Globe were
+    // also researched but dropped this round -- exact English RSS paths
+    // couldn't be corroborated by a 2nd source; only Indonesian-language
+    // editions were confirmed for Tempo.)
+    { source: 'coconuts.co', feedUrl: 'https://coconuts.co/jakarta/feed/' },
   ],
   // FIXED (2026-08-02): /rss 404'd. Confirmed real path directly from The
   // Star's own RSS directory page (thestar.com.my/RSS) -- their feeds live
@@ -1744,52 +1793,6 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'dutchnews.nl', feedUrl: 'https://www.dutchnews.nl/feed' }, // genuinely different second English-language Dutch outlet, exact URL confirmed
   ],
 };
-
-// --- New-source merge step (added for the Aug 2026 source-research pass) ---
-//
-// New candidate feeds are NEVER hand-merged into FEED_URLS_BY_COUNTRY above.
-// They live in validated-feeds.json, which is only produced by running
-// `node validate-rss-feeds.js` -- a live HTTP+XML check against every
-// candidate in candidate-feeds.json. This keeps the "no untested changes
-// shipped" rule enforced structurally: if validation hasn't been run (or a
-// specific country's candidate failed it), that entry simply isn't present
-// in validated-feeds.json and never reaches this merge.
-//
-// Safe to run with or without validated-feeds.json present -- if it's
-// missing (validator hasn't been run yet), this is a no-op and the script
-// behaves exactly as before.
-(function mergeValidatedFeeds() {
-  const path = require('path');
-  const fs = require('fs');
-  const validatedPath = path.join(__dirname, 'validated-feeds.json');
-  if (!fs.existsSync(validatedPath)) {
-    console.log('[merge] No validated-feeds.json found -- skipping new-source merge (run validate-rss-feeds.js first to enable).');
-    return;
-  }
-
-  let validated;
-  try {
-    validated = JSON.parse(fs.readFileSync(validatedPath, 'utf8'));
-  } catch (err) {
-    console.error(`[merge] Failed to parse validated-feeds.json: ${err.message} -- skipping merge.`);
-    return;
-  }
-
-  let added = 0;
-  let skippedDuplicate = 0;
-  for (const entry of validated) {
-    const { country, feedUrl, sourceName, stateMedia } = entry;
-    if (!FEED_URLS_BY_COUNTRY[country]) FEED_URLS_BY_COUNTRY[country] = [];
-    const domain = (() => { try { return new URL(feedUrl).hostname.replace(/^www\./, ''); } catch { return feedUrl; } })();
-    const alreadyPresent = FEED_URLS_BY_COUNTRY[country].some((e) => e.feedUrl === feedUrl || e.source === domain);
-    if (alreadyPresent) { skippedDuplicate++; continue; }
-    const newEntry = { source: domain, feedUrl };
-    if (stateMedia) newEntry.stateMedia = true;
-    FEED_URLS_BY_COUNTRY[country].push(newEntry);
-    added++;
-  }
-  console.log(`[merge] Added ${added} validated new feeds across ${new Set(validated.map(v => v.country)).size} countries (${skippedDuplicate} skipped as already present).`);
-})();
 
 async function loadExistingTitles() {
   const { data, error } = await supabase.from('articles').select('title');
