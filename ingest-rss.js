@@ -947,7 +947,7 @@ const FEED_URLS_BY_COUNTRY = {
   // Feed path is a standard-convention guess -- unverified, confirm via
   // next run's log. Uses Cloudflare per its own tech stack, so a 403 here
   // wouldn't be surprising.
-  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/index.php?option=com_content&view=featured&format=feed&type=rss' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }], // Samoa Observer's Joomla feed path still unconfirmed. NEW: RNZ Pacific regional wire added as second source.
+  WS: [{ source: 'samoaobserver.ws', feedUrl: 'https://www.samoaobserver.ws/index.php?option=com_content&view=featured&format=feed&type=rss' }, { source: 'rnz.co.nz', feedUrl: 'https://www.rnz.co.nz/rss/pacific.xml' }, { source: 'asiapacificreport.nz', feedUrl: 'https://asiapacificreport.nz/tag/samoa-observer/feed/' }], // Samoa Observer's Joomla feed path still unconfirmed. RNZ Pacific regional wire as second source. NEW (2026-09-22): Asia Pacific Report's Samoa Observer-tagged feed added as a third, confirmed-live source (live-checked: real Samoa-specific content, last build date current) -- WS was found stale (no new articles in 9+ days) in a live data audit, so this adds real redundancy rather than relying solely on the unverified primary path.
   // NOT FOUND -- no plausible independent English-language outlet located
   // in this pass, or these are genuinely tiny states with no discoverable
   // English-language press at all:
@@ -1795,12 +1795,31 @@ const FEED_URLS_BY_COUNTRY = {
 };
 
 async function loadExistingTitles() {
-  const { data, error } = await supabase.from('articles').select('title');
-  if (error) {
-    console.error('Could not load existing titles for dedup, continuing without it:', error.message);
-    return new Set();
+  // FIX (2026-09-22): same unpaginated-select cap bug as ingest.js -- see
+  // that file's comment for the full explanation. Same 14-day window +
+  // pagination fix, kept in sync since this file requires normalizeTitle
+  // from ingest.js already (module.exports) but has its own copy of the
+  // loader.
+  const PAGE_SIZE = 1000;
+  const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const titles = new Set();
+  let from = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('title, source')
+      .gte('created_at', sinceIso)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('Could not load existing titles for dedup, continuing with what was loaded so far:', error.message);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    for (const row of data) titles.add(normalizeTitle(row.title, row.source));
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
-  return new Set(data.map((row) => normalizeTitle(row.title)));
+  return titles;
 }
 
 // RAW FETCH + SANITIZE (2026-08-02): replaces reliance on rss-parser's own
@@ -2073,7 +2092,7 @@ async function processFeed(country, feedEntry, seenTitles, seenUrls) {
       console.log(`[DEBUG excluded_category] ${row.source}: "${safeStringify(row._rawCategory)}" -- title: "${row.title.slice(0, 60)}"`);
     }
     if (reason === null) {
-      const key = normalizeTitle(row.title);
+      const key = normalizeTitle(row.title, row.source);
       if (seenTitles.has(key)) {
         reasonCounts['duplicate_title'] = (reasonCounts['duplicate_title'] || 0) + 1;
         continue;
@@ -2420,8 +2439,34 @@ async function main() {
   console.log(`Clustering complete (${clusteredOk}/${CLUSTER_CALLS_PER_RUN} calls succeeded).`);
 
   const seenTitles = await loadExistingTitles();
-  const { data: existingUrls } = await supabase.from('articles').select('url');
-  const seenUrls = new Set((existingUrls || []).map((r) => r.url));
+  // FIX (2026-09-22): same unpaginated-select cap as loadExistingTitles()
+  // above -- was silently capped at ~1000 rows. This one had a DB-level
+  // backstop (the url_key upsert still catches exact URL repeats even if
+  // seenUrls misses them), so it wasn't causing duplicate rows, but it was
+  // doing far less pre-filtering than intended and wasting round trips.
+  // Same 14-day window as loadExistingTitles() -- older rows are gone via
+  // trim-stale-articles anyway, so there's nothing useful past that window.
+  const seenUrls = new Set();
+  {
+    const PAGE_SIZE = 1000;
+    const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    let from = 0;
+    for (;;) {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('url')
+        .gte('created_at', sinceIso)
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) {
+        console.error('Could not fully load existing URLs for dedup, continuing with what was loaded so far:', error.message);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      for (const row of data) seenUrls.add(row.url);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+  }
   console.log(`Loaded ${seenTitles.size} existing titles / ${seenUrls.size} existing URLs for dedup.\n`);
 
   const results = [];
