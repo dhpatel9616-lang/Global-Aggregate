@@ -1133,7 +1133,7 @@ function isJunk(row) {
 // (different URL each time, so the DB's unique-URL constraint won't catch it).
 // This tracks titles we've already seen — both already in the database and
 // within this run — so syndicated repeats get skipped instead of piling up.
-function normalizeTitle(title) {
+function normalizeTitle(title, source) {
   let t = (title || '').trim().toLowerCase();
   // Strip a trailing " | <suffix>" only when the suffix is short (<=20
   // chars) -- that's the shape of an appended site name (e.g. "| Flipboard",
@@ -1146,16 +1146,55 @@ function normalizeTitle(title) {
   if (pipeIndex !== -1 && t.length - pipeIndex - 3 <= 20) {
     t = t.slice(0, pipeIndex);
   }
+  // FIX (2026-09-22): Google News search-feed titles append the syndication
+  // partner as "<story> - <Partner Name>" and the partner rotates on every
+  // poll -- confirmed live: "Mideast Wars Yemen - dailyrecordnews.com" /
+  // "- The Herald Journal" / "- Goshen News" / "- Dayton Daily News", all
+  // the same underlying story, none matching each other under the old key.
+  // Scoped strictly to source === 'news.google.com' so no other outlet's
+  // legitimate use of " - " in a real headline is affected. Threshold is
+  // wider than the pipe case (40 vs 20 chars) because outlet names here run
+  // longer, e.g. "Bluefield Daily Telegraph" (25 chars), "South China
+  // Morning Post" (25 chars) -- confirmed against real leaked examples.
+  if (source === 'news.google.com') {
+    const dashIndex = t.lastIndexOf(' - ');
+    if (dashIndex !== -1 && t.length - dashIndex - 3 <= 40) {
+      t = t.slice(0, dashIndex);
+    }
+  }
   return t.trim();
 }
 
 async function loadExistingTitles() {
-  const { data, error } = await supabase.from('articles').select('title');
-  if (error) {
-    console.error('Could not load existing titles for dedup, continuing without it:', error.message);
-    return new Set();
+  // FIX (2026-09-22): the old unpaginated select() was silently capped at
+  // Supabase/PostgREST's default ~1000-row limit -- with 93k+ rows in
+  // `articles`, that meant the dedup Set covered a near-random ~1% slice of
+  // history, not "everything already ingested" as the comment always
+  // claimed. Scoped to a 14-day lookback (matches the trim-stale-articles
+  // retention window already in place -- nothing older survives in the DB
+  // regardless) and paginated in 1000-row pages as a safety net in case
+  // even the 14-day window exceeds the default page size (it does: ~90k
+  // rows over ~60 days is easily >1000 rows per 14-day slice).
+  const PAGE_SIZE = 1000;
+  const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const titles = new Set();
+  let from = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('title, source')
+      .gte('created_at', sinceIso)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('Could not load existing titles for dedup, continuing with what was loaded so far:', error.message);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    for (const row of data) titles.add(normalizeTitle(row.title, row.source));
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
-  return new Set(data.map((row) => normalizeTitle(row.title)));
+  return titles;
 }
 
 async function upsertRows(countryName, rows, seenTitles) {
@@ -1178,7 +1217,7 @@ async function upsertRows(countryName, rows, seenTitles) {
   const deduped = [];
   let dupeSkipped = 0;
   for (const row of noJunk) {
-    const key = normalizeTitle(row.title);
+    const key = normalizeTitle(row.title, row.source);
     if (seenTitles.has(key)) {
       dupeSkipped++;
       continue;
