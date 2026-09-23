@@ -227,6 +227,12 @@ const FEED_URLS_BY_COUNTRY = {
     // (150K Facebook followers), genuinely different from The Star/
     // Standard Media. Confirmed real and exact path via feed directory.
     { source: 'nairobiwire.com', feedUrl: 'https://nairobiwire.com/feed' },
+    // NEW (2026-09-22): The East African -- Nation Media Group's regional
+    // weekly (Kenya/Tanzania/Uganda/Rwanda coverage), genuinely different
+    // scope from the three domestic-only sources above. Exact feed path
+    // not independently fetch-verified this round (standard /rss.xml
+    // pattern), treat as a candidate for the next log to confirm.
+    { source: 'theeastafrican.co.ke', feedUrl: 'https://www.theeastafrican.co.ke/rss.xml' },
   ],
   // Fetch-verified via search this session (real, current feed URLs)
   PK: [
@@ -284,6 +290,15 @@ const FEED_URLS_BY_COUNTRY = {
     // -- exact feed URL confirmed via directory listing, a different outlet
     // than the already-blocked dailymirror.lk, not the same domain retried.
     { source: 'nation.lk', feedUrl: 'https://www.nation.lk/online/rss.xml' },
+    // NEW (2026-09-22): Ada Derana (Sri Lanka's most-visited news network)
+    // and Daily FT (leading business daily) -- genuinely different
+    // outlets from the two above, added because colombogazette.com has a
+    // known malformed-XML issue and this country was down to one reliable
+    // source. dailymirror.lk deliberately NOT re-added -- already
+    // confirmed persistently 403-blocked earlier in this file. Paths not
+    // independently fetch-verified this round, treat as candidates.
+    { source: 'adaderana.lk', feedUrl: 'https://www.adaderana.lk/rss.php' },
+    { source: 'ft.lk', feedUrl: 'https://www.ft.lk/rss' },
   ],
   // Verified via a real feed-listing source this session, not directly
   // fetch-tested. allafrica.com's English feed avoids the problem that
@@ -345,6 +360,13 @@ const FEED_URLS_BY_COUNTRY = {
     // "Generate RSS" placeholder, unlike Kathmandu Post above) via feed
     // directory.
     { source: 'kathmandutribune.com', feedUrl: 'https://kathmandutribune.com/feed' },
+    // NEW (2026-09-22): The Himalayan Times -- major English daily,
+    // genuinely different outlet from the three above (Kathmandu Post's
+    // listed feed is a confirmed-dead "Generate RSS" placeholder, so this
+    // adds real redundancy rather than a fourth copy of the same failure
+    // mode). Feed hub confirmed to exist on-site; exact section path not
+    // independently fetch-verified this round, treat as a candidate.
+    { source: 'thehimalayantimes.com', feedUrl: 'https://thehimalayantimes.com/rss' },
   ],
   // greekreporter.com/greece/feed 403'd (likely IP-reputation blocking,
   // same category as Kenya/Morocco/Sri Lanka/Uganda -- a UA header alone
@@ -373,6 +395,15 @@ const FEED_URLS_BY_COUNTRY = {
     // confirmed producing zero articles ever via a live data audit, and
     // Zimbabwe had no safety net at all until now.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=Zimbabwe&hl=en&gl=ZW&ceid=ZW:en' },
+    // NEW (2026-09-22): all three dedicated sources above are either
+    // 403-blocked or confirmed producing zero articles -- Zimbabwe was
+    // effectively running on the Google News fallback alone. The Herald
+    // (state-owned Zimpapers, flagged) and The Chronicle (also Zimpapers,
+    // Bulawayo edition) are genuine, currently-operating newsrooms not yet
+    // tried. Paths not independently fetch-verified this round, treat as
+    // candidates for the next log to confirm.
+    { source: 'herald.co.zw', feedUrl: 'https://www.herald.co.zw/feed/', stateMedia: true },
+    { source: 'chronicle.co.zw', feedUrl: 'https://www.chronicle.co.zw/feed/', stateMedia: true },
   ],
   // jamaica-star.com threw "unable to verify the first certificate" -- a
   // real TLS cert chain issue on their end (likely a missing intermediate
@@ -516,7 +547,13 @@ const FEED_URLS_BY_COUNTRY = {
     { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/cotedivoire/headlines.rdf' }],
   CM: [
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/cameroon/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
-    { source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }], // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
+    { source: 'journalducameroun.com', feedUrl: 'https://en.journalducameroun.com/feed/' }, // switched from bare domain -- served French content (10/10 non_english); en. subdomain is the confirmed English edition, path unverified
+    // NEW (2026-09-22): Business in Cameroon -- English-language business
+    // monthly, genuinely different outlet/scope from Journal du Cameroun's
+    // general-news English edition. Path not independently fetch-verified
+    // this round, treat as a candidate.
+    { source: 'businessincameroon.com', feedUrl: 'https://www.businessincameroon.com/feed' },
+  ],
   CR: [
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/latin-america/costa-rica/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
     { source: 'ticotimes.net', feedUrl: 'https://ticotimes.net/feed' }], // "Non-whitespace before first tag" -- the response isn't valid XML at all (likely an HTML error page served at this path, or a redirect not being followed) -- not a simple path-guess fix, needs real investigation
@@ -645,7 +682,14 @@ const FEED_URLS_BY_COUNTRY = {
   ],
   ML: [
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/mali/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
-    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' }],
+    { source: 'allafrica.com', feedUrl: 'https://allafrica.com/tools/headlines/rdf/mali/headlines.rdf' },
+    // NEW (2026-09-22): Maliweb -- Mali's highest-traffic news portal runs
+    // a dedicated English-language section with its own feed path
+    // (site2.maliweb.net, not the main maliweb.net domain), genuinely
+    // different from the two citizen-journalism/wire sources above. Path
+    // not independently fetch-verified this round, treat as a candidate.
+    { source: 'maliweb.net', feedUrl: 'https://site2.maliweb.net/en/rss/latest-posts' },
+  ],
   // Two confirmed dead ends across sessions now: /en/rss (404), then /en/feed
   // (also 404). Not chasing a third guess at Montsame's path -- adding a
   // Google News fallback instead so Mongolia isn't fully dependent on
@@ -1330,6 +1374,13 @@ const FEED_URLS_BY_COUNTRY = {
     // Colombian newspaper, genuinely different outlet. Confirmed real and
     // exact path via feed directory.
     { source: 'thebogotapost.com', feedUrl: 'https://thebogotapost.com/feed' },
+    // NEW (2026-09-22): Rio Times' Colombia section -- outlet confirmed
+    // real and currently live (fetched directly: real Sept 2026 Colombia
+    // articles, e.g. Petro/UNP security, Colpensiones coverage). Exact
+    // /feed path unconfirmed (WordPress site, standard convention, but not
+    // individually fetched) -- treat as candidate, next run's log confirms
+    // or rejects.
+    { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/latin-america/colombia/feed/' },
   ],
   BR: [
     { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/feed' },
@@ -1452,6 +1503,11 @@ const FEED_URLS_BY_COUNTRY = {
     // outlet from Tolo News. Confirmed real and exact path via feed
     // directory.
     { source: 'khaama.com', feedUrl: 'https://www.khaama.com/feed' },
+    // NEW (2026-09-22): Pajhwok Afghan News -- Afghanistan's largest
+    // independent news agency (founded 2004), genuinely different outlet
+    // from Tolo News/Khaama. Path not independently fetch-verified this
+    // round, treat as a candidate.
+    { source: 'pajhwok.com', feedUrl: 'https://pajhwok.com/feed' },
   ],
   LB: [
     // NEW (2026-08-06): Google News fallback -- every dedicated source configured for this country was confirmed producing zero articles ever via a live data audit, and there was no safety net at all until now.
@@ -1492,6 +1548,13 @@ const FEED_URLS_BY_COUNTRY = {
     // genuinely different outlet from Buenos Aires Times. Confirmed real
     // and exact path via feed directory.
     { source: 'buenosairesherald.com', feedUrl: 'https://buenosairesherald.com/feed' },
+    // NEW (2026-09-22): Rio Times' Argentina section -- outlet confirmed
+    // real and currently live (fetched directly: real Sept 2026 Argentina
+    // coverage, e.g. Messi farewell match). Exact /feed path unconfirmed
+    // (WordPress site, standard convention, not individually fetched) --
+    // candidate, next run's log confirms or rejects. AR flagged weak (2
+    // sources, only 85 articles/14d) despite being a major economy.
+    { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/latin-america/argentina/feed/' },
   ],
   // NEW (2026-07-30): Austria had zero RSS entry and zero allowlist entry
   // despite being a major European country. thelocal.at confirmed real,
@@ -1658,6 +1721,14 @@ const FEED_URLS_BY_COUNTRY = {
     // English-language, genuinely different outlet from Mexico News
     // Daily. Confirmed real and exact path via feed directory.
     { source: 'theyucatantimes.com', feedUrl: 'https://theyucatantimes.com/feed' },
+    // NEW (2026-09-22): Rio Times' Mexico section -- outlet confirmed real
+    // and currently live (fetched directly: real Sept 2026 Mexico
+    // coverage, e.g. Hurricane Polo, anti-corruption savings). Exact
+    // /feed path unconfirmed (WordPress site, standard convention, not
+    // individually fetched) -- candidate, next run's log confirms or
+    // rejects. MX flagged weak (only 107 articles/14d) for a country of
+    // ~130M.
+    { source: 'riotimesonline.com', feedUrl: 'https://www.riotimesonline.com/latin-america/mexico/feed/' },
   ],
   // NEW (2026-07-30): remaining major no-RSS countries, using their
   // already-allowlisted top domain with standard RSS path conventions.
@@ -1772,7 +1843,15 @@ const FEED_URLS_BY_COUNTRY = {
     // NEW (2026-08-06): Google News fallback -- every dedicated source configured for this country was confirmed producing zero articles ever via a live data audit, and there was no safety net at all until now.
     { source: 'news.google.com', feedUrl: 'https://news.google.com/rss/search?q=DR+Congo&hl=en&gl=CD&ceid=CD:en' },
     { source: 'globalvoices.org', feedUrl: 'https://globalvoices.org/-/world/sub-saharan-africa/dr-of-congo/feed/' }, // NEW (2026-08-03): Global Voices -- confirmed exact per-country RSS feed directly from their own feeds page. Citizen-journalism/commentary, lower volume than local dailies, but genuine English-language redundancy.
-    { source: 'congoplanet.com', feedUrl: 'http://www.congoplanet.com/feeds/rss_congo_africa.xml' }],
+    { source: 'congoplanet.com', feedUrl: 'http://www.congoplanet.com/feeds/rss_congo_africa.xml' },
+    // NEW (2026-09-22): Africanews -- already proven working for CG
+    // (Congo-Brazzaville, see that entry) but was missing here for CD (DR
+    // Congo) specifically. Same pan-African feed, verified live directly
+    // this session (real Sept 2026 content); relies on the existing
+    // country-mention relevance check to isolate DRC-specific items, same
+    // as any WORLD-tier wire source.
+    { source: 'africanews.com', feedUrl: 'https://www.africanews.com/feed/rss' },
+  ],
   IR: [
     { source: 'khabaronline.ir', feedUrl: 'http://english.khabaronline.ir/rss/' }, // has repeatedly returned zero items in recent runs -- not removing (may recover) but real redundancy is overdue
     // NEW (2026-08-03): Tehran Times -- English-language daily since 1979,
