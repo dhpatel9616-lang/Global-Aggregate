@@ -1104,7 +1104,7 @@ function isPrWireContent(row) {
 // is a generous cutoff (this is a live news aggregator refreshed every 3
 // hours, not an archive) that still comfortably allows for feeds with
 // delayed/backdated publish timestamps.
-const MAX_ARTICLE_AGE_DAYS = 60;
+const MAX_ARTICLE_AGE_DAYS = 14; // was 60; matches 14-day retention so old items aren't ingested just to be trimmed
 
 function isStale(publishedAt) {
   if (!publishedAt) return false; // missing date isn't this check's problem
@@ -1112,8 +1112,19 @@ function isStale(publishedAt) {
   return ageMs > MAX_ARTICLE_AGE_DAYS * 24 * 60 * 60 * 1000;
 }
 
+// SPAM FILTER (2026-10-03): news.google.com was returning hijacked-page
+// "LIVE STREAM FREE" football spam (titles written in Unicode math/fullwidth
+// "fancy" letters, e.g. czechinvest.gov.cz pages). 770 rows found across 35
+// countries, ~58/day still arriving. Real news titles never use these blocks.
+const FANCY_UNICODE_RE = /[\u{1D400}-\u{1D7FF}\u{FF21}-\u{FF3A}\u{FF41}-\u{FF5A}]/u;
+const STREAM_SPAM_RE = /(\[[^\]]{0,12}live\s*-?\s*streams?[^\]]*\]|live\s*@\s*streams?|free\s+live\s+streams?|live\s+free\s+streams?|streams?\s+free\s+online|watch\s+live\s+free)/i;
+function isStreamSpam(title) {
+  return FANCY_UNICODE_RE.test(title) || STREAM_SPAM_RE.test(title);
+}
+
 function getJunkReason(row) {
   if (!row.title) return 'missing_title';
+  if (isStreamSpam(row.title)) return 'stream_spam';
   if (isBlockedSource(row.source)) return 'blocked_source';
   if (isObscureSports(row)) return 'obscure_sports';
   if (failsNationalAllowlist(row)) return 'not_relevant_to_country';
