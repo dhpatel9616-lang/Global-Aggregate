@@ -1319,7 +1319,12 @@ function decodeHtmlEntities(text) {
 function safeParseDate(value) {
   if (!value) return null;
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  if (Number.isNaN(d.getTime())) return null;
+  // FUTURE-DATE GUARD (2026-10-03): a thebulletin.be item with a pubDate two
+  // months ahead sorted to the top of every feed (feed orders by
+  // published_at desc). Clamp anything >1 day ahead to "now".
+  if (d.getTime() > Date.now() + 24 * 60 * 60 * 1000) return new Date().toISOString();
+  return d.toISOString();
 }
 
 function capDescription(text) {
