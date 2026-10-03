@@ -1880,7 +1880,13 @@ async function loadExistingTitles() {
   // from ingest.js already (module.exports) but has its own copy of the
   // loader.
   const PAGE_SIZE = 1000;
-  const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  // EGRESS FIX (2026-10-03): was 14 days (~85 paginated GETs per run, ~10MB
+  // downloaded every run -- the confirmed cause of 12GB/mo Supabase egress).
+  // Syndicated duplicates land within hours/days of each other, and the
+  // url_key upsert is the hard backstop for exact repeats, so a 2-day window
+  // keeps dedup quality while cutting this download ~85%.
+  const TITLE_DEDUP_DAYS = Number(process.env.TITLE_DEDUP_DAYS) || 2;
+  const sinceIso = new Date(Date.now() - TITLE_DEDUP_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const titles = new Set();
   let from = 0;
   for (;;) {
@@ -2528,7 +2534,10 @@ async function main() {
   const seenUrls = new Set();
   {
     const PAGE_SIZE = 1000;
-    const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    // EGRESS FIX (2026-10-03): 14d -> 1d. url_key upsert (ignoreDuplicates)
+    // still guarantees no duplicate rows; this Set is only a pre-filter.
+    const URL_DEDUP_DAYS = Number(process.env.URL_DEDUP_DAYS) || 1;
+    const sinceIso = new Date(Date.now() - URL_DEDUP_DAYS * 24 * 60 * 60 * 1000).toISOString();
     let from = 0;
     for (;;) {
       const { data, error } = await supabase

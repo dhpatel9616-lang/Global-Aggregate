@@ -1176,7 +1176,13 @@ async function loadExistingTitles() {
   // even the 14-day window exceeds the default page size (it does: ~90k
   // rows over ~60 days is easily >1000 rows per 14-day slice).
   const PAGE_SIZE = 1000;
-  const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  // EGRESS FIX (2026-10-03): was 14 days (~85 paginated GETs per run, ~10MB
+  // downloaded every run -- the confirmed cause of 12GB/mo Supabase egress).
+  // Syndicated duplicates land within hours/days of each other, and the
+  // url_key upsert is the hard backstop for exact repeats, so a 2-day window
+  // keeps dedup quality while cutting this download ~85%.
+  const TITLE_DEDUP_DAYS = Number(process.env.TITLE_DEDUP_DAYS) || 2;
+  const sinceIso = new Date(Date.now() - TITLE_DEDUP_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const titles = new Set();
   let from = 0;
   for (;;) {
