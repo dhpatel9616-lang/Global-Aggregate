@@ -2384,19 +2384,10 @@ async function main() {
   // takes a SHARE lock: blocks concurrent writes for ~15s, does NOT block
   // reads (the live site is unaffected). Gated to fire roughly once/day
   // (shard A only, specific hour) rather than every run.
-  const now_ = new Date();
-  if (SHARD === 'A' && now_.getUTCHours() === 3) {
-    try {
-      const { error: refreshError } = await supabase.rpc('refresh_recent_title_trgm_index', { days_back: 7 });
-      if (refreshError) {
-        console.error(`Trigram index refresh failed (non-fatal): ${refreshError.message}`);
-      } else {
-        console.log('Trigram index refresh: OK');
-      }
-    } catch (err) {
-      console.error(`Trigram index refresh threw (non-fatal): ${err.message}`);
-    }
-  }
+  // REMOVED (2026-10-05): the nightly refresh_recent_title_trgm_index RPC call
+  // that lived here. pg_cron job 'refresh-recent-title-trgm-index' (03:10 UTC)
+  // already runs it directly in-database; the PostgREST RPC copy hit the 8s
+  // statement timeout every night (HTTP 500) and could contend with the cron run.
   // Expected side effect, confirmed via direct testing (2026-08-17): the
   // first clustering call right after a fresh rebuild hits a cold-cache
   // penalty (observed once: 17.4s, well over the timeout ceiling), which

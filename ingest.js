@@ -1104,7 +1104,7 @@ function isPrWireContent(row) {
 // is a generous cutoff (this is a live news aggregator refreshed every 3
 // hours, not an archive) that still comfortably allows for feeds with
 // delayed/backdated publish timestamps.
-const MAX_ARTICLE_AGE_DAYS = 14; // was 60; matches 14-day retention so old items aren't ingested just to be trimmed
+const MAX_ARTICLE_AGE_DAYS = 7; // matches 7-day retention (trim_stale_articles). Was 14, which re-ingested ~400 rows/day that the nightly trim then deleted.
 
 function isStale(publishedAt) {
   if (!publishedAt) return false; // missing date isn't this check's problem
