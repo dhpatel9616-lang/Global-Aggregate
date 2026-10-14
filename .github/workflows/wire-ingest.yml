@@ -1,0 +1,26 @@
+name: Ingest Wire (policy/primary sources)
+on:
+  # Manual / external-scheduler trigger only, same convention as
+  # ingest-rss.yml: the live schedule belongs in cron-job.org (calling
+  # workflow_dispatch), NOT a native GitHub cron, because native schedules
+  # silently skipped runs on this repo. Suggested cron-job.org schedule:
+  # hourly at an off-round minute (e.g. minute 11).
+  workflow_dispatch:
+jobs:
+  wire-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Run Wire ingestion script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node wire-ingest.js
