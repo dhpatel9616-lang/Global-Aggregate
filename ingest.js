@@ -270,6 +270,18 @@ const JUNK_PATTERNS = [
   // the price-threshold pattern above didn't catch this broader listicle format
   /\bbest .{0,40}\b(to buy|to buy in \d{4}|of \d{4})\b/i,
 
+  // Online-casino SEO spam (NEW 2026-11-05). businessbhutan.bt's feed carries
+  // injected casino "reviews" among real stories, e.g. "Slot Mafia Casino:
+  // Quick-Hit Play...", "Daytona Spin Casino UK Review: Bonuses...". Kept
+  // deliberately narrow so legitimate regulatory/business news about casinos
+  // (licences, Macau revenue, Las Vegas) still passes: it needs a casino/slot
+  // word PLUS a gambling-promo word, or an explicit online/mobile casino term.
+  /\b(online|mobile|live) casinos?\b/i,
+  /\bcasino\b.{0,60}\b(review|bonus(es)?|app|mobile|login|free spins?|payouts?|no deposit)\b/i,
+  /\b(review|bonus(es)?|app|mobile|login|free spins?|payouts?)\b.{0,60}\bcasino\b/i,
+  /\bslots?\b.{0,60}\b(players?|spins?|sessions?|bonus(es)?|jackpots?|rtp)\b/i,
+  /\bfree spins?\b/i,
+
   // Lottery / sweepstakes / giveaways
   /lottery numbers/i,
   /\bpowerball\b/i,
@@ -1361,7 +1373,7 @@ async function fetchNewsData(country) {
       topic: mapTopic(item.category, item.title),
       title: item.title,
       description: capDescription(item.description) || null,
-      url: item.link,
+      url: typeof item.link === 'string' ? item.link.trim() : item.link, // see ingest-rss.js buildRow (2026-11-05)
       published_at: safeParseDate(item.pubDate),
       _rawCategory: item.category,
     }));
@@ -1426,7 +1438,7 @@ async function fetchCurrents(country) {
       topic: mapTopic(item.category, item.title),
       title: item.title,
       description: capDescription(item.description) || null,
-      url: item.url,
+      url: typeof item.url === 'string' ? item.url.trim() : item.url, // see ingest-rss.js buildRow (2026-11-05)
       published_at: safeParseDate(item.published),
       _rawCategory: item.category,
     }));

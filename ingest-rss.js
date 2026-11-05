@@ -2133,7 +2133,11 @@ function buildRow(item, country, source, isStateMedia) {
     topic: mapTopic(item.categories, safeTitle),
     title: safeTitle,
     description: capDescription(item.contentSnippet || item.content || item.summary || null),
-    url: item.link,
+    // FIX (2026-11-05): some feeds (confirmed: thelocal.* newsletters) emit
+    // <link> with a leading newline/indent. Left as-is, the whitespace is
+    // stored in articles.url and baked into url_key, producing broken links
+    // and breaking URL dedup. 121 live rows were affected.
+    url: typeof item.link === 'string' ? item.link.trim() : item.link,
     published_at: safeParseDate(item.isoDate) || safeParseDate(item.pubDate),
     is_state_media: !!isStateMedia,
     _rawCategory: item.categories,
